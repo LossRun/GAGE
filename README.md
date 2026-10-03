@@ -1,15 +1,8 @@
 <div align="center">
 
-```text
- ██████╗  █████╗  ██████╗ ███████╗
-██╔════╝ ██╔══██╗██╔════╝ ██╔════╝
-██║  ███╗███████║██║  ███╗█████╗
-██║   ██║██╔══██║██║   ██║██╔══╝
-╚██████╔╝██║  ██║╚██████╔╝███████╗
- ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝
-```
+<img src="logo.png" alt="GAGE Logo" width="180">
 
-# ⚡ GAGE
+# GAGE
 
 ### GAGE UNIFIED TOOLCHAIN
 **Native LLVM Compiler & Fast VM**
@@ -247,36 +240,30 @@ GAGE/
 ├── src/
 │   ├── ast.rs
 │   │   └── Abstract Syntax Tree nodes
-│   │
 │   ├── token.rs
 │   │   └── Lexical tokens and source spans
-│   │
 │   ├── lexer.rs
 │   │   └── Scanner and tokenizer
-│   │
 │   ├── parser.rs
 │   │   └── Recursive-descent parser
-│   │
 │   ├── types.rs
 │   │   └── Semantic analyzer and type checker
-│   │
 │   ├── codegen.rs
 │   │   └── Native AOT and SIMD code generation
-│   │
 │   ├── bytecode.rs
 │   │   └── Bytecode instructions and chunks
-│   │
 │   ├── compiler.rs
 │   │   └── Bytecode compiler
-│   │
 │   ├── vm.rs
 │   │   └── Stack-based virtual machine
-│   │
 │   └── main.rs
 │       └── Unified CLI entrypoint
 │
 ├── examples/
 │   └── Example programs and simulation tests
+│
+├── logo.png
+│   └── GAGE project logo
 │
 ├── gage-setup.sh
 │   └── Unix and Android installer
@@ -476,13 +463,8 @@ Copyright © 2026 Akarsh Tyagi.
 
 <div align="center">
 
-## ⚡ GAGE
+<img src="logo.png" alt="GAGE Logo" width="120">
 
 **Native performance. Vector-first design. Unified tooling.**
-
-```text
-GAGE UNIFIED TOOLCHAIN
-Native LLVM Compiler & Fast VM
-```
 
 </div>
