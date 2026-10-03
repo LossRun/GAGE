@@ -92,33 +92,27 @@ fn invoke_c_compiler(c_code: &str, output_binary: &Path) -> Result<(), String> {
     let temp_c = output_binary.with_extension("tmp.c");
     fs::write(&temp_c, c_code).map_err(|e| format!("Failed to create intermediate C file: {}", e))?;
 
-    let compilers = ["clang", "gcc", "clang-cl"];
+    let compilers = if cfg!(target_os = "windows") { vec!["clang-cl", "clang", "gcc"] } else { vec!["clang", "gcc"] };
     let mut success = false;
-    let mut last_err = String::new();
+    let mut primary_err = String::new();
 
     for cc in compilers {
         let mut cmd = Command::new(cc);
-        cmd.arg("-O3")
-           .arg("-w")
-           .arg("-Wno-everything")
-           .arg(&temp_c)
-           .arg("-o")
-           .arg(output_binary);
-
-        if !cfg!(target_os = "windows") {
-            cmd.arg("-lm");
-        }
+        cmd.arg("-O3").arg("-w").arg(&temp_c).arg("-o").arg(output_binary);
+        if !cfg!(target_os = "windows") { cmd.arg("-lm"); }
 
         match cmd.output() {
-            Ok(output) if output.status.success() => {
-                success = true;
-                break;
-            }
+            Ok(output) if output.status.success() => { success = true; break; }
             Ok(output) => {
-                last_err = format!("Compiler '{}' exited with error:\n{}", cc, String::from_utf8_lossy(&output.stderr));
+                if primary_err.is_empty() {
+                    primary_err = format!("{} error:
+{}", cc, String::from_utf8_lossy(&output.stderr));
+                }
             }
             Err(e) => {
-                last_err = format!("Could not launch '{}': {}", cc, e);
+                if primary_err.is_empty() {
+                    primary_err = format!("Could not launch {}: {}", cc, e);
+                }
             }
         }
     }
@@ -126,12 +120,10 @@ fn invoke_c_compiler(c_code: &str, output_binary: &Path) -> Result<(), String> {
     let _ = fs::remove_file(temp_c);
 
     if !success {
-        return Err(format!(
-            "Native compilation failed. Please ensure Clang or GCC is installed.\nDetails: {}",
-            last_err
-        ));
+        return Err(format!("Native compilation failed.
+Details:
+{}", primary_err));
     }
-
     Ok(())
 }
 
