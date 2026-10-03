@@ -18,20 +18,18 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-# Clean, razor-sharp GAGE banner
 echo -e "${CYAN}"
 echo "   ______      ___       ______   _______ "
 echo "  / _____|    /   \     / _____| |  _____|"
 echo " | |  __     / /_\ \   | |  __   | |____  "
 echo " | | |_ |   / _____ \  | | |_ |  |  ____| "
 echo " | |__| |  / /     \ \ | |__| |  | |_____ "
-echo "  \_____/ /_/       \_\\_____/   |_______|"
+echo "  \_____/ /_/       \_\_____/   |_______|"
 echo -e "${RESET}"
 echo -e "${BORDER}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo -e " ${BOLD}${WHITE}GAGE TOOLCHAIN INSTALLER${RESET} ${MUTED}|${RESET} Native Engine & VM"
 echo -e "${BORDER}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
 
-# Live Braille spinner function
 run_step() {
     local task_name="$1"
     local cmd="$2"
@@ -58,61 +56,72 @@ run_step() {
     fi
 }
 
-# 1. Target Directory Detection
+# 1. Automated Platform Dependency Resolution
 if [ -n "$PREFIX" ] && [ -d "$PREFIX/bin" ]; then
     INSTALL_DIR="$PREFIX/bin"
-elif [ "$(id -u)" -eq 0 ]; then
+    # Ensure Termux has all C standard library headers (ndk-sysroot), Clang, and Rust
+    if ! command -v clang &> /dev/null || [ ! -f "$PREFIX/include/stdio.h" ]; then
+        run_step "Installing Termux C toolchain & sysroot headers" "pkg update -y && pkg install -y ndk-sysroot clang"
+    fi
+    if ! command -v cargo &> /dev/null; then
+        run_step "Installing Rust & Cargo compiler" "pkg install -y rust"
+    fi
+elif [ "$(uname -s)" = "Darwin" ]; then
     INSTALL_DIR="/usr/local/bin"
+    if ! command -v clang &> /dev/null; then
+        run_step "Checking Xcode Command Line Tools" "xcode-select --install || true"
+    fi
+    if ! command -v cargo &> /dev/null; then
+        run_step "Installing Rust via rustup" "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source \$HOME/.cargo/env"
+    fi
 else
-    INSTALL_DIR="$HOME/.local/bin"
-    mkdir -p "$INSTALL_DIR"
+    # Linux (Debian/Ubuntu/Arch/Fedora)
+    if [ "$(id -u)" -eq 0 ]; then
+        INSTALL_DIR="/usr/local/bin"
+    else
+        INSTALL_DIR="$HOME/.local/bin"
+        mkdir -p "$INSTALL_DIR"
+    fi
+
+    if command -v apt-get &> /dev/null; then
+        if ! command -v clang &> /dev/null || ! command -v cargo &> /dev/null; then
+            run_step "Installing system build dependencies (apt)" "sudo apt-get update -y && sudo apt-get install -y clang build-essential rustc cargo"
+        fi
+    elif command -v pacman &> /dev/null; then
+        if ! command -v clang &> /dev/null || ! command -v cargo &> /dev/null; then
+            run_step "Installing system build dependencies (pacman)" "sudo pacman -Sy --noconfirm clang base-devel rust"
+        fi
+    elif command -v dnf &> /dev/null; then
+        if ! command -v clang &> /dev/null || ! command -v cargo &> /dev/null; then
+            run_step "Installing system build dependencies (dnf)" "sudo dnf install -y clang gcc rust cargo"
+        fi
+    fi
 fi
 
-# 2. Host Toolchain Validation
-if ! command -v cargo &> /dev/null; then
-    run_step "Installing Rust & Cargo toolchain" "pkg update -y && pkg install rust -y"
-else
-    printf " ${GREEN}✔${RESET}  ${WHITE}%-42s${RESET}\n" "Rust & Cargo compiler toolchain verified"
-fi
-
-if ! command -v clang &> /dev/null && ! command -v gcc &> /dev/null; then
-    run_step "Installing Clang/LLVM native compiler backend" "pkg install clang -y"
-else
-    printf " ${GREEN}✔${RESET}  ${WHITE}%-42s${RESET}\n" "Clang/LLVM native backend verified"
-fi
-
-# 3. Source Discovery
+# 2. Source Discovery
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ ! -f "$SCRIPT_DIR/Cargo.toml" ] || [ ! -d "$SCRIPT_DIR/src" ]; then
     printf " ${RED}✖${RESET}  Cannot find valid Gage source directory in %s\n" "$SCRIPT_DIR"
     exit 1
 fi
-printf " ${GREEN}✔${RESET}  ${WHITE}%-42s${RESET}\n" "Source directory verified"
 
-# 4. Sandbox Staging
+# 3. Workspace Staging
 BUILD_DIR="$HOME/.gage_build"
-run_step "Synchronizing build workspace" "rm -rf '$BUILD_DIR' && mkdir -p '$BUILD_DIR' && cp -r '$SCRIPT_DIR/Cargo.toml' '$SCRIPT_DIR/src' '$SCRIPT_DIR/version.txt' '$BUILD_DIR/'"
+run_step "Synchronizing build workspace" "rm -rf '$BUILD_DIR' && mkdir -p '$BUILD_DIR' && cp -r '$SCRIPT_DIR/Cargo.toml' '$SCRIPT_DIR/src' '$BUILD_DIR/'"
 
-# 5. Compilation
+# 4. Compilation
 run_step "Compiling Gage toolchain binary" "cd '$BUILD_DIR' && cargo build --release"
 
-# 6. Binary Deployment
+# 5. Deployment
 run_step "Installing binaries to $INSTALL_DIR" "mkdir -p '$INSTALL_DIR' && cp '$BUILD_DIR/target/release/gage' '$INSTALL_DIR/gage' && chmod +x '$INSTALL_DIR/gage'"
 
-if [ -n "$PREFIX" ]; then
-    mkdir -p "$PREFIX/share/gage"
-    cp "$BUILD_DIR/version.txt" "$PREFIX/share/gage/version.txt"
-    echo "$SCRIPT_DIR" > "$PREFIX/share/gage/source_path.txt"
-fi
-
-# 7. Verification Test
+# 6. Verification
 run_step "Running system verification test" "$INSTALL_DIR/gage --info"
 
-# Summary Card
 echo ""
 echo -e "${BORDER}┌─ INSTALLATION COMPLETE ───────────────────────────┐${RESET}"
 echo -e "${BORDER}│${RESET}  ${WHITE}Binary Path  :${RESET} ${CYAN}$INSTALL_DIR/gage${RESET}"
 echo -e "${BORDER}│${RESET}  ${WHITE}Architecture :${RESET} ${GREEN}Native LLVM AOT + Bytecode VM${RESET}"
-echo -e "${BORDER}│${RESET}  ${WHITE}Quick Test   :${RESET} ${BOLD}gage run main.gage${RESET}"
+echo -e "${BORDER}│${RESET}  ${WHITE}Quick Test   :${RESET} ${BOLD}gage examples/23_hello_world.gage${RESET}"
 echo -e "${BORDER}│${RESET}  ${WHITE}Build Binary :${RESET} ${BOLD}gage build main.gage -o myapp${RESET}"
 echo -e "${BORDER}└───────────────────────────────────────────────────┘${RESET}\n"
