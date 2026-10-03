@@ -1,0 +1,26 @@
+// 30_inventory_system.gage
+class Item {
+    item_id;
+    value;
+
+    fn setup(id, val) {
+        this.item_id = id;
+        this.value = val;
+    }
+}
+
+let sword = new Item();
+sword.setup(101, 150);
+
+let shield = new Item();
+shield.setup(102, 200);
+
+let loot = [sword.value, shield.value];
+let total_gold = 0;
+
+for gold in loot {
+    total_gold = total_gold + gold;
+}
+
+print("Total inventory gold value: ");
+println(total_gold);

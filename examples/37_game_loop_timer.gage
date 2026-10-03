@@ -1,0 +1,13 @@
+// 37_game_loop_timer.gage
+let total_time = 0.0;
+let frames = 0;
+
+step(dt) {
+    if (frames < 3) {
+        total_time = total_time + dt;
+        frames = frames + 1;
+    }
+}
+
+print("Elapsed simulated time: ");
+println(total_time);

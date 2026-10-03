@@ -1,0 +1,13 @@
+// 34_orbit_simulation.gage
+let pos = vec2(10.0, 0.0);
+let vel = vec2(0.0, 5.0);
+let tick = 0;
+
+step(dt) {
+    if (tick < 4) {
+        pos = pos + (vel * dt);
+        print("Orbit position: ");
+        println(pos);
+        tick = tick + 1;
+    }
+}

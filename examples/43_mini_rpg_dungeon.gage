@@ -1,0 +1,28 @@
+// 43_mini_rpg_dungeon.gage
+class Entity {
+    id;
+    power;
+
+    fn create(i, p) {
+        this.id = i;
+        this.power = p;
+    }
+}
+
+let knight = new Entity();
+knight.create(1, 45);
+
+let room_enemies = [20, 30, 40];
+let dungeon_cleared = true;
+
+for e_power in room_enemies {
+    if (e_power >= knight.power) {
+        dungeon_cleared = false;
+    }
+}
+
+if (dungeon_cleared) {
+    println("🏆 Knight cleared the dungeon!");
+} else {
+    println("Enemy too strong! Retreated.");
+}

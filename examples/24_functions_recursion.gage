@@ -1,0 +1,16 @@
+// 24_functions_recursion.gage
+fn add(a, b) {
+    return a + b;
+}
+
+fn factorial(n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+println("=== Functions & Recursion ===");
+println(add(25, 75));
+print("5! = ");
+println(factorial(5));

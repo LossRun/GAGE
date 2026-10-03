@@ -1,0 +1,6 @@
+// 29_dynamic_arrays.gage
+let numbers = [10, 20, 30, 40, 50];
+println("=== Array Iteration ===");
+for n in numbers {
+    println(n);
+}

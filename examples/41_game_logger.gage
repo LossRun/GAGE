@@ -1,0 +1,9 @@
+// 41_game_logger.gage
+let log_path = "game_event.log";
+let log_entry = "[LOG] Player entered Dungeon Level 1\n[LOG] Encountered Fire Dragon";
+
+let ok = write_file(log_path, log_entry);
+if (ok) {
+    println("Event log saved:");
+    println(read_file(log_path));
+}

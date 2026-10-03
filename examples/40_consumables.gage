@@ -1,0 +1,26 @@
+// 40_consumables.gage
+class Character {
+    health;
+    max_health;
+
+    fn set_hp(h, m) {
+        this.health = h;
+        this.max_health = m;
+    }
+
+    fn heal(amount) {
+        this.health = this.health + amount;
+        if (this.health > this.max_health) {
+            this.health = this.max_health;
+        }
+    }
+}
+
+let player = new Character();
+player.set_hp(35, 100);
+print("HP before potion: ");
+println(player.health);
+
+player.heal(50);
+print("HP after potion: ");
+println(player.health);

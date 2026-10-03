@@ -1,0 +1,26 @@
+// 26_enemy_ai.gage
+class Enemy {
+    health;
+    is_alive;
+
+    fn spawn(hp) {
+        this.health = hp;
+        this.is_alive = true;
+    }
+
+    fn take_damage(dmg) {
+        this.health = this.health - dmg;
+        if (this.health <= 0) {
+            this.is_alive = false;
+            println("Enemy defeated!");
+        } else {
+            print("Enemy health remaining: ");
+            println(this.health);
+        }
+    }
+}
+
+let orc = new Enemy();
+orc.spawn(50);
+orc.take_damage(20);
+orc.take_damage(35);

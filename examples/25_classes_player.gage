@@ -1,0 +1,19 @@
+// 25_classes_player.gage
+class Player {
+    hp;
+    attack_power;
+
+    fn init_stats(h, atk) {
+        this.hp = h;
+        this.attack_power = atk;
+    }
+
+    fn show_hp() {
+        print("Player HP: ");
+        println(this.hp);
+    }
+}
+
+let hero = new Player();
+hero.init_stats(100, 25);
+hero.show_hp();

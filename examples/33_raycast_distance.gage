@@ -1,0 +1,8 @@
+// 33_raycast_distance.gage
+let ray_origin = vec3(0.0, 0.0, 0.0);
+let target_pos = vec3(10.0, 0.0, 0.0);
+let diff = target_pos - ray_origin;
+let distance = length(diff);
+
+print("Distance to target: ");
+println(distance);

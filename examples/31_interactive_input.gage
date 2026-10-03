@@ -1,0 +1,5 @@
+// 31_interactive_input.gage
+println("=== NPC Interaction ===");
+let player_name = input("Enter adventurer name: ");
+print("Welcome to the Guild, ");
+println(player_name);

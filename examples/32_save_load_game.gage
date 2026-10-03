@@ -1,0 +1,11 @@
+// 32_save_load_game.gage
+let filename = "savegame.dat";
+let save_data = "player_level: 14\nexp: 9500";
+
+let saved = write_file(filename, save_data);
+if (saved) {
+    println("✔ Game saved successfully to disk!");
+    let loaded_data = read_file(filename);
+    println("--- Loaded Save State ---");
+    println(loaded_data);
+}

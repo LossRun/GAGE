@@ -1,0 +1,12 @@
+// 36_score_leaderboard.gage
+let scores = [450, 1200, 890, 2400, 1600];
+let high_score = 0;
+
+for s in scores {
+    if (s > high_score) {
+        high_score = s;
+    }
+}
+
+print("Arcade Top High Score: ");
+println(high_score);

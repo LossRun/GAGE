@@ -1,0 +1,8 @@
+// 38_camera_follow.gage
+let cam_pos = vec2(0.0, 0.0);
+let player_pos = vec2(50.0, 20.0);
+let lerp_factor = 0.1;
+
+cam_pos = cam_pos + ((player_pos - cam_pos) * lerp_factor);
+print("Updated Camera Position: ");
+println(cam_pos);

@@ -1,14 +1,24 @@
 #![allow(warnings)]
+use std::collections::HashMap;
 use crate::ast::*;
 
 pub struct CodeGen {
     out: String,
     indent_level: usize,
+    var_classes: HashMap<String, String>,
+    method_classes: HashMap<String, String>,
+    current_class: Option<String>,
 }
 
 impl CodeGen {
     pub fn new() -> Self {
-        Self { out: String::new(), indent_level: 0 }
+        Self {
+            out: String::new(),
+            indent_level: 0,
+            var_classes: HashMap::new(),
+            method_classes: HashMap::new(),
+            current_class: None,
+        }
     }
 
     fn emit_line(&mut self, text: &str) {
@@ -17,6 +27,22 @@ impl CodeGen {
     }
 
     pub fn generate(mut self, program: &Program) -> String {
+        // Collect class methods and variable instance classes
+        for stmt in &program.statements {
+            if let Stmt::Class(c) = stmt {
+                for m in &c.methods {
+                    self.method_classes.insert(m.name.clone(), c.name.clone());
+                }
+            }
+        }
+        for stmt in &program.statements {
+            if let Stmt::Let(name, expr) = stmt {
+                if let Expr::New(c_name, _) = expr {
+                    self.var_classes.insert(name.clone(), c_name.clone());
+                }
+            }
+        }
+
         self.emit_line("#pragma GCC diagnostic ignored \"-Wunused-function\"");
         self.emit_line("#pragma GCC diagnostic ignored \"-Wunused-variable\"");
         self.emit_line("#include <stdio.h>");
@@ -25,9 +51,10 @@ impl CodeGen {
         self.emit_line("#include <string.h>");
         self.emit_line("#include <math.h>\n");
 
-        self.emit_line("typedef struct { double x, y; } gage_vec2;");
-        self.emit_line("typedef struct { double x, y, z; } gage_vec3;");
-        self.emit_line("typedef struct { double x, y, z, w; } gage_vec4;\n");
+        // Clang native SIMD vector types supporting +, -, * operators
+        self.emit_line("typedef double gage_vec2 __attribute__((ext_vector_type(2)));");
+        self.emit_line("typedef double gage_vec3 __attribute__((ext_vector_type(3)));");
+        self.emit_line("typedef double gage_vec4 __attribute__((ext_vector_type(4)));\n");
 
         self.emit_line("static inline gage_vec2 make_vec2(double x, double y) { return (gage_vec2){x, y}; }");
         self.emit_line("static inline gage_vec3 make_vec3(double x, double y, double z) { return (gage_vec3){x, y, z}; }");
@@ -38,18 +65,20 @@ impl CodeGen {
         self.emit_line("static inline double gage_length_vec3(gage_vec3 v) { return sqrt(v.x*v.x + v.y*v.y + v.z*v.z); }");
         self.emit_line("static inline gage_vec3 gage_normalize_vec3(gage_vec3 v) { double l = gage_length_vec3(v); return (gage_vec3){v.x/l, v.y/l, v.z/l}; }\n");
 
-        self.emit_line("typedef struct { void** data; size_t length; size_t capacity; } gage_array;");
+        // Native Double Array Runtime
+        self.emit_line("typedef struct { double* data; size_t length; size_t capacity; } gage_array;");
         self.emit_line("static inline gage_array* gage_create_array(size_t cap) {");
         self.emit_line("  gage_array* a = malloc(sizeof(gage_array));");
         self.emit_line("  a->length = 0; a->capacity = cap > 0 ? cap : 8;");
-        self.emit_line("  a->data = malloc(sizeof(void*) * a->capacity);");
+        self.emit_line("  a->data = malloc(sizeof(double) * a->capacity);");
         self.emit_line("  return a;");
         self.emit_line("}");
-        self.emit_line("static inline void gage_array_push(gage_array* a, void* item) {");
-        self.emit_line("  if (a->length >= a->capacity) { a->capacity *= 2; a->data = realloc(a->data, sizeof(void*) * a->capacity); }");
+        self.emit_line("static inline void gage_array_push(gage_array* a, double item) {");
+        self.emit_line("  if (a->length >= a->capacity) { a->capacity *= 2; a->data = realloc(a->data, sizeof(double) * a->capacity); }");
         self.emit_line("  a->data[a->length++] = item;");
         self.emit_line("}\n");
 
+        // Runtime I/O Helpers
         self.emit_line("static inline char* gage_input(const char* prompt) {");
         self.emit_line("  if (prompt && strlen(prompt) > 0) { printf(\"%s\", prompt); fflush(stdout); }");
         self.emit_line("  char buffer[4096];");
@@ -71,6 +100,7 @@ impl CodeGen {
         self.emit_line("  fputs(content, f); fclose(f); return true;");
         self.emit_line("}\n");
 
+        // C11 Generic Dispatchers
         self.emit_line("static inline void _gage_print_i64(long long v) { printf(\"%lld\", v); }");
         self.emit_line("static inline void _gage_print_f64(double v) { printf(\"%g\", v); }");
         self.emit_line("static inline void _gage_print_str(const char* v) { printf(\"%s\", v ? v : \"\"); }");
@@ -99,6 +129,7 @@ impl CodeGen {
         self.emit_line(")(x)");
         self.emit_line("#define gage_println(x) do { gage_print(x); printf(\"\\n\"); fflush(stdout); } while(0)\n");
 
+        // Forward declare classes
         for stmt in &program.statements {
             if let Stmt::Class(c) = stmt {
                 self.emit_line(&format!("typedef struct {} {{", c.name));
@@ -117,6 +148,7 @@ impl CodeGen {
             }
         }
 
+        // Functions
         for stmt in &program.statements {
             if let Stmt::Function(f) = stmt {
                 let mut params_str = String::new();
@@ -133,8 +165,10 @@ impl CodeGen {
             }
         }
 
+        // Class Methods
         for stmt in &program.statements {
             if let Stmt::Class(c) = stmt {
+                self.current_class = Some(c.name.clone());
                 for m in &c.methods {
                     let mut params_str = format!("{}* this", c.name);
                     for p in &m.params { params_str.push_str(&format!(", double {}", p)); }
@@ -145,9 +179,11 @@ impl CodeGen {
                     self.indent_level -= 1;
                     self.emit_line("}\n");
                 }
+                self.current_class = None;
             }
         }
 
+        // Main
         self.emit_line("int main(void) {");
         self.indent_level += 1;
         for stmt in &program.statements {
@@ -165,6 +201,9 @@ impl CodeGen {
     fn gen_stmt(&mut self, stmt: &Stmt) {
         match stmt {
             Stmt::Let(name, expr) => {
+                if let Expr::New(c_name, _) = expr {
+                    self.var_classes.insert(name.clone(), c_name.clone());
+                }
                 let e = self.gen_expr(expr);
                 self.emit_line(&format!("__auto_type {} = {};", name, e));
             }
@@ -181,7 +220,7 @@ impl CodeGen {
                 let a = self.gen_expr(arr);
                 let i = self.gen_expr(idx);
                 let e = self.gen_expr(expr);
-                self.emit_line(&format!("(({})->data[(size_t)({})]) = (void*)(size_t)({});", a, i, e));
+                self.emit_line(&format!("(({})->data[(size_t)({})]) = (double)({});", a, i, e));
             }
             Stmt::Print(expr) => {
                 let e = self.gen_expr(expr);
@@ -230,7 +269,7 @@ impl CodeGen {
                 let it = self.gen_expr(iter);
                 self.emit_line(&format!("for (size_t _i = 0; _i < ({})->length; ++_i) {{", it));
                 self.indent_level += 1;
-                self.emit_line(&format!("__auto_type {} = ({})->data[_i];", var, it));
+                self.emit_line(&format!("double {} = ({})->data[_i];", var, it));
                 for s in body { self.gen_stmt(s); }
                 self.indent_level -= 1;
                 self.emit_line("}");
@@ -278,11 +317,18 @@ impl CodeGen {
             }
             Expr::MethodCall(obj, method, args) => {
                 let o = self.gen_expr(obj);
+                let class_name = match obj.as_ref() {
+                    Expr::This => self.current_class.clone(),
+                    Expr::Ident(name) => self.var_classes.get(name).cloned(),
+                    _ => None,
+                }.or_else(|| self.method_classes.get(method).cloned())
+                 .unwrap_or_else(|| o.clone());
+
                 let mut args_str = o.clone();
                 for a in args {
                     args_str.push_str(&format!(", {}", self.gen_expr(a)));
                 }
-                format!("{}__{}({})", o, method, args_str)
+                format!("{}__{}({})", class_name, method, args_str)
             }
             Expr::Call(name, args) => {
                 let mut args_str = String::new();
@@ -295,7 +341,7 @@ impl CodeGen {
             Expr::Array(elements) => {
                 let mut s = format!("gage_create_array({})", elements.len());
                 for el in elements {
-                    s = format!("(gage_array_push({}, (void*)(size_t)({})), {})", s, self.gen_expr(el), s);
+                    s = format!("(gage_array_push({}, (double)({})), {})", s, self.gen_expr(el), s);
                 }
                 s
             }

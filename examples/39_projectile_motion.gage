@@ -1,0 +1,16 @@
+// 39_projectile_motion.gage
+let pos_y = 0.0;
+let vel_y = 40.0;
+let g = -9.8;
+let step_count = 0;
+
+println("=== Cannonball Trajectory ===");
+step(dt) {
+    if (step_count < 4) {
+        vel_y = vel_y + (g * dt);
+        pos_y = pos_y + (vel_y * dt);
+        print("Height Y: ");
+        println(pos_y);
+        step_count = step_count + 1;
+    }
+}

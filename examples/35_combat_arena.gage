@@ -1,0 +1,31 @@
+// 35_combat_arena.gage
+class Fighter {
+    name;
+    hp;
+    atk;
+
+    fn set_fighter(n, h, a) {
+        this.name = n;
+        this.hp = h;
+        this.atk = a;
+    }
+
+    fn strike(target_hp) {
+        return target_hp - this.atk;
+    }
+}
+
+let warrior = new Fighter();
+warrior.set_fighter(1, 100, 30);
+
+let boss_hp = 60;
+println("=== Arena Fight ===");
+boss_hp = warrior.strike(boss_hp);
+print("Boss HP after Round 1: ");
+println(boss_hp);
+boss_hp = warrior.strike(boss_hp);
+print("Boss HP after Round 2: ");
+println(boss_hp);
+if (boss_hp <= 0) {
+    println("Boss defeated!");
+}

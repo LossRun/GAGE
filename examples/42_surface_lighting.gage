@@ -1,0 +1,7 @@
+// 42_surface_lighting.gage
+let surface_normal = normalize(vec3(0.0, 1.0, 0.0));
+let light_dir = normalize(vec3(0.0, 1.0, 0.5));
+
+let diffuse = dot(surface_normal, light_dir);
+print("Lambertian diffuse brightness: ");
+println(diffuse);

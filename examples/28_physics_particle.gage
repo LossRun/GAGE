@@ -1,0 +1,16 @@
+// 28_physics_particle.gage
+let y = 100.0;
+let velocity_y = 0.0;
+let gravity = -9.8;
+let frames = 0;
+
+println("=== Particle Physics Falling ===");
+step(dt) {
+    if (frames < 5) {
+        velocity_y = velocity_y + (gravity * dt);
+        y = y + (velocity_y * dt);
+        print("Frame Y position: ");
+        println(y);
+        frames = frames + 1;
+    }
+}

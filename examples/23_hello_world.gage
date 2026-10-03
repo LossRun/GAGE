@@ -1,2 +1,5 @@
 // Gage requires semicolons at the end of every statement!
 println("Hello, World!");
+
+// You can also use print() for no auto next line
+print("Hello, World!");
