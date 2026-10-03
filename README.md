@@ -457,7 +457,7 @@ GAGE is distributed under the terms of the **MIT License**.
 
 See [`LICENSE`](LICENSE) for the complete license text.
 
-Copyright © 2026 Akarsh Tyagi.
+Copyright © 2026 LossRun.
 
 ---
 
