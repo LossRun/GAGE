@@ -1,20 +1,13 @@
-// Project 3: Battery Management System (BMS) Monitor
 let cell_voltage = 3.85;
 let cell_count = 4.0;
 let pack_voltage = cell_voltage * cell_count;
 let temperature_c = 34.0;
-let discharge_current_a = 12.5;
-
-println("=== Battery Management System (BMS) ===");
-println("Total Pack Voltage (V):");
+println("=== Battery Management System ===");
 println(pack_voltage);
-println("Current Draw (A):");
-println(discharge_current_a);
-
-if pack_voltage < 12.8 {
-    println("BMS Alert: Undervoltage detected! Cutoff triggered.");
-} else if temperature_c > 60.0 {
-    println("BMS Alert: Overheating! Thermal throttling enabled.");
+if (pack_voltage < 12.8) {
+    println("BMS Alert: Undervoltage");
+} else if (temperature_c > 60.0) {
+    println("BMS Alert: Overheating");
 } else {
     println("BMS Status: System Nominal");
 }

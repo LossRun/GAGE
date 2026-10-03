@@ -1,21 +1,14 @@
-// Project 16: API Rate Limiter Simulation
 let max_tokens = 10;
 let current_tokens = 4;
 let refill_rate = 2;
 let requests_received = 6;
-
-println("=== Token Bucket Rate Limiter ===");
 current_tokens = current_tokens + refill_rate;
-if current_tokens > max_tokens {
+if (current_tokens > max_tokens) {
     current_tokens = max_tokens;
 }
-
-if requests_received <= current_tokens {
+if (requests_received <= current_tokens) {
     current_tokens = current_tokens - requests_received;
-    println("Status: 200 OK - All Requests Processed");
+    println("200 OK");
 } else {
-    println("Status: 429 Too Many Requests - Throttled");
+    println("429 Too Many Requests");
 }
-
-println("Tokens remaining in bucket:");
-println(current_tokens);

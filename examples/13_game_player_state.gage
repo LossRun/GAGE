@@ -1,22 +1,14 @@
-// Project 13: RPG Player Health & Shield System
 let max_hp = 100.0;
 let current_hp = 100.0;
 let shield = 50.0;
 let incoming_damage = 75.0;
-
-println("=== Combat Damage Calculator ===");
-println("Incoming Damage:");
-println(incoming_damage);
-
-if incoming_damage <= shield {
+println("=== Damage Calculation ===");
+if (incoming_damage <= shield) {
     shield = shield - incoming_damage;
 } else {
-    let remainder = incoming_damage - shield;
+    let rem = incoming_damage - shield;
     shield = 0.0;
-    current_hp = current_hp - remainder;
+    current_hp = current_hp - rem;
 }
-
-println("Remaining Shield:");
 println(shield);
-println("Remaining Health:");
 println(current_hp);

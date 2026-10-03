@@ -1,13 +1,9 @@
-// Project 10: 2D Planet Gravitational Orbit Step
 let planet_pos = vec2(0.0, 1000.0);
 let planet_vel = vec2(30.0, 0.0);
 let sun_gravity_dir = vec2(0.0, -0.98);
-
-println("=== Orbital Gravity Step ===");
+println("=== Orbital Step ===");
 step(dt) {
     planet_vel = planet_vel + (sun_gravity_dir * dt);
     planet_pos = planet_pos + (planet_vel * dt);
 }
-
-println("New Planet Coordinates:");
 println(planet_pos);

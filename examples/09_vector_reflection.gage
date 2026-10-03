@@ -1,12 +1,5 @@
-// Project 9: Ray / Surface Vector Bounce
 let ray_dir = vec3(1.0, -1.0, 0.0);
 let surface_normal = vec3(0.0, 1.0, 0.0);
-
-// Reflection: r = d - 2*(d . n)*n
 let reflected = ray_dir - (surface_normal * -2.0);
-
-println("=== Ray Surface Reflection ===");
-println("Incoming Ray:");
-println(ray_dir);
-println("Reflected Ray:");
+println("=== Vector Reflection ===");
 println(reflected);

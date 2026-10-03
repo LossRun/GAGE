@@ -1,12 +1,7 @@
-// Project 11: Unit Metric-to-Imperial Converter
 let km = 120.0;
 let miles = km * 0.621371;
-
 let liters = 45.0;
 let gallons = liters * 0.264172;
-
 println("=== Unit Converter ===");
-println("Kilometers to Miles:");
 println(miles);
-println("Liters to Gallons:");
 println(gallons);

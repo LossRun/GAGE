@@ -1,21 +1,16 @@
-// Project 6: Drone Altitude PID Controller
 let target_alt = 100.0;
 let current_alt = 20.0;
 let kp = 0.6;
 let kd = 0.05;
 let last_error = target_alt - current_alt;
-
 println("=== PID Altitude Controller ===");
 let iter = 0;
-while iter < 5 {
+while (iter < 5) {
     let error = target_alt - current_alt;
     let derivative = error - last_error;
     let throttle = (error * kp) + (derivative * kd);
-    
     current_alt = current_alt + (throttle * 0.2);
     last_error = error;
-    
-    println("Current Drone Altitude:");
     println(current_alt);
     iter = iter + 1;
 }

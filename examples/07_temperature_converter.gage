@@ -1,12 +1,7 @@
-// Project 7: Temperature Converter (C to F & K)
 let celsius = 37.0;
 let fahrenheit = (celsius * 1.8) + 32.0;
 let kelvin = celsius + 273.15;
-
 println("=== Temperature Converter ===");
-println("Celsius:");
 println(celsius);
-println("Fahrenheit:");
 println(fahrenheit);
-println("Kelvin:");
 println(kelvin);

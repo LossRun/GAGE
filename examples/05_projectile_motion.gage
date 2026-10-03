@@ -1,16 +1,13 @@
-// Project 5: 3D Projectile Motion Simulation
 let pos = vec3(0.0, 0.0, 0.0);
 let velocity = vec3(15.0, 25.0, 0.0);
 let gravity = vec3(0.0, -9.81, 0.0);
-
-println("=== 3D Projectile Motion Simulation ===");
+println("=== 3D Projectile Motion ===");
 let step_idx = 0;
-while step_idx < 6 {
+while (step_idx < 6) {
     step(dt) {
         velocity = velocity + (gravity * dt);
         pos = pos + (velocity * dt);
     }
-    println("Position at tick:");
     println(pos);
     step_idx = step_idx + 1;
 }

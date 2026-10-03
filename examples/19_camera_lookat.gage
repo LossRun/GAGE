@@ -1,13 +1,5 @@
-// Project 19: 3D Camera Look Direction Vector
 let cam_pos = vec3(0.0, 5.0, 15.0);
 let target_pos = vec3(0.0, 1.0, 0.0);
-
 let forward_vector = target_pos - cam_pos;
-
-println("=== 3D View Vector ===");
-println("Camera Position:");
-println(cam_pos);
-println("LookAt Target Position:");
-println(target_pos);
-println("Unnormalized Forward Vector:");
+println("=== Camera Vector ===");
 println(forward_vector);

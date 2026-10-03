@@ -1,22 +1,11 @@
-// Project 1: Multi-Operation Math Calculator
 let a = 40.0;
 let b = 8.0;
-
 let sum = a + b;
 let diff = a - b;
 let prod = a * b;
 let quot = a / b;
-
 println("=== Basic Calculator ===");
-println("Input A:");
-println(a);
-println("Input B:");
-println(b);
-println("Addition (A + B):");
 println(sum);
-println("Subtraction (A - B):");
 println(diff);
-println("Multiplication (A * B):");
 println(prod);
-println("Division (A / B):");
 println(quot);

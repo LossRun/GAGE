@@ -1,20 +1,12 @@
-// Project 18: Step Search Simulation
 let target = 42;
 let current_index = 0;
 let found = false;
-
-while current_index < 50 {
-    if current_index == target {
+while (current_index < 50) {
+    if (current_index == target) {
         found = true;
         break;
     }
     current_index = current_index + 1;
 }
-
-println("=== Step Search ===");
-if found {
-    println("Target element located at index:");
-    println(current_index);
-} else {
-    println("Target not found");
-}
+println("=== Search Test ===");
+println(current_index);
