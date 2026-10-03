@@ -1,3 +1,4 @@
+#![allow(warnings)]
 pub mod ast;
 pub mod bytecode;
 pub mod codegen;

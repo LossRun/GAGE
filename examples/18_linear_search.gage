@@ -10,3 +10,4 @@ while (current_index < 50) {
 }
 println("=== Search Test ===");
 println(current_index);
+print("Hello, World")

@@ -1,3 +1,4 @@
+#![allow(warnings)]
 use crate::ast::{BinaryOp, Expr, Program, Stmt, UnaryOp};
 use crate::token::{Token, TokenType};
 

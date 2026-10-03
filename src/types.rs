@@ -1,3 +1,4 @@
+#![allow(warnings)]
 use crate::ast::{BinaryOp, Expr, Program, Stmt};
 use std::collections::HashMap;
 

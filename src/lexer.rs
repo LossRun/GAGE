@@ -1,3 +1,4 @@
+#![allow(warnings)]
 use crate::token::{Token, TokenType};
 
 pub struct Lexer {

@@ -1,3 +1,4 @@
+#![allow(warnings)]
 use crate::bytecode::{Chunk, OpCode, Value};
 use std::collections::HashMap;
 

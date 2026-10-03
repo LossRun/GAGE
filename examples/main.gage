@@ -1,5 +1,0 @@
-function main() => int {
-    let mut x = 10
-    println(x)
-    return 0
-}
