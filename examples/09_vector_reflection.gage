@@ -2,8 +2,7 @@
 let ray_dir = vec3(1.0, -1.0, 0.0);
 let surface_normal = vec3(0.0, 1.0, 0.0);
 
-// Reflection formula: r = d - 2*(d . n)*n
-// For surface_normal (0, 1, 0), dot product is -1.0
+// Reflection: r = d - 2*(d . n)*n
 let reflected = ray_dir - (surface_normal * -2.0);
 
 println("=== Ray Surface Reflection ===");

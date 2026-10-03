@@ -73,7 +73,7 @@ fn compile_to_c(source: &str) -> Result<String, String> {
 
 fn run_via_vm(source: &str) -> Result<(), String> {
     let program = parse_and_validate(source)?;
-    let mut comp = Compiler::new();
+    let comp = Compiler::new();
     let chunk = comp.compile(&program).map_err(|e| format!("[Bytecode Error] {:?}", e))?;
     let mut vm = VM::new(chunk);
     vm.run().map_err(|e| format!("[Runtime Error] {:?}", e))?;
@@ -98,7 +98,8 @@ fn invoke_c_compiler(c_code: &str, output_binary: &Path) -> Result<(), String> {
     for cc in compilers {
         let mut cmd = Command::new(cc);
         cmd.arg("-O3")
-           .arg("-Wall")
+           .arg("-w")
+           .arg("-Wno-everything")
            .arg(&temp_c)
            .arg("-o")
            .arg(output_binary);
@@ -107,13 +108,13 @@ fn invoke_c_compiler(c_code: &str, output_binary: &Path) -> Result<(), String> {
             cmd.arg("-lm");
         }
 
-        match cmd.status() {
-            Ok(status) if status.success() => {
+        match cmd.output() {
+            Ok(output) if output.status.success() => {
                 success = true;
                 break;
             }
-            Ok(status) => {
-                last_err = format!("Compiler '{}' exited with status: {}", cc, status);
+            Ok(output) => {
+                last_err = format!("Compiler '{}' exited with error:\n{}", cc, String::from_utf8_lossy(&output.stderr));
             }
             Err(e) => {
                 last_err = format!("Could not launch '{}': {}", cc, e);

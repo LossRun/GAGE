@@ -3,7 +3,6 @@ let red_color = vec4(1.0, 0.0, 0.0, 1.0);
 let blue_color = vec4(0.0, 0.0, 1.0, 1.0);
 let alpha_t = 0.5;
 
-// Linear interpolation: A + (B - A) * t
 let delta = blue_color - red_color;
 let purple = red_color + (delta * alpha_t);
 
