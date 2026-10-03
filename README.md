@@ -1,470 +1,106 @@
-<div align="center">
+# ⚡ Gage Programming Language (v2.0)
 
-<img src="logo.png" alt="GAGE Logo" width="180">
-
-# GAGE
-
-### GAGE UNIFIED TOOLCHAIN
-**Native LLVM Compiler & Fast VM**
-
-[![License](https://img.shields.io/badge/License-MIT-00f5ff?style=flat-square)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Active-39ff14?style=flat-square)](#)
-[![Backend](https://img.shields.io/badge/Backend-LLVM%20%2F%20Clang-00f5ff?style=flat-square)](#)
-[![Architecture](https://img.shields.io/badge/Architecture-ARM64%20%7C%20x86__64-39ff14?style=flat-square)](#)
-[![Platforms](https://img.shields.io/badge/Platforms-Linux%20%7C%20Windows%20%7C%20macOS%20%7C%20Android-orange?style=flat-square)](#)
-[![Language](https://img.shields.io/badge/Language-GAGE-00f5ff?style=flat-square)](#)
-
-**A high-performance, ahead-of-time compiled native systems programming language designed for simulations, game engines, graphics, vector mathematics, and low-latency systems.**
-
-</div>
+A high-performance, expressive programming language engineered for game development, physics simulations, and graphics scripting. Gage compiles directly to optimized native machine code via C/Clang and features a custom bytecode virtual machine.
 
 ---
 
-## ⚡ What is GAGE?
+## 🌟 Key Features in Gage 2.0
 
-**GAGE** is a native systems programming language and unified toolchain built around two execution paths:
-
-- **AOT Native Compilation** powered by LLVM/Clang
-- **Fast Bytecode VM Execution** for rapid development and testing
-
-GAGE is designed to combine the productivity of a modern language with the performance and control expected from native systems software.
-
-Source files such as `.gage`, `.gg`, and `.gag` can be compiled directly into native machine-code binaries or executed through the integrated virtual machine.
-
----
-
-## ✨ Core Features
-
-### 🚀 Native AOT Compilation
-
-GAGE can compile source code directly into native **ARM64** and **x86_64** binaries through an LLVM/Clang-based compilation pipeline.
-
-- Native machine-code generation
-- Optimized compilation
-- `-O3` optimization support
-- Standalone executable output
-- No managed runtime required
-
-### 📐 First-Class Vector Mathematics
-
-Vectors are treated as first-class language primitives rather than external library abstractions.
-
-Supported primitives include:
-
-- `vec2`
-- `vec3`
-- `vec4`
-
-Designed for:
-
-- Physics
-- Graphics
-- Simulations
-- Game engines
-- Numerical computation
-
-### ⏱️ Simulation-Oriented Design
-
-GAGE provides primitives designed around deterministic simulation workloads.
-
-```text
-step(dt)
-```
-
-This makes the language suitable for:
-
-- Physics simulations
-- Game logic
-- Animation systems
-- Dynamic environments
-- Real-time computation
-
-### 🛡️ Static Semantic Checking
-
-Before native compilation, GAGE performs semantic and type validation.
-
-The compiler can detect problems such as:
-
-- Undefined identifiers
-- Invalid scopes
-- Type conflicts
-- Invalid expressions
-- Semantic errors
-
-### ⚡ Dual Execution Engine
-
-GAGE provides two primary execution modes:
-
-| Mode | Command | Purpose |
-|---|---|---|
-| Native AOT | `gage build` | Produce optimized native binaries |
-| Native Run | `gage run` | Compile and execute natively |
-| Bytecode VM | `gage vm` | Fast execution without an external C compiler |
-| Semantic Check | `gage check` | Validate source without compiling |
-| C Emission | `gage emit-c` | Inspect generated intermediate C |
-
-### 🌐 Cross-Platform Toolchain
-
-GAGE is designed to operate across:
-
-- Android / Termux
-- Linux
-- Windows
-- macOS
-- ARM64
-- x86_64
+- 🏛️ **Object-Oriented Programming**: First-class `class` definitions, instance fields, member methods, and `new` instantiation with `this` pointer scoping.
+- ⚡ **First-Class Functions**: Multi-argument functions (`fn`), return values (`return`), and recursion.
+- 📐 **Native SIMD Vector Algebra**: Hardware-accelerated `vec2`, `vec3`, and `vec4` primitives with built-in `dot()`, `cross()`, `length()`, and `normalize()`.
+- 📦 **Dynamic Collections**: Dynamic arrays (`[1, 2, 3]`), 0-based index subscripting (`arr[i]`), and `for item in array` iterators.
+- 💾 **System I/O & Persistence**: Inline `print()`, newline `println()`, terminal `input("prompt")`, and native file operations (`read_file`, `write_file`).
+- ⏱️ **Game Loop & Physics Primitives**: Dedicated `step(dt)` simulation blocks for delta-time integration.
+- 🚀 **Dual Execution Targets**: Native ahead-of-time (AOT) compilation via Clang or instant bytecode VM execution.
 
 ---
 
-## 🏗️ Compilation Architecture
+## 🚀 Quick Start
 
-```text
-                    ┌─────────────────────┐
-                    │     GAGE SOURCE     │
-                    │ .gage / .gg / .gag  │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │  Lexer / Tokenizer  │
-                    │      lexer.rs       │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │      AST Parser     │
-                    │      parser.rs      │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │ Semantic / Type     │
-                    │      Checker        │
-                    │      types.rs       │
-                    └──────────┬──────────┘
-                               │
-                  ┌────────────┴────────────┐
-                  │                         │
-                  ▼                         ▼
-        ┌──────────────────┐      ┌──────────────────┐
-        │   NATIVE AOT     │      │    BYTECODE VM   │
-        │      PATH        │      │       PATH       │
-        └────────┬─────────┘      └────────┬─────────┘
-                 │                         │
-                 ▼                         ▼
-        ┌──────────────────┐      ┌──────────────────┐
-        │    codegen.rs    │      │   compiler.rs    │
-        │    C / SIMD      │      │     Bytecode     │
-        └────────┬─────────┘      └────────┬─────────┘
-                 │                         │
-                 ▼                         ▼
-        ┌──────────────────┐      ┌──────────────────┐
-        │   LLVM / Clang   │      │      vm.rs       │
-        │     Backend      │      │  Virtual Machine │
-        └────────┬─────────┘      └────────┬─────────┘
-                 │                         │
-                 ▼                         ▼
-        ┌──────────────────┐      ┌──────────────────┐
-        │ Native Machine   │      │   Direct VM      │
-        │     Binary       │      │     Output       │
-        └──────────────────┘      └──────────────────┘
-```
-
-> **Note:** Detailed grammar rules, language keywords, syntax references, and standard-library documentation are maintained separately in [`DOCS.txt`](DOCS.txt).
-
----
-
-## 💻 Cross-Platform Installation
-
-Clone the repository and run the setup script for your platform.
-
-### 1. Android — Termux 📱
-
+### 1. Build & Install (Termux / Linux)
 ```bash
-git clone https://github.com/akarshtyagi08-lgtm/GAGE.git
-cd GAGE
-bash gage-setup.sh
-```
+cargo build --release
+cp target/release/gage "$PREFIX/bin/gage"
+chmod +x "$PREFIX/bin/gage"
 
-### 2. Linux — Ubuntu, Debian, Fedora, Arch 🐧
+### 2. Run a Program
+# Compile and run natively via Clang
+gage main.gage
 
-```bash
-git clone https://github.com/akarshtyagi08-lgtm/GAGE.git
-cd GAGE
-sudo bash gage-setup.sh
-```
+# Run via bytecode VM
+gage --vm main.gage
 
-### 3. macOS — Apple Silicon & Intel 🍎
+💻 Code at a Glance
+Classes & Methods
+class Player {
+    health;
+    power;
 
-```bash
-git clone https://github.com/akarshtyagi08-lgtm/GAGE.git
-cd GAGE
-bash gage-setup.sh
-```
+    fn setup(hp, atk) {
+        this.health = hp;
+        this.power = atk;
+    }
 
-### 4. Windows — PowerShell 🪟
-
-```powershell
-git clone https://github.com/akarshtyagi08-lgtm/GAGE.git
-cd GAGE
-powershell -ExecutionPolicy Bypass -File .\install.ps1
-```
-
----
-
-## 🛠️ Toolchain CLI Reference
-
-The unified `gage` executable handles compilation, validation, execution, and toolchain management across supported platforms.
-
-| Command | Description |
-|---|---|
-| `gage build <file> [-o bin]` | Compile source into a standalone native binary |
-| `gage run <file>` | Compile and execute using the native backend |
-| `gage vm <file>` | Execute source using the integrated bytecode VM |
-| `gage check <file>` | Run syntax, semantic, and type validation |
-| `gage emit-c <file>` | Generate and inspect intermediate C code |
-| `gage delete` | Safely remove installed GAGE binaries and local data |
-| `gage --info` | Display target architecture, OS, and toolchain information |
-| `gage -v` | Display the compiler version |
-| `gage --version` | Display the compiler version |
-| `gage -h` | Display CLI help |
-| `gage --help` | Display the complete CLI manual |
-
----
-
-## 📁 Repository Structure
-
-```text
-GAGE/
-│
-├── src/
-│   ├── ast.rs
-│   │   └── Abstract Syntax Tree nodes
-│   ├── token.rs
-│   │   └── Lexical tokens and source spans
-│   ├── lexer.rs
-│   │   └── Scanner and tokenizer
-│   ├── parser.rs
-│   │   └── Recursive-descent parser
-│   ├── types.rs
-│   │   └── Semantic analyzer and type checker
-│   ├── codegen.rs
-│   │   └── Native AOT and SIMD code generation
-│   ├── bytecode.rs
-│   │   └── Bytecode instructions and chunks
-│   ├── compiler.rs
-│   │   └── Bytecode compiler
-│   ├── vm.rs
-│   │   └── Stack-based virtual machine
-│   └── main.rs
-│       └── Unified CLI entrypoint
-│
-├── examples/
-│   └── Example programs and simulation tests
-│
-├── logo.png
-│   └── GAGE project logo
-│
-├── gage-setup.sh
-│   └── Unix and Android installer
-│
-├── install.ps1
-│   └── Windows installer
-│
-├── Cargo.toml
-│   └── Rust package and build configuration
-│
-├── LICENSE
-│   └── MIT License
-│
-├── DOCS.txt
-│   └── Language specification and syntax reference
-│
-└── README.md
-    └── Project documentation
-```
-
----
-
-## 🧪 Example
-
-A minimal GAGE program:
-
-```text
-fn main() {
-    print("Hello from GAGE!");
+    fn attack(target_hp) {
+        return target_hp - this.power;
+    }
 }
-```
 
-Build it:
+let hero = new Player();
+hero.setup(100, 25);
+let boss_hp = hero.attack(80);
+println(boss_hp);
 
-```bash
-gage build hello.gage -o hello
-```
+3D Vector Math & Lighting
+let normal = normalize(vec3(0.0, 1.0, 0.0));
+let light_dir = normalize(vec3(0.0, 1.0, 0.5));
+let brightness = dot(normal, light_dir);
+println(brightness);
 
-Run it:
+Arrays & Iteration
+let scores = [450, 1200, 890, 2400];
+let high = 0;
+for s in scores {
+    if (s > high) {
+        high = s;
+    }
+}
+println(high);
 
-```bash
-./hello
-```
+File I/O & Input
+let name = input("Enter player name: ");
+let saved = write_file("save.txt", name);
+if (saved) {
+    println(read_file("save.txt"));
+}
 
-Or execute it directly:
-
-```bash
-gage run hello.gage
-```
-
-For rapid VM testing:
-
-```bash
-gage vm hello.gage
-```
-
----
-
-## 📐 Vector Example
-
-GAGE is designed with vector-oriented workloads in mind.
-
-```text
-let position = vec3(10.0, 5.0, 2.0);
-let velocity = vec3(1.0, 0.0, -1.0);
-
-let next_position = position + velocity;
-```
-
-This style is intended to make common mathematical and simulation operations concise and readable.
-
----
-
-## 🔬 Compiler Pipeline
-
-```text
-Source
-  │
-  ▼
-Lexer
-  │
-  ▼
-Parser
-  │
-  ▼
-AST
-  │
-  ▼
-Semantic Analysis
-  │
-  ├───────────────────┐
-  │                   │
-  ▼                   ▼
-AOT Backend        VM Backend
-  │                   │
-  ▼                   ▼
-LLVM / Clang       Bytecode
-  │                   │
-  ▼                   ▼
-Native Binary      VM Runtime
-```
-
-The separation between the language frontend and execution backends allows GAGE to support both native production builds and rapid development-time execution.
-
----
-
-## 🎯 Designed For
-
-GAGE is intended for workloads where native performance, predictable execution, and efficient numerical operations are important.
-
-- 🎮 Game engines
-- 🧮 Physics simulations
-- 🎨 Graphics computation
-- 🌌 Scientific simulations
-- 📐 Vector mathematics
-- ⚙️ Systems programming
-- 🚀 Performance-sensitive applications
-- 📱 Native ARM64 applications
-- 🖥️ Low-latency workloads
-
----
-
-## 🔧 Toolchain Philosophy
-
-### Native First
-
-Programs should be capable of becoming real native machine-code executables.
-
-### Fast Iteration
-
-The integrated VM provides a quick execution path during development.
-
-### Predictable Compilation
-
-Semantic and type validation happens before code generation.
-
-### Minimal Runtime Overhead
-
-Native builds do not depend on a heavyweight managed runtime.
-
-### Portable Tooling
-
-The same unified `gage` interface is designed to work across supported platforms.
-
----
-
-## 📊 Execution Modes
-
-| Feature | AOT | VM |
-|---|:---:|:---:|
-| Native machine code | ✅ | ❌ |
-| LLVM / Clang backend | ✅ | ❌ |
-| Fast startup | — | ✅ |
-| External compiler required | Usually | ❌ |
-| Standalone executable | ✅ | ❌ |
-| Development testing | ✅ | ✅ |
-| Native performance | ✅ | — |
-
----
-
-## 🧭 Roadmap
-
-The GAGE architecture is designed to evolve toward a broader native development ecosystem.
-
-Potential development areas include:
-
-- Expanded standard library
-- More vector and matrix primitives
-- Additional optimization passes
-- Improved compiler diagnostics
-- More complete language tooling
-- Debugging support
-- Editor integration
-- Expanded platform support
-- Advanced SIMD code generation
-- Richer simulation primitives
-
----
-
-## 🤝 Contributing
-
-Contributions, experiments, bug reports, and language-design discussions are welcome.
-
-Before submitting major changes, review the compiler architecture and language documentation in [`DOCS.txt`](DOCS.txt).
-
----
-
-## 📄 License
-
-GAGE is distributed under the terms of the **MIT License**.
-
-See [`LICENSE`](LICENSE) for the complete license text.
-
-Copyright © 2026 LossRun.
-
----
-
-<div align="center">
-
-<img src="logo.png" alt="GAGE Logo" width="120">
-
-**Native performance. Vector-first design. Unified tooling.**
-
-</div>
+📂 Showcase Examples (1–43)
+The repository includes 43 working example scripts in examples/:
+ * 01–23: Hello world, basic control flow, arithmetic, while/loop, step blocks.
+ * 24_functions_recursion.gage: Functions, returns, and recursive factorial.
+ * 25_classes_player.gage: Classes, methods, and this state.
+ * 26_enemy_ai.gage: State mutations and combat logic.
+ * 27_vector_math.gage: Linear algebra operations (dot, cross, length, normalize).
+ * 28_physics_particle.gage: Verlet/Euler delta-time gravity motion.
+ * 29_dynamic_arrays.gage: Arrays and for-in traversal.
+ * 30_inventory_system.gage: Item storage and value aggregation.
+ * 31_interactive_input.gage: Real-time CLI terminal prompting.
+ * 32_save_load_game.gage: Disk storage and data deserialization.
+ * 33_raycast_distance.gage: 3D raycast distance checks.
+ * 34_orbit_simulation.gage: Vector velocity integration in orbit.
+ * 35_combat_arena.gage: Turn-based RPG boss battle loop.
+ * 36_score_leaderboard.gage: High score calculation over collections.
+ * 37_game_loop_timer.gage: Accumulator timing inside step(dt).
+ * 38_camera_follow.gage: Smooth vector Lerp camera tracking.
+ * 39_projectile_motion.gage: Ballistic gravity physics trajectory.
+ * 40_consumables.gage: Object state healing and caps.
+ * 41_game_logger.gage: File-based event logging.
+ * 42_surface_lighting.gage: Lambertian shader diffuse computation.
+ * 43_mini_rpg_dungeon.gage: Integrated Class, Array, Vector, and I/O gameplay demo.
+📖 Documentation
+Check the docs/ directory for detailed manuals:
+ * Complete Syntax Reference
+ * Architecture & VM Specification
+📜 License
+MIT License. Built with Rust and C.
