@@ -1,0 +1,4 @@
+gage 0.1.0-alpha
+build: rust-vm
+target: simulations & math
+formats: .gage, .gg, .gag

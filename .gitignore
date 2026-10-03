@@ -1,0 +1,3 @@
+target/
+**/*.tmp.c
+**/.gage_exec_bin*
