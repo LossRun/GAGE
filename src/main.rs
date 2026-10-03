@@ -1,13 +1,14 @@
 #![allow(warnings)]
-pub mod ast;
-pub mod bytecode;
-pub mod codegen;
-pub mod compiler;
-pub mod lexer;
-pub mod parser;
-pub mod token;
-pub mod types;
-pub mod vm;
+
+mod token;
+mod lexer;
+mod ast;
+mod parser;
+mod types;
+mod codegen;
+mod bytecode;
+mod vm;
+mod compiler;
 
 use std::env;
 use std::fs;
@@ -74,7 +75,7 @@ fn compile_to_c(source: &str) -> Result<String, String> {
 
 fn run_via_vm(source: &str) -> Result<(), String> {
     let program = parse_and_validate(source)?;
-    let comp = Compiler::new();
+    let mut comp = Compiler::new();
     let chunk = comp.compile(&program).map_err(|e| format!("[Bytecode Error] {:?}", e))?;
     let mut vm = VM::new(chunk);
     vm.run().map_err(|e| format!("[Runtime Error] {:?}", e))?;

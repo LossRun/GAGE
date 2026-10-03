@@ -2,13 +2,76 @@
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenType {
-    Let, If, Else, While, Loop, Break, Step, Fn, Return, True, False, Nil,
-    Print, Println, Input, ReadFile, WriteFile,
-    Vec2, Vec3, Vec4,
-    Ident(String), Int(i64), Float(f64), Str(String),
-    Plus, Minus, Star, Slash, Percent, Assign,
-    EqualEqual, BangEqual, Less, LessEqual, Greater, GreaterEqual, AndAnd, OrOr, Bang,
-    LParen, RParen, LBrace, RBrace, Comma, Semicolon,
+    // Declarations & OOP
+    Let,
+    Fn,
+    Return,
+    Class,
+    New,
+    This,
+
+    // Control Flow
+    If,
+    Else,
+    While,
+    For,
+    In,
+    Loop,
+    Break,
+    Step,
+
+    // Literals & Primitives
+    True,
+    False,
+    Nil,
+    Ident(String),
+    Int(i64),
+    Float(f64),
+    Str(String),
+
+    // Vector Types
+    Vec2,
+    Vec3,
+    Vec4,
+
+    // Built-in Functions
+    Print,
+    Println,
+    Input,
+    ReadFile,
+    WriteFile,
+    Dot,
+    Cross,
+    Length,
+    Normalize,
+
+    // Operators & Delimiters
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    Percent,
+    Assign,
+    EqualEqual,
+    BangEqual,
+    Less,
+    LessEqual,
+    Greater,
+    GreaterEqual,
+    AndAnd,
+    OrOr,
+    Bang,
+    DotOp,
+
+    LParen,
+    RParen,
+    LBrace,
+    RBrace,
+    LBracket,
+    RBracket,
+    Comma,
+    Semicolon,
+
     EOF,
 }
 

@@ -1,4 +1,7 @@
-#![allow(warnings)]
+import os
+import subprocess
+
+codegen_code = r'''#![allow(warnings)]
 use crate::ast::*;
 
 pub struct CodeGen {
@@ -348,3 +351,8 @@ impl CodeGen {
         }
     }
 }
+'''
+
+with open("/sdcard/GAGE/src/codegen.rs", "w") as f:
+    f.write(codegen_code)
+print("✔ codegen.rs updated cleanly!")

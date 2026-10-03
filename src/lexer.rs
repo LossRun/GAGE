@@ -7,17 +7,21 @@ pub struct LexError {
     pub message: String,
 }
 
-pub struct Lexer<'a> {
-    source: &'a str,
+pub struct Lexer {
     chars: Vec<char>,
     pos: usize,
     line: usize,
     col: usize,
 }
 
-impl<'a> Lexer<'a> {
-    pub fn new(source: &'a str) -> Self {
-        Self { source, chars: source.chars().collect(), pos: 0, line: 1, col: 1 }
+impl Lexer {
+    pub fn new(source: &str) -> Self {
+        Self {
+            chars: source.chars().collect(),
+            pos: 0,
+            line: 1,
+            col: 1,
+        }
     }
 
     fn peek(&self) -> Option<char> { self.chars.get(self.pos).copied() }
@@ -33,6 +37,7 @@ impl<'a> Lexer<'a> {
 
     pub fn tokenize(&mut self) -> Result<Vec<Token>, LexError> {
         let mut tokens = Vec::new();
+
         while let Some(ch) = self.peek() {
             let start_line = self.line;
             let start_col = self.col;
@@ -54,8 +59,11 @@ impl<'a> Lexer<'a> {
                 ')' => { self.advance(); tokens.push(Token::new(TokenType::RParen, start_line, start_col)); }
                 '{' => { self.advance(); tokens.push(Token::new(TokenType::LBrace, start_line, start_col)); }
                 '}' => { self.advance(); tokens.push(Token::new(TokenType::RBrace, start_line, start_col)); }
+                '[' => { self.advance(); tokens.push(Token::new(TokenType::LBracket, start_line, start_col)); }
+                ']' => { self.advance(); tokens.push(Token::new(TokenType::RBracket, start_line, start_col)); }
                 ',' => { self.advance(); tokens.push(Token::new(TokenType::Comma, start_line, start_col)); }
                 ';' => { self.advance(); tokens.push(Token::new(TokenType::Semicolon, start_line, start_col)); }
+                '.' => { self.advance(); tokens.push(Token::new(TokenType::DotOp, start_line, start_col)); }
                 '=' => {
                     self.advance();
                     if self.peek() == Some('=') {
@@ -128,9 +136,13 @@ impl<'a> Lexer<'a> {
                     let mut num_str = String::new();
                     let mut is_float = false;
                     while let Some(c) = self.peek() {
-                        if c.is_ascii_digit() { num_str.push(c); self.advance(); }
-                        else if c == '.' && !is_float && self.peek_next().map_or(false, |n| n.is_ascii_digit()) {
-                            is_float = true; num_str.push(c); self.advance();
+                        if c.is_ascii_digit() {
+                            num_str.push(c);
+                            self.advance();
+                        } else if c == '.' && !is_float && self.peek_next().map_or(false, |n| n.is_ascii_digit()) {
+                            is_float = true;
+                            num_str.push(c);
+                            self.advance();
                         } else { break; }
                     }
                     if is_float {
@@ -147,14 +159,19 @@ impl<'a> Lexer<'a> {
                     }
                     let token_type = match ident.as_str() {
                         "let" => TokenType::Let,
+                        "fn" => TokenType::Fn,
+                        "return" => TokenType::Return,
+                        "class" => TokenType::Class,
+                        "new" => TokenType::New,
+                        "this" => TokenType::This,
                         "if" => TokenType::If,
                         "else" => TokenType::Else,
                         "while" => TokenType::While,
+                        "for" => TokenType::For,
+                        "in" => TokenType::In,
                         "loop" => TokenType::Loop,
                         "break" => TokenType::Break,
                         "step" => TokenType::Step,
-                        "fn" => TokenType::Fn,
-                        "return" => TokenType::Return,
                         "true" => TokenType::True,
                         "false" => TokenType::False,
                         "nil" => TokenType::Nil,
@@ -163,6 +180,10 @@ impl<'a> Lexer<'a> {
                         "input" => TokenType::Input,
                         "read_file" => TokenType::ReadFile,
                         "write_file" => TokenType::WriteFile,
+                        "dot" => TokenType::Dot,
+                        "cross" => TokenType::Cross,
+                        "length" => TokenType::Length,
+                        "normalize" => TokenType::Normalize,
                         "vec2" => TokenType::Vec2,
                         "vec3" => TokenType::Vec3,
                         "vec4" => TokenType::Vec4,
@@ -173,6 +194,7 @@ impl<'a> Lexer<'a> {
                 _ => return Err(LexError { line: start_line, column: start_col, message: format!("Unexpected character: '{}'", ch) }),
             }
         }
+
         tokens.push(Token::new(TokenType::EOF, self.line, self.col));
         Ok(tokens)
     }
