@@ -1,66 +1,18 @@
 #![allow(warnings)]
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenType {
-    // Literals
-    Int(i64),
-    Float(f64),
-    Str(String),
-    Bool(bool),
-    Ident(String),
-
-    // Keywords
-    Let,
-    Mut,
-    Function,
-    Return,
-    If,
-    Else,
-    While,
-    Loop,
-    Break,
-    Continue,
-    Step,     // Simulation tick construct: step(dt) { ... }
-    Nil,
-
-    // Built-in Primitive & Vector Types
-    TypeInt,
-    TypeFloat,
-    TypeBool,
-    TypeStr,
-    TypeVec2,
-    TypeVec3,
-    TypeVec4,
-
-    // Operators
-    Plus,          // +
-    Minus,         // -
-    Star,          // *
-    Slash,         // /
-    Equal,         // =
-    EqualEqual,    // ==
-    BangEqual,     // !=
-    Less,          // <
-    LessEqual,     // <=
-    Greater,       // >
-    GreaterEqual,  // >=
-    FatArrow,      // =>
-
-    // Delimiters & Punctuation
-    Colon,         // :
-    Semicolon,     // ;
-    Comma,         // ,
-    Dot,           // .
-    LParen,        // (
-    RParen,        // )
-    LBrace,        // {
-    RBrace,        // }
-    LBracket,      // [
-    RBracket,      // ]
-
-    Eof,
+    Let, If, Else, While, Loop, Break, Step, Fn, Return, True, False, Nil,
+    Print, Println, Input, ReadFile, WriteFile,
+    Vec2, Vec3, Vec4,
+    Ident(String), Int(i64), Float(f64), Str(String),
+    Plus, Minus, Star, Slash, Percent, Assign,
+    EqualEqual, BangEqual, Less, LessEqual, Greater, GreaterEqual, AndAnd, OrOr, Bang,
+    LParen, RParen, LBrace, RBrace, Comma, Semicolon,
+    EOF,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub token_type: TokenType,
     pub line: usize,
@@ -69,10 +21,6 @@ pub struct Token {
 
 impl Token {
     pub fn new(token_type: TokenType, line: usize, column: usize) -> Self {
-        Self {
-            token_type,
-            line,
-            column,
-        }
+        Self { token_type, line, column }
     }
 }

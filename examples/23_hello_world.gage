@@ -1,4 +1,2 @@
 // Gage requires semicolons at the end of every statement!
-// And it only has println() built-in right now.
-
 println("Hello, World!");
