@@ -1,0 +1,11 @@
+// Project 22: Matrix Diagonal Trace Sum
+let m00 = 4.0;
+let m11 = 9.0;
+let m22 = 15.0;
+
+let trace = m00 + m11 + m22;
+
+println("=== 3x3 Matrix Diagonal Trace ===");
+println("Main Diagonal Elements: 4.0, 9.0, 15.0");
+println("Computed Trace:");
+println(trace);

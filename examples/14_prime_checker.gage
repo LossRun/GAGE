@@ -1,0 +1,21 @@
+// Project 14: Prime Number Tester
+let num = 29;
+let is_prime = true;
+let divisor = 2;
+
+while divisor * divisor <= num {
+    if num % divisor == 0 {
+        is_prime = false;
+        break;
+    }
+    divisor = divisor + 1;
+}
+
+println("=== Prime Number Check ===");
+println("Number:");
+println(num);
+if is_prime {
+    println("Result: Prime");
+} else {
+    println("Result: Composite");
+}

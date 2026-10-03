@@ -1,0 +1,18 @@
+// Project 1: Multi-Operation Math Calculator
+fn add(a, b) { return a + b; }
+fn sub(a, b) { return a - b; }
+fn mul(a, b) { return a * b; }
+fn div(a, b) { return a / b; }
+
+let x = 40.0;
+let y = 8.0;
+
+println("=== Basic Calculator ===");
+println("Addition:");
+println(add(x, y));
+println("Subtraction:");
+println(sub(x, y));
+println("Multiplication:");
+println(mul(x, y));
+println("Division:");
+println(div(x, y));

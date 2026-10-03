@@ -1,0 +1,13 @@
+// Project 4: Iterative Fibonacci Series Generator
+println("=== Fibonacci Generator ===");
+let a = 0;
+let b = 1;
+let count = 0;
+
+while count < 10 {
+    println(a);
+    let next = a + b;
+    a = b;
+    b = next;
+    count = count + 1;
+}

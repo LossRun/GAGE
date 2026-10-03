@@ -1,0 +1,24 @@
+// Project 2: Body Mass Index (BMI) Health Calculator
+let weight_kg = 70.0;
+let height_m = 1.75;
+
+let height_sq = height_m * height_m;
+let bmi = weight_kg / height_sq;
+
+println("=== BMI Calculator ===");
+println("Weight (kg):");
+println(weight_kg);
+println("Height (m):");
+println(height_m);
+println("BMI Score:");
+println(bmi);
+
+if bmi < 18.5 {
+    println("Category: Underweight");
+} else if bmi < 25.0 {
+    println("Category: Normal weight");
+} else if bmi < 30.0 {
+    println("Category: Overweight");
+} else {
+    println("Category: Obese");
+}

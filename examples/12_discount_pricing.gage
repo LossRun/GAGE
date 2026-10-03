@@ -1,0 +1,15 @@
+// Project 12: Retail Tax & Discount Engine
+let base_price = 2499.0;
+let discount_percent = 15.0;
+let tax_percent = 18.0;
+
+let discounted = base_price - ((base_price * discount_percent) / 100.0);
+let final_bill = discounted + ((discounted * tax_percent) / 100.0);
+
+println("=== Retail Billing Engine ===");
+println("Base Price:");
+println(base_price);
+println("Price After 15% Discount:");
+println(discounted);
+println("Total Bill with GST (18%):");
+println(final_bill);

@@ -1,0 +1,13 @@
+// Project 21: Vehicle Fuel Efficiency Analysis
+let distance_km = 450.0;
+let fuel_liters = 30.0;
+
+let km_per_liter = distance_km / fuel_liters;
+let cost_per_liter = 96.5;
+let trip_cost = fuel_liters * cost_per_liter;
+
+println("=== Fuel & Trip Telemetry ===");
+println("Fuel Efficiency (km/L):");
+println(km_per_liter);
+println("Total Fuel Cost:");
+println(trip_cost);

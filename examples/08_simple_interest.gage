@@ -1,0 +1,15 @@
+// Project 8: Financial Interest Calculator
+let principal = 10000.0;
+let rate_percent = 7.5;
+let time_years = 3.0;
+
+let interest = (principal * rate_percent * time_years) / 100.0;
+let total_amount = principal + interest;
+
+println("=== Loan Interest Breakdown ===");
+println("Principal:");
+println(principal);
+println("Total Interest:");
+println(interest);
+println("Final Maturity Value:");
+println(total_amount);

@@ -1,0 +1,20 @@
+// Project 20: Calendar Leap Year Checker
+let year = 2028;
+let is_leap = false;
+
+if year % 400 == 0 {
+    is_leap = true;
+} else if year % 100 == 0 {
+    is_leap = false;
+} else if year % 4 == 0 {
+    is_leap = true;
+}
+
+println("=== Leap Year Assessment ===");
+println("Year:");
+println(year);
+if is_leap {
+    println("Status: Leap Year (366 days)");
+} else {
+    println("Status: Standard Year (365 days)");
+}

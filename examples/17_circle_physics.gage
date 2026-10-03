@@ -1,0 +1,14 @@
+// Project 17: Circle Area & Perimeter Geometry Engine
+let radius = 7.0;
+let pi = 3.14159265;
+
+let circumference = 2.0 * pi * radius;
+let area = pi * (radius * radius);
+
+println("=== Circle Geometry Engine ===");
+println("Radius:");
+println(radius);
+println("Circumference:");
+println(circumference);
+println("Area:");
+println(area);
