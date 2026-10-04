@@ -1,23 +1,16 @@
-// 3D ASCII Rotating Wireframe Cube Demo
-// Uses: mat4_rotate_y, floor, gage_sleep, clear_screen
-
-println("Initializing 3D Matrix Renderer...");
-
+// Real-time ASCII Wireframe 3D Cube
 let angle = 0.0;
 let frame = 0;
 
-// Run 20 frames of 3D animation
-while (frame < 20) {
+while (frame < 25) {
     clear_screen();
-    println("=== ⚡ GAGE 3D REAL-TIME ENGINE (mat4 + SIMD) ===");
+    println("=== ⚡ REAL-TIME 3D ROTATING CUBE (mat4) ===");
     print("Frame: ");
     println(frame);
-    print("Rotation Angle: ");
-    println(angle);
 
     let rot = mat4_rotate_y(angle);
 
-    // Transform and project each cube vertex
+    // Transform 8 cube vertices
     let v0 = mat4_transform_vec3(rot, vec3(-1.0, -1.0, -1.0));
     let v1 = mat4_transform_vec3(rot, vec3( 1.0, -1.0, -1.0));
     let v2 = mat4_transform_vec3(rot, vec3( 1.0,  1.0, -1.0));
@@ -27,27 +20,58 @@ while (frame < 20) {
     let v6 = mat4_transform_vec3(rot, vec3( 1.0,  1.0,  1.0));
     let v7 = mat4_transform_vec3(rot, vec3(-1.0,  1.0,  1.0));
 
-    // Perspective projection helper (Z + 3.0 distance)
-    let px0 = floor((v0.x / (v0.z + 3.0)) * 14.0 + 20.0);
-    let py0 = floor((v0.y / (v0.z + 3.0)) * 7.0 + 10.0);
-    let px6 = floor((v6.x / (v6.z + 3.0)) * 14.0 + 20.0);
-    let py6 = floor((v6.y / (v6.z + 3.0)) * 7.0 + 10.0);
+    // Perspective project vertices onto 24x12 terminal grid
+    let px0 = floor((v0.x / (v0.z + 3.2)) * 16.0 + 12.0);
+    let py0 = floor((v0.y / (v0.z + 3.2)) * 8.0 + 6.0);
 
-    print("  Vertex 0 Projected: [");
-    print(px0);
-    print(", ");
-    print(py0);
-    println("]");
+    let px1 = floor((v1.x / (v1.z + 3.2)) * 16.0 + 12.0);
+    let py1 = floor((v1.y / (v1.z + 3.2)) * 8.0 + 6.0);
 
-    print("  Vertex 6 Projected: [");
-    print(px6);
-    print(", ");
-    print(py6);
-    println("]");
+    let px2 = floor((v2.x / (v2.z + 3.2)) * 16.0 + 12.0);
+    let py2 = floor((v2.y / (v2.z + 3.2)) * 8.0 + 6.0);
+
+    let px3 = floor((v3.x / (v3.z + 3.2)) * 16.0 + 12.0);
+    let py3 = floor((v3.y / (v3.z + 3.2)) * 8.0 + 6.0);
+
+    let px4 = floor((v4.x / (v4.z + 3.2)) * 16.0 + 12.0);
+    let py4 = floor((v4.y / (v4.z + 3.2)) * 8.0 + 6.0);
+
+    let px5 = floor((v5.x / (v5.z + 3.2)) * 16.0 + 12.0);
+    let py5 = floor((v5.y / (v5.z + 3.2)) * 8.0 + 6.0);
+
+    let px6 = floor((v6.x / (v6.z + 3.2)) * 16.0 + 12.0);
+    let py6 = floor((v6.y / (v6.z + 3.2)) * 8.0 + 6.0);
+
+    let px7 = floor((v7.x / (v7.z + 3.2)) * 16.0 + 12.0);
+    let py7 = floor((v7.y / (v7.z + 3.2)) * 8.0 + 6.0);
+
+    // Render screen grid
+    let y = 0.0;
+    while (y < 13.0) {
+        let x = 0.0;
+        while (x < 25.0) {
+            let hit = 0;
+            if (x == px0 && y == py0) { hit = 1; }
+            if (x == px1 && y == py1) { hit = 1; }
+            if (x == px2 && y == py2) { hit = 1; }
+            if (x == px3 && y == py3) { hit = 1; }
+            if (x == px4 && y == py4) { hit = 1; }
+            if (x == px5 && y == py5) { hit = 1; }
+            if (x == px6 && y == py6) { hit = 1; }
+            if (x == px7 && y == py7) { hit = 1; }
+
+            if (hit == 1) {
+                print("#");
+            } else {
+                print(" ");
+            }
+            x = x + 1.0;
+        }
+        println("");
+        y = y + 1.0;
+    }
 
     angle = angle + 0.15;
     frame = frame + 1;
-    gage_sleep(33.0);
+    gage_sleep(50.0);
 }
-
-println("Animation complete! 20 frames rendered.");

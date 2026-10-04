@@ -181,7 +181,10 @@ impl TypeChecker {
                 for a in args { self.check_expr(a)?; }
                 Ok(Type::Custom(name.clone()))
             }
-            Expr::MemberAccess(obj, _) => {
+            Expr::MemberAccess(obj, member) => {
+                if member == "x" || member == "y" || member == "z" || member == "w" {
+                    return Ok(Type::Float);
+                }
                 self.check_expr(obj)?;
                 Ok(Type::Any)
             }
