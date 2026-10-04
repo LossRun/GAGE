@@ -560,6 +560,57 @@ fn handle_run_tests() {
 }
 
 
+
+fn handle_delete() {
+    println!("\x1b[1;33m==> Deleting GAGE binaries and compiler artifacts...\x1b[0m");
+
+    let mut removed_items = Vec::new();
+
+    // 1. Remove the installed executable from Termux bin path
+    if let Ok(prefix) = std::env::var("PREFIX") {
+        let p = std::path::PathBuf::from(prefix).join("bin/gage");
+        if p.exists() && std::fs::remove_file(&p).is_ok() {
+            removed_items.push(p.to_string_lossy().to_string());
+        }
+    }
+    if let Ok(exe) = std::env::current_exe() {
+        if exe.exists() && std::fs::remove_file(&exe).is_ok() {
+            removed_items.push(exe.to_string_lossy().to_string());
+        }
+    }
+
+    // 2. Remove the Cargo release/debug build targets (~/.cargo_target_gage)
+    if let Ok(home) = std::env::var("HOME") {
+        let target_dir = std::path::PathBuf::from(home).join(".cargo_target_gage");
+        if target_dir.exists() {
+            let _ = std::fs::remove_dir_all(&target_dir);
+            removed_items.push(target_dir.to_string_lossy().to_string());
+        }
+    }
+
+    // 3. Remove all cached C runner binaries and scratch files
+    let cache_dirs = [
+        std::path::PathBuf::from("/data/data/com.termux/files/usr/tmp/gage_cache"),
+        std::path::PathBuf::from("/tmp/gage_cache"),
+    ];
+    for dir in &cache_dirs {
+        if dir.exists() {
+            let _ = std::fs::remove_dir_all(dir);
+            removed_items.push(dir.to_string_lossy().to_string());
+        }
+    }
+    let _ = std::fs::remove_file("/data/data/com.termux/files/usr/tmp/gage_repl.tmp.c");
+    let _ = std::fs::remove_file("/data/data/com.termux/files/usr/tmp/gage_repl.tmp");
+
+    println!("\x1b[1;32m✔ All GAGE binaries and execution targets removed!\x1b[0m");
+    for item in &removed_items {
+        println!("  \x1b[90mRemoved:\x1b[0m {}", item);
+    }
+    println!("\n\x1b[1m📁 Source repository remains completely untouched:\x1b[0m /sdcard/GAGE");
+    println!("\x1b[90mRun '\x1b[33mhash -r\x1b[90m' to clear the terminal command cache.\x1b[0m");
+    std::process::exit(0);
+}
+
 fn handle_clean() {
     let cache_dirs = [
         std::path::PathBuf::from("/data/data/com.termux/files/usr/tmp/gage_cache"),
@@ -632,8 +683,12 @@ fn main() {
             print_system_info();
             return;
         }
-        "--clean" | "clean" | "--delete" | "delete" | "clear-cache" => {
+        "--clean" | "clean" | "clear-cache" => {
             handle_clean();
+            return;
+        }
+        "--delete" | "delete" | "--uninstall" | "uninstall" => {
+            handle_delete();
             return;
         }
         "--test" | "test" => {
