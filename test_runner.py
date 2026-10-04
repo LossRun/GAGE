@@ -8,26 +8,8 @@ BOLD = "\033[1m"
 RESET = "\033[0m"
 
 test_dir = "/sdcard/GAGE/tests_suite"
-os.makedirs(test_dir, exist_ok=True)
-
-unit_tests = {
-    "test_primitives_arithmetic.gage": "let a = 15; let b = 4; if (a+b == 19 && a*b == 60) { println(\"PASS\"); }",
-    "test_boolean_logic.gage": "let t = true; let f = false; if (t && !f) { println(\"PASS\"); }",
-    "test_control_flow.gage": "let i = 0; while (i < 5) { i = i + 1; } if (i == 5) { println(\"PASS\"); }",
-    "test_functions_recursion.gage": "fn fib(n) { if (n <= 1) { return n; } return fib(n-1) + fib(n-2); } if (fib(7) == 13) { println(\"PASS\"); }",
-    "test_oop_classes.gage": "class Calc { v; fn set(x) { this.v = x; } fn get() { return this.v * 2; } } let c = new Calc(); c.set(21); if (c.get() == 42) { println(\"PASS\"); }",
-    "test_simd_vectors.gage": "let v1 = vec3(1.0, 2.0, 3.0); let v2 = vec3(4.0, 5.0, 6.0); if (dot(v1, v2) == 32.0 && length(vec3(3.0, 4.0, 0.0)) == 5.0) { println(\"PASS\"); }",
-    "test_dynamic_arrays.gage": "let arr = [10.0, 20.0, 30.0, 40.0]; arr[1] = 99.0; let s = 0.0; for x in arr { s = s + x; } if (s > 178.0) { if (s < 180.0) { println(\"PASS\"); } }",
-    "test_step_physics_loop.gage": "let ticks = 0; step(dt) { if (ticks < 3) { ticks = ticks + 1; } } if (ticks == 3) { println(\"PASS\"); }",
-    "test_file_io.gage": "let f = \"/sdcard/GAGE/tests_suite/tmp.txt\"; write_file(f, \"ok\"); if (read_file(f) != \"\") { println(\"PASS\"); }",
-    "test_sim_primitives.gage": "let n = vec3(0.0, 1.0, 0.0); let v = vec3(5.0, -5.0, 0.0); let ref = reflect(v, n); let ry = dot(ref, n); let d = distance(vec3(0.0, 0.0, 0.0), vec3(3.0, 4.0, 0.0)); let l = lerp(0.0, 100.0, 0.5); let c = clamp(150.0, 0.0, 100.0); if (ry > 4.9) { if (ry < 5.1) { if (d > 4.9) { if (d < 5.1) { if (l == 50.0) { if (c == 100.0) { println(\"PASS\"); } } } } } }"
-}
-
-for name, code in unit_tests.items():
-    with open(os.path.join(test_dir, name), "w") as f:
-        f.write(code + "\n")
-
 examples_dir = "/sdcard/GAGE/examples"
+
 example_files = sorted([os.path.join(examples_dir, f) for f in os.listdir(examples_dir) if f.endswith(".gage") and "31_interactive_input" not in f])
 unit_files = sorted([os.path.join(test_dir, f) for f in os.listdir(test_dir) if f.endswith(".gage")])
 
@@ -46,8 +28,8 @@ def run_test(label, filepath, verify_pass=False):
         print(f"  [{GREEN}✔ PASS{RESET}] {label:<38} {dt:>6.1f} ms")
     else:
         failed += 1
-        err_detail = res.stderr.strip() or res.stdout.strip() or "Empty output"
-        failures.append((label, err_detail))
+        err = res.stderr.strip() or res.stdout.strip() or "Assertion Failed"
+        failures.append((label, err))
         print(f"  [{RED}✖ FAIL{RESET}] {label:<38} {dt:>6.1f} ms")
 
 print(f"\n{BOLD}{CYAN}======================================================{RESET}")
@@ -69,6 +51,6 @@ if failures:
     for lbl, err in failures:
         print(f"  • {BOLD}{lbl}{RESET}:\n    {err}")
 else:
-    print(f"\n{BOLD}{GREEN}✔ 100% of all 57 tests passed cleanly!{RESET}")
+    print(f"\n{BOLD}{GREEN}✔ 100% of all tests passed cleanly!{RESET}")
 
 print(f"{BOLD}{CYAN}======================================================{RESET}\n")
