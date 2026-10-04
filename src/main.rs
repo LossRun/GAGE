@@ -559,137 +559,205 @@ fn handle_run_tests() {
     }
 }
 
-fn main() {
-    let cli_args: Vec<String> = std::env::args().collect();
-    if cli_args.len() >= 2 {
-        let cmd = cli_args[1].as_str();
-        match cmd {
-            "--help" | "-h" | "help" => {
-                print_custom_help();
-                return;
-            }
-            "--version" | "-v" | "version" => {
-                println!("\x1b[1;36mGAGE\x1b[0m version \x1b[1;32m0.1.0\x1b[0m (SIMD AOT native compiler)");
-                return;
-            }
-            "--info" | "info" => {
-                print_system_info();
-                return;
-            }
-            "--test" | "test" => {
-                handle_run_tests();
-                return;
-            }
-            "--examples" | "--list" | "examples" | "list" => {
-                handle_list_examples();
-                return;
-            }
-            "--example" | "example" => {
-                if cli_args.len() < 3 {
-                    eprintln!("\x1b[1;31mError:\x1b[0m --example requires an ID (e.g. \x1b[36mgage --example 51\x1b[0m)");
-                    std::process::exit(1);
-                }
-                handle_run_example(&cli_args[2]);
-                return;
-            }
-            _ => {
-                if cmd.starts_with('-') && cmd != "--time" && cmd != "--vm" {
-                    eprintln!("\x1b[1;31m[Error]\x1b[0m Unknown option: '{}'", cmd);
-                    eprintln!("Run \x1b[1;33mgage --help\x1b[0m to see all available options.");
-                    std::process::exit(1);
+
+fn handle_clean() {
+    let cache_dirs = [
+        std::path::PathBuf::from("/data/data/com.termux/files/usr/tmp/gage_cache"),
+        std::path::PathBuf::from("/tmp/gage_cache"),
+    ];
+    let mut count = 0;
+    for dir in &cache_dirs {
+        if dir.exists() {
+            if let Ok(entries) = std::fs::read_dir(dir) {
+                for entry in entries.flatten() {
+                    if std::fs::remove_file(entry.path()).is_ok() {
+                        count += 1;
+                    }
                 }
             }
+            let _ = std::fs::remove_dir(dir);
         }
     }
+    // Also remove temporary REPL scratch files
+    let _ = std::fs::remove_file("/data/data/com.termux/files/usr/tmp/gage_repl.tmp.c");
+    let _ = std::fs::remove_file("/data/data/com.termux/files/usr/tmp/gage_repl.tmp");
 
-    let args: Vec<String> = env::args().collect();
+    println!("\x1b[1;32m✔ GAGE Cache Purged:\x1b[0m Removed {} cached binaries and scratch files.", count);
+}
 
-    if args.len() == 1 {
+fn resolve_gage_file(target: &str) -> Option<String> {
+    let p = std::path::Path::new(target);
+    if p.is_file() {
+        return Some(target.to_string());
+    }
+    let with_ext = format!("{}.gage", target);
+    if std::path::Path::new(&with_ext).is_file() {
+        return Some(with_ext);
+    }
+    if let Some(ex_dir) = find_examples_dir() {
+        let inside = ex_dir.join(target);
+        if inside.is_file() {
+            return Some(inside.to_string_lossy().to_string());
+        }
+        let inside_ext = ex_dir.join(&with_ext);
+        if inside_ext.is_file() {
+            return Some(inside_ext.to_string_lossy().to_string());
+        }
+    }
+    None
+}
+
+fn main() {
+    let cli_args: Vec<String> = std::env::args().collect();
+
+    // No arguments -> launch REPL
+    if cli_args.len() == 1 {
         start_repl();
         return;
     }
 
-    if args[1] == "-h" || args[1] == "--help" {
-        print_usage();
-        return;
-    }
+    let first_arg = cli_args[1].as_str();
 
-    if args[1] == "emit-c" {
-        if args.len() < 3 {
-            print_usage();
+    // Handle Top-Level Commands
+    match first_arg {
+        "--help" | "-h" | "help" => {
+            print_custom_help();
             return;
         }
-        let in_file = &args[2];
-        let out_file = if args.len() >= 5 && args[3] == "-o" {
-            &args[4]
-        } else {
-            "out.c"
-        };
-
-        let source = fs::read_to_string(in_file).expect("Failed to read input gage file");
-        let mut lexer = Lexer::new(&source);
-        let tokens = match lexer.tokenize() {
-            Ok(t) => t,
-            Err(e) => {
-                eprintln!("[Lex Error] Line {}:{}: {}", e.line, e.column, e.message);
-                return;
-            }
-        };
-        let mut parser = Parser::new(tokens);
-        let program = match parser.parse() {
-            Ok(p) => p,
-            Err(e) => {
-                eprintln!("[Parse Error] Line {}:{}: {}", e.line, e.column, e.message);
-                return;
-            }
-        };
-        let mut checker = TypeChecker::new();
-        if let Err(e) = checker.check(&program) {
-            eprintln!("{}", e);
+        "--version" | "-v" | "version" => {
+            println!("\x1b[1;36mGAGE\x1b[0m version \x1b[1;32m0.2.0\x1b[0m (SIMD AOT native compiler)");
             return;
         }
+        "--info" | "info" => {
+            print_system_info();
+            return;
+        }
+        "--clean" | "clean" | "--delete" | "delete" | "clear-cache" => {
+            handle_clean();
+            return;
+        }
+        "--test" | "test" => {
+            handle_run_tests();
+            return;
+        }
+        "--examples" | "--list" | "examples" | "list" => {
+            handle_list_examples();
+            return;
+        }
+        "--example" | "example" => {
+            if cli_args.len() < 3 {
+                eprintln!("\x1b[1;31mError:\x1b[0m 'example' requires an ID (e.g. \x1b[36mgage example 52\x1b[0m)");
+                std::process::exit(1);
+            }
+            handle_run_example(&cli_args[2]);
+            return;
+        }
+        "repl" | "shell" => {
+            start_repl();
+            return;
+        }
+        "emit-c" => {
+            if cli_args.len() < 3 {
+                print_usage();
+                return;
+            }
+            let in_file = &cli_args[2];
+            let out_file = if cli_args.len() >= 5 && cli_args[3] == "-o" {
+                &cli_args[4]
+            } else {
+                "out.c"
+            };
 
-        let c_code = CodeGen::new().generate(&program);
-        fs::write(out_file, &c_code).expect("Failed to write output C file");
-        println!("\x1b[32m✔ Emitted native C code to:\x1b[0m {}", out_file);
-        return;
+            let source = match fs::read_to_string(in_file) {
+                Ok(s) => s,
+                Err(_) => {
+                    eprintln!("\x1b[31m[Error] Could not find file:\x1b[0m {}", in_file);
+                    return;
+                }
+            };
+            let mut lexer = Lexer::new(&source);
+            let tokens = match lexer.tokenize() {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("[Lex Error] Line {}:{}: {}", e.line, e.column, e.message);
+                    return;
+                }
+            };
+            let mut parser = Parser::new(tokens);
+            let program = match parser.parse() {
+                Ok(p) => p,
+                Err(e) => {
+                    eprintln!("[Parse Error] Line {}:{}: {}", e.line, e.column, e.message);
+                    return;
+                }
+            };
+            let mut checker = TypeChecker::new();
+            if let Err(e) = checker.check(&program) {
+                eprintln!("{}", e);
+                return;
+            }
+
+            let c_code = CodeGen::new().generate(&program);
+            let _ = fs::write(out_file, &c_code);
+            println!("\x1b[32m✔ Emitted native C code to:\x1b[0m {}", out_file);
+            return;
+        }
+        _ => {}
     }
 
+    // Execution Flags
     let mut benchmark = false;
     let mut use_vm = false;
     let mut file_idx = 1;
 
-    if args[1] == "--time" {
+    if first_arg == "--time" {
         benchmark = true;
         file_idx = 2;
-    } else if args[1] == "--vm" {
+    } else if first_arg == "--vm" {
         use_vm = true;
+        file_idx = 2;
+    } else if first_arg == "run" {
         file_idx = 2;
     }
 
-    if file_idx >= args.len() {
+    if file_idx >= cli_args.len() {
         print_usage();
         return;
     }
 
-    let filepath = &args[file_idx];
-    let source = match fs::read_to_string(filepath) {
+    let raw_target = &cli_args[file_idx];
+    let resolved = match resolve_gage_file(raw_target) {
+        Some(path) => path,
+        None => {
+            eprintln!("\x1b[1;31m[Error]\x1b[0m Unknown command or file not found: '\x1b[1;33m{}\x1b[0m'", raw_target);
+            eprintln!("\n\x1b[1mAvailable GAGE Commands:\x1b[0m");
+            eprintln!("  \x1b[36mgage clean\x1b[0m         Clear compiled cache binaries");
+            eprintln!("  \x1b[36mgage test\x1b[0m          Run regression test suite");
+            eprintln!("  \x1b[36mgage examples\x1b[0m      List all available demo programs");
+            eprintln!("  \x1b[36mgage example <id>\x1b[0m  Run example by numeric ID");
+            eprintln!("  \x1b[36mgage repl\x1b[0m          Launch interactive Python-style shell");
+            eprintln!("  \x1b[36mgage help\x1b[0m          Display detailed usage guide");
+            std::process::exit(1);
+        }
+    };
+
+    let source = match fs::read_to_string(&resolved) {
         Ok(s) => s,
         Err(_) => {
-            eprintln!("\x1b[31m[Error] Could not find file:\x1b[0m {}", filepath);
+            eprintln!("\x1b[31m[Error] Failed to read file:\x1b[0m {}", resolved);
             return;
         }
     };
 
-        let cache_dir = "/data/data/com.termux/files/usr/tmp/gage_cache";
-        let _ = fs::create_dir_all(cache_dir);
-        let mut h_fast: u64 = 0xcbf29ce484222325;
-        for b in source.bytes() { h_fast = (h_fast ^ (b as u64)).wrapping_mul(0x100000001b3); }
-        let fast_bin = format!("{}/bin_{:x}", cache_dir, h_fast);
-        if !use_vm && !benchmark && std::path::Path::new(&fast_bin).exists() {
-            let _ = Command::new(&fast_bin).status();
-            return;
-        }
+    let cache_dir = "/data/data/com.termux/files/usr/tmp/gage_cache";
+    let _ = fs::create_dir_all(cache_dir);
+    let mut h_fast: u64 = 0xcbf29ce484222325;
+    for b in source.bytes() { h_fast = (h_fast ^ (b as u64)).wrapping_mul(0x100000001b3); }
+    let fast_bin = format!("{}/bin_{:x}", cache_dir, h_fast);
+    if !use_vm && !benchmark && std::path::Path::new(&fast_bin).exists() {
+        let _ = Command::new(&fast_bin).status();
+        return;
+    }
 
     let t_start = Instant::now();
 
@@ -737,7 +805,7 @@ fn main() {
         let vm_end = Instant::now();
 
         if benchmark {
-            println!("\n⏱️  \x1b[1;36mBenchmark Results (VM):\x1b[0m");
+            println!("\n⏱️️  \x1b[1;36mBenchmark Results (VM):\x1b[0m");
             println!("  Frontend (Lex + Parse + Check): {:.2} ms", (t_frontend - t_start).as_secs_f64() * 1000.0);
             println!("  VM Execution Time:              {:.2} ms", (vm_end - vm_start).as_secs_f64() * 1000.0);
             println!("  Total Time:                     {:.2} ms", (vm_end - t_start).as_secs_f64() * 1000.0);
@@ -748,26 +816,23 @@ fn main() {
     let codegen = CodeGen::new();
     let c_code = codegen.generate(&program);
 
-        let cache_dir = "/data/data/com.termux/files/usr/tmp/gage_cache";
-    let _ = fs::create_dir_all(cache_dir);
-    let mut h: u64 = 0xcbf29ce484222325;
-    for b in source.bytes() { h = (h ^ (b as u64)).wrapping_mul(0x100000001b3); }
-    let cached_bin = format!("{}/bin_{:x}", cache_dir, h);
-
-    if !std::path::Path::new(&cached_bin).exists() {
-        let codegen = CodeGen::new();
-        let c_code = codegen.generate(&program);
-        let temp_c = format!("{}/src_{:x}.c", cache_dir, h);
-        let _ = fs::write(&temp_c, &c_code);
-        let clang_status = Command::new("clang").args(&["-O1", "-lm", &temp_c, "-o", &cached_bin]).output();
-        let _ = fs::remove_file(&temp_c);
-        match clang_status {
-            Ok(out) if out.status.success() => { let _ = Command::new("chmod").args(&["+x", &cached_bin]).status(); }
-            Ok(out) => { eprintln!("Compilation error:
-{}", String::from_utf8_lossy(&out.stderr)); return; }
-            Err(e) => { eprintln!("Failed to run clang: {}", e); return; }
+    let temp_c = format!("{}/src_{:x}.c", cache_dir, h_fast);
+    let _ = fs::write(&temp_c, &c_code);
+    let clang_status = Command::new("clang").args(&["-O1", "-lm", &temp_c, "-o", &fast_bin]).output();
+    let _ = fs::remove_file(&temp_c);
+    match clang_status {
+        Ok(out) if out.status.success() => {
+            let _ = Command::new("chmod").args(&["+x", &fast_bin]).status();
+        }
+        Ok(out) => {
+            eprintln!("Compilation error:\n{}", String::from_utf8_lossy(&out.stderr));
+            return;
+        }
+        Err(e) => {
+            eprintln!("Failed to run clang: {}", e);
+            return;
         }
     }
 
-    let _ = Command::new(&cached_bin).status();
+    let _ = Command::new(&fast_bin).status();
 }
