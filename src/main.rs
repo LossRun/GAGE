@@ -317,6 +317,16 @@ fn main() {
         }
     };
 
+        let cache_dir = "/data/data/com.termux/files/usr/tmp/gage_cache";
+        let _ = fs::create_dir_all(cache_dir);
+        let mut h_fast: u64 = 0xcbf29ce484222325;
+        for b in source.bytes() { h_fast = (h_fast ^ (b as u64)).wrapping_mul(0x100000001b3); }
+        let fast_bin = format!("{}/bin_{:x}", cache_dir, h_fast);
+        if !use_vm && !benchmark && std::path::Path::new(&fast_bin).exists() {
+            let _ = Command::new(&fast_bin).status();
+            return;
+        }
+
     let t_start = Instant::now();
 
     let mut lexer = Lexer::new(&source);
@@ -376,9 +386,8 @@ fn main() {
 
         let cache_dir = "/data/data/com.termux/files/usr/tmp/gage_cache";
     let _ = fs::create_dir_all(cache_dir);
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    std::hash::Hash::hash(&source, &mut hasher);
-    let h = std::hash::Hasher::finish(&hasher);
+    let mut h: u64 = 0xcbf29ce484222325;
+    for b in source.bytes() { h = (h ^ (b as u64)).wrapping_mul(0x100000001b3); }
     let cached_bin = format!("{}/bin_{:x}", cache_dir, h);
 
     if !std::path::Path::new(&cached_bin).exists() {

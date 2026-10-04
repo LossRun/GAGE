@@ -1,5 +1,12 @@
 import os, subprocess, time
 
+CYAN = "\033[1;36m"
+GREEN = "\033[1;32m"
+RED = "\033[1;31m"
+YELLOW = "\033[1;33m"
+BOLD = "\033[1m"
+RESET = "\033[0m"
+
 test_dir = "/sdcard/GAGE/tests_suite"
 os.makedirs(test_dir, exist_ok=True)
 
@@ -34,17 +41,22 @@ def run_test(label, filepath, verify_pass=False):
     total_time += dt
     if res.returncode == 0 and (not verify_pass or "PASS" in res.stdout):
         passed += 1
-        print(f"  [PASS] {label:<35} {dt:>6.1f} ms")
+        print(f"  [{GREEN}✔ PASS{RESET}] {label:<35} {dt:>6.1f} ms")
     else:
         failed += 1
-        print(f"  [FAIL] {label:<35} {dt:>6.1f} ms")
+        print(f"  [{RED}✖ FAIL{RESET}] {label:<35} {dt:>6.1f} ms")
 
-print("\n=== GAGE 2.0 FULL ENGINE DIAGNOSTIC SUITE ===\n")
-print("Phase 1: Feature Units")
+print(f"\n{BOLD}{CYAN}=============================================={RESET}")
+print(f"{BOLD}{CYAN}    ⚡ GAGE 2.0 FULL ENGINE DIAGNOSTIC SUITE  {RESET}")
+print(f"{BOLD}{CYAN}=============================================={RESET}\n")
+
+print(f"{BOLD}Phase 1: Feature & Syntax Verification Units{RESET}")
 for uf in unit_files: run_test(os.path.basename(uf), uf, verify_pass=True)
 
-print("\nPhase 2: Examples Suite")
+print(f"\n{BOLD}Phase 2: Full Examples Suite (AOT Native){RESET}")
 for ef in example_files: run_test(os.path.basename(ef), ef, verify_pass=False)
 
-print(f"\nExecuted: {passed + failed} | Passed: {passed} | Failed: {failed}")
-print(f"Total Runtime: {total_time/1000.0:.2f} s\n")
+print(f"\n{BOLD}{CYAN}----------------------------------------------{RESET}")
+print(f"  Executed: {BOLD}{passed + failed}{RESET} | Passed: {GREEN}{passed}{RESET} | Failed: {RED if failed else GREEN}{failed}{RESET}")
+print(f"  Total Runtime: {YELLOW}{total_time/1000.0:.2f} s{RESET}")
+print(f"{BOLD}{CYAN}=============================================={RESET}\n")
