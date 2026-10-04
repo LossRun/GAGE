@@ -112,6 +112,7 @@ impl Highlighter for GageHelper {
 }
 
 fn print_usage() {
+    print_gage_banner();
     println!("\x1b[1;36m⚡ Gage Programming Language (v2.0)\x1b[0m");
     println!("Usage:");
     println!("  gage                                \x1b[90mLaunch interactive REPL\x1b[0m");
@@ -122,8 +123,9 @@ fn print_usage() {
 }
 
 fn start_repl() {
-    println!("GAGE 0.2.0 (native-aot, Oct 2026) [Clang AOT on aarch64-linux-android]");
-    println!("Type \"help\", \"copyright\", \"credits\" or \"license\" for more information.");
+    use std::io::Write;
+
+    print_gage_banner();
 
     let mut rl = Editor::new().unwrap();
     rl.set_helper(Some(GageHelper));
@@ -133,13 +135,17 @@ fn start_repl() {
 
     let mut session_code = String::new();
     let mut multi_buf: Vec<String> = Vec::new();
+    let mut turn_idx: usize = 1;
 
     loop {
         let is_continuation = !multi_buf.is_empty();
-        // Bold Purple / Magenta ANSI: \x1b[1;35m
-        let prompt = if is_continuation { "\x1b[1;35m... \x1b[0m" } else { "\x1b[1;35m>>> \x1b[0m" };
+        let prompt = if is_continuation {
+            format!("\x1b[1;35m{:>4} ... \x1b[0m", "")
+        } else {
+            format!("\x1b[38;2;80;250;130m[{}]\x1b[0m \x1b[1;35m>>> \x1b[0m", turn_idx)
+        };
 
-        match rl.readline(prompt) {
+        match rl.readline(&prompt) {
             Ok(line) => {
                 let trimmed = line.trim();
 
@@ -151,7 +157,6 @@ fn start_repl() {
                     let _ = rl.add_history_entry(line.as_str());
                 }
 
-                // Python-style Top Level Commands
                 if !is_continuation {
                     match trimmed {
                         "exit" | "quit" | "exit()" | "quit()" => {
@@ -160,63 +165,60 @@ fn start_repl() {
                         "clear" | "clear()" => {
                             print!("\x1b[H\x1b[2J");
                             let _ = io::stdout().flush();
+                            turn_idx = 1;
+                            continue;
+                        }
+                        "banner" | "logo" => {
+                            print_gage_banner();
                             continue;
                         }
                         "help" => {
                             println!("Type help() for interactive help, or check out these basics:");
                             println!("  • Variables:     let x = 42;");
                             println!("  • SIMD Vectors:  let v = vec3(1.0, 2.0, 3.0) * 2.0;");
-                            println!("  • Canvas:        let c = gage_canvas_create(40, 15);");
                             println!("  • Functions:     fn add(a, b) {{ return a + b; }}");
-                            println!("  • Exit:          exit or Ctrl+D");
+                            println!("  • Exit:          exit or Ctrl+C");
                             continue;
                         }
                         "help()" => {
                             println!("Welcome to GAGE 0.2.0 interactive help utility!");
-                            println!("\nGAGE is a high-performance simulation language with native SIMD support.");
-                            println!("Expressions typed directly at the '>>>' prompt are evaluated immediately.");
-                            println!("Statements like 'let', 'fn', and assignments persist in session memory.");
+                            println!("Expressions typed at the prompt evaluate immediately.");
+                            println!("Statements (let, fn) persist in session memory.");
                             continue;
                         }
-                        "license" => {
-                            println!("Type license() to see the full license text");
-                            continue;
-                        }
-                        "license()" => {
-                            println!("GAGE Software License");
-                            println!("=====================");
-                            println!("");
-                            println!("MIT License");
-                            println!("");
-                            println!("Copyright (c) 2026 LossRun / GAGE Project Contributors");
-                            println!("");
-                            println!("Permission is hereby granted, free of charge, to any person obtaining a copy");
-                            println!("of this software and associated documentation files (the \"Software\"), to deal");
-                            println!("in the Software without restriction, including without limitation the rights");
-                            println!("to use, copy, modify, merge, publish, distribute, sublicense, and/or sell");
-                            println!("copies of the Software, and to permit persons to whom the Software is");
-                            println!("furnished to do so, subject to the following conditions:");
-                            println!("");
-                            println!("The above copyright notice and this permission notice shall be included in all");
-                            println!("copies or substantial portions of the Software.");
-                            println!("");
-                            println!("THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR");
-                            println!("IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,");
-                            println!("FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE");
-                            println!("AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER");
-                            println!("LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,");
-                            println!("OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE");
-                            println!("SOFTWARE.");
+                        "license" | "license()" => {
+                            println!(r#"GAGE Software License"#);
+                            println!(r#"====================="#);
+                            println!(r#""#);
+                            println!(r#"MIT License"#);
+                            println!(r#""#);
+                            println!(r#"Copyright (c) 2026 LossRun / GAGE Project Contributors"#);
+                            println!(r#""#);
+                            println!(r#"Permission is hereby granted, free of charge, to any person obtaining a copy"#);
+                            println!(r#"of this software and associated documentation files (the "Software"), to deal"#);
+                            println!(r#"in the Software without restriction, including without limitation the rights"#);
+                            println!(r#"to use, copy, modify, merge, publish, distribute, sublicense, and/or sell"#);
+                            println!(r#"copies of the Software, and to permit persons to whom the Software is"#);
+                            println!(r#"furnished to do so, subject to the following conditions:"#);
+                            println!(r#""#);
+                            println!(r#"The above copyright notice and this permission notice shall be included in all"#);
+                            println!(r#"copies or substantial portions of the Software."#);
+                            println!(r#""#);
+                            println!(r#"THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR"#);
+                            println!(r#"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,"#);
+                            println!(r#"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE"#);
+                            println!(r#"AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER"#);
+                            println!(r#"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,"#);
+                            println!(r#"OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE"#);
+                            println!(r#"SOFTWARE."#);
                             continue;
                         }
                         "copyright" | "copyright()" => {
                             println!("Copyright (c) 2026 LossRun / GAGE Project Contributors.");
-                            println!("All Rights Reserved.");
                             continue;
                         }
                         "credits" | "credits()" => {
-                            println!("Thanks to all contributors and the open-source systems community.");
-                            println!("GAGE is powered by Rust, LLVM/Clang AOT compilation, and native SIMD.");
+                            println!("Developed by LossRun. Powered by Rust, LLVM/Clang AOT, and SIMD.");
                             continue;
                         }
                         _ => {}
@@ -292,7 +294,7 @@ fn start_repl() {
                 let tokens = match lexer.tokenize() {
                     Ok(t) => t,
                     Err(e) => {
-                        eprintln!("  File \"<stdin>\", line {}:{}", e.line, e.column);
+                        eprintln!(r#"  File "<stdin>", line {}:{}"#, e.line, e.column);
                         eprintln!("\x1b[31mSyntaxError:\x1b[0m {}", e.message);
                         continue;
                     }
@@ -302,7 +304,7 @@ fn start_repl() {
                 let program = match parser.parse() {
                     Ok(p) => p,
                     Err(e) => {
-                        eprintln!("  File \"<stdin>\", line {}:{}", e.line, e.column);
+                        eprintln!(r#"  File "<stdin>", line {}:{}"#, e.line, e.column);
                         eprintln!("\x1b[31mSyntaxError:\x1b[0m {}", e.message);
                         continue;
                     }
@@ -310,7 +312,7 @@ fn start_repl() {
 
                 let mut checker = TypeChecker::new();
                 if let Err(e) = checker.check(&program) {
-                    eprintln!("  File \"<stdin>\", line 1");
+                    eprintln!(r#"  File "<stdin>", line 1"#);
                     eprintln!("\x1b[31mTypeError:\x1b[0m {}", e);
                     continue;
                 }
@@ -336,6 +338,7 @@ fn start_repl() {
                         if persist {
                             session_code.push_str(&to_compile);
                         }
+                        turn_idx += 1;
                     }
                     Ok(out) => {
                         eprintln!("\x1b[31mRuntimeError:\x1b[0m Compilation failed\n{}", String::from_utf8_lossy(&out.stderr));
@@ -349,12 +352,8 @@ fn start_repl() {
                 let _ = fs::remove_file(temp_bin);
             }
             Err(ReadlineError::Interrupted) => {
-                if !multi_buf.is_empty() {
-                    multi_buf.clear();
-                    println!("\nKeyboardInterrupt");
-                } else {
-                    println!("\nKeyboardInterrupt (Use exit or Ctrl+D to quit)");
-                }
+                println!("\nKeyboardInterrupt");
+                break;
             }
             Err(ReadlineError::Eof) => {
                 break;
@@ -370,8 +369,22 @@ fn start_repl() {
 }
 
 fn print_gage_banner() {
-    println!("\x1b[1;36m   ⚡ GAGE v0.1.0\x1b[0m \x1b[90m— High-Performance SIMD Simulation Language\x1b[0m");
-    println!("\x1b[90m   ──────────────────────────────────────────────────────────\x1b[0m");
+    let lines = [
+        r#"  ██████╗   █████╗   ██████╗  ███████╗"#,
+        r#" ██╔════╝  ██╔══██╗ ██╔════╝  ██╔════╝"#,
+        r#" ██║  ███╗ ███████║ ██║  ███╗ █████╗  "#,
+        r#" ██║   ██║ ██╔══██║ ██║   ██║ ██╔══╝  "#,
+        r#" ╚██████╔╝ ██║  ██║ ╚██████╔╝ ███████╗"#,
+        r#"  ╚═════╝  ╚═╝  ╚═╝  ╚═════╝  ╚══════╝"#,
+    ];
+
+    for (i, line) in lines.iter().enumerate() {
+        // Vibrant vertical TrueColor emerald-to-mint gradient
+        let g = 250 - (i as u32 * 12);
+        println!("\x1b[38;2;40;{};110m{}\x1b[0m", g, line);
+    }
+    println!("  \x1b[38;2;0;225;145m● \x1b[1;37mGAGE 0.2.0\x1b[0m \x1b[90m|\x1b[0m \x1b[38;2;80;240;140mnative-aot\x1b[0m \x1b[90m[SIMD]\x1b[0m");
+    println!("  \x1b[90mType \"help\", \"license\", or \"exit\" for more information.\x1b[0m\n");
 }
 
 fn print_custom_help() {
@@ -562,53 +575,122 @@ fn handle_run_tests() {
 
 
 fn handle_delete() {
-    println!("\x1b[1;33m==> Deleting GAGE binaries and compiler artifacts...\x1b[0m");
+    use std::io::{stdin, stdout, Write};
 
-    let mut removed_items = Vec::new();
+    // Print the recognizable GAGE logo
+    print_gage_banner();
 
-    // 1. Remove the installed executable from Termux bin path
-    if let Ok(prefix) = std::env::var("PREFIX") {
-        let p = std::path::PathBuf::from(prefix).join("bin/gage");
-        if p.exists() && std::fs::remove_file(&p).is_ok() {
-            removed_items.push(p.to_string_lossy().to_string());
-        }
+    println!("\x1b[1;31m  ⚠️  DANGER ZONE: UNINSTALL GAGE TOOLCHAIN\x1b[0m");
+    println!("\x1b[90m  This will permanently delete the GAGE binary, cache, and compiled artifacts.\x1b[0m\n");
+    print!("\x1b[1;33m  Are you sure you want to proceed? [y/N]: \x1b[0m");
+    let _ = stdout().flush();
+
+    let mut response = String::new();
+    if stdin().read_line(&mut response).is_err() {
+        println!("\n\x1b[31mAction aborted.\x1b[0m");
+        return;
     }
-    if let Ok(exe) = std::env::current_exe() {
-        if exe.exists() && std::fs::remove_file(&exe).is_ok() {
-            removed_items.push(exe.to_string_lossy().to_string());
-        }
+
+    let trimmed = response.trim().to_lowercase();
+    if trimmed != "y" && trimmed != "yes" {
+        println!("\x1b[32m✔ Deletion cancelled. Your GAGE installation remains active.\x1b[0m\n");
+        return;
     }
 
-    // 2. Remove the Cargo release/debug build targets (~/.cargo_target_gage)
+    println!("\n\x1b[33mUninstalling GAGE...\x1b[0m");
+
+    // Remove binary from $PREFIX/bin
+    let bin_path = format!("{}/bin/gage", std::env::var("PREFIX").unwrap_or_else(|_| "/data/data/com.termux/files/usr".into()));
+    if std::path::Path::new(&bin_path).exists() {
+        let _ = std::fs::remove_file(&bin_path);
+        println!("  \x1b[32m✔ Removed executable:\x1b[0m {}", bin_path);
+    }
+
+    // Remove cargo target cache
     if let Ok(home) = std::env::var("HOME") {
-        let target_dir = std::path::PathBuf::from(home).join(".cargo_target_gage");
-        if target_dir.exists() {
-            let _ = std::fs::remove_dir_all(&target_dir);
-            removed_items.push(target_dir.to_string_lossy().to_string());
+        let cache_path = format!("{}/.cargo_target_gage", home);
+        if std::path::Path::new(&cache_path).exists() {
+            let _ = std::fs::remove_dir_all(&cache_path);
+            println!("  \x1b[32m✔ Removed build cache:\x1b[0m {}", cache_path);
         }
     }
 
-    // 3. Remove all cached C runner binaries and scratch files
-    let cache_dirs = [
-        std::path::PathBuf::from("/data/data/com.termux/files/usr/tmp/gage_cache"),
-        std::path::PathBuf::from("/tmp/gage_cache"),
+    println!("\x1b[1;32m✔ GAGE has been completely uninstalled.\x1b[0m\n");
+}
+
+
+fn handle_continuous_banner() {
+    use std::io::Write;
+
+    let target_lines = [
+        r#"  ██████╗   █████╗   ██████╗  ███████╗"#,
+        r#" ██╔════╝  ██╔══██╗ ██╔════╝  ██╔════╝"#,
+        r#" ██║  ███╗ ███████║ ██║  ███╗ █████╗  "#,
+        r#" ██║   ██║ ██╔══██║ ██║   ██║ ██╔══╝  "#,
+        r#" ╚██████╔╝ ██║  ██║ ╚██████╔╝ ███████╗"#,
+        r#"  ╚═════╝  ╚═╝  ╚═╝  ╚═════╝  ╚══════╝"#,
     ];
-    for dir in &cache_dirs {
-        if dir.exists() {
-            let _ = std::fs::remove_dir_all(dir);
-            removed_items.push(dir.to_string_lossy().to_string());
-        }
-    }
-    let _ = std::fs::remove_file("/data/data/com.termux/files/usr/tmp/gage_repl.tmp.c");
-    let _ = std::fs::remove_file("/data/data/com.termux/files/usr/tmp/gage_repl.tmp");
 
-    println!("\x1b[1;32m✔ All GAGE binaries and execution targets removed!\x1b[0m");
-    for item in &removed_items {
-        println!("  \x1b[90mRemoved:\x1b[0m {}", item);
+    print!("\x1b[H\x1b[2J\x1b[?25l");
+    let _ = std::io::stdout().flush();
+
+    let running = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
+    let r_clone = running.clone();
+
+    // Listen for Enter key on separate thread to exit cleanly
+    std::thread::spawn(move || {
+        let mut buf = String::new();
+        let _ = std::io::stdin().read_line(&mut buf);
+        r_clone.store(false, std::sync::atomic::Ordering::SeqCst);
+    });
+
+    let mut frame: i32 = 0;
+    let t_start = std::time::Instant::now();
+
+    while running.load(std::sync::atomic::Ordering::Relaxed) {
+        print!("\x1b[1;1H\r");
+
+        for (row_idx, line) in target_lines.iter().enumerate() {
+            let mut col_idx: i32 = 0;
+            for ch in line.chars() {
+                if ch == ' ' {
+                    print!(" ");
+                } else {
+                    let wave = ((col_idx * 5 + (row_idx as i32) * 16 - frame * 7).rem_euclid(220)) as f32 / 220.0;
+                    let (r, g, b) = if wave > 0.42 && wave < 0.58 {
+                        let peak = 1.0 - ((wave - 0.50).abs() / 0.08);
+                        let r = (40.0 + 215.0 * peak) as u8;
+                        let g = (200.0 + 55.0 * peak) as u8;
+                        let b = (100.0 + 155.0 * peak) as u8;
+                        (r, g, b)
+                    } else {
+                        let glow = (wave * std::f32::consts::PI * 2.0).sin() * 0.5 + 0.5;
+                        let r = (10.0 + 25.0 * glow) as u8;
+                        let g = (120.0 + 80.0 * glow) as u8;
+                        let b = (45.0 + 50.0 * glow) as u8;
+                        (r, g, b)
+                    };
+                    print!("\x1b[38;2;{};{};{}m{}\x1b[0m", r, g, b, ch);
+                }
+                col_idx += 1;
+            }
+            print!("\x1b[K\n");
+        }
+
+        let elapsed = t_start.elapsed().as_secs_f32();
+        let fps = if elapsed > 0.0 { frame as f32 / elapsed } else { 0.0 };
+        let pulse = ((frame * 6).rem_euclid(360) as f32 * std::f32::consts::PI / 180.0).sin() * 0.5 + 0.5;
+        let dot_g = (160.0 + 95.0 * pulse) as u8;
+
+        print!("  \x1b[38;2;0;{};120m●\x1b[0m \x1b[1;37mGAGE CONTINUOUS ENGINE\x1b[0m \x1b[38;2;90;105;120m::\x1b[0m \x1b[38;2;60;225;130m{:.1} FPS\x1b[0m \x1b[90m(Press ENTER to exit)\x1b[0m\x1b[K\n", dot_g, fps);
+        let _ = std::io::stdout().flush();
+
+        frame = frame.wrapping_add(1);
+        std::thread::sleep(std::time::Duration::from_millis(45));
     }
-    println!("\n\x1b[1m📁 Source repository remains completely untouched:\x1b[0m /sdcard/GAGE");
-    println!("\x1b[90mRun '\x1b[33mhash -r\x1b[90m' to clear the terminal command cache.\x1b[0m");
-    std::process::exit(0);
+
+    print!("\x1b[?25h\n");
+    let _ = std::io::stdout().flush();
 }
 
 fn handle_clean() {
