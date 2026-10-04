@@ -7,16 +7,25 @@ import time
 import re
 import threading
 import tempfile
+import platform
 
 CYAN = "\033[1;36m"
 GREEN = "\033[1;32m"
 RED = "\033[1;31m"
+YELLOW = "\033[1;33m"
 PURPLE = "\033[1;35m"
 BOLD = "\033[1m"
 DIM = "\033[90m"
 RESET = "\033[0m"
 
 SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+
+def get_clang_version():
+    try:
+        res = subprocess.run(["clang", "--version"], capture_output=True, text=True)
+        return res.stdout.splitlines()[0].split("(")[0].strip()
+    except Exception:
+        return "Clang LLVM (AOT)"
 
 def synthesize_mock_stdin(content):
     inputs = []
@@ -46,11 +55,10 @@ class LiveSpinner:
         idx = 0
         while not self.stop_event.is_set():
             frame = SPINNER_FRAMES[idx % len(SPINNER_FRAMES)]
-            # Clean full-line erase with padded output to prevent ghost characters
-            sys.stdout.write(f"\r\033[2K {self.prefix} {CYAN}{frame}{RESET} {DIM}{self.name[:20]}{RESET}")
+            sys.stdout.write(f"\r\033[2K {self.prefix} {CYAN}{frame}{RESET} {DIM}{self.name[:18]}{RESET}")
             sys.stdout.flush()
             idx += 1
-            time.sleep(0.065)
+            time.sleep(0.06)
 
     def start(self):
         self.thread = threading.Thread(target=self._spin, daemon=True)
@@ -71,19 +79,28 @@ def run_suite():
     all_tests = [(t, "DEMO") for t in examples] + [(t, "SPEC") for t in specs]
     total = len(all_tests)
 
-    print(f"\n{CYAN}⚡ GAGE TEST HARNESS{RESET} {DIM}v0.1.0{RESET}")
-    print(f"{DIM}────────────────────────────────────────{RESET}")
+    clang_info = get_clang_version()
 
-    passed = 0
-    failed = 0
+    print(f"\n{CYAN}╔════════════════════════════════════════╗{RESET}")
+    print(f"{CYAN}║{RESET}  {BOLD}⚡ GAGE AOT COMPILER REGRESSION SUITE{RESET}  {CYAN}║{RESET}")
+    print(f"{CYAN}╚════════════════════════════════════════╝{RESET}")
+    print(f" {BOLD}Target:{RESET}  {platform.system()} ({platform.machine()})")
+    print(f" {BOLD}Engine:{RESET}  {clang_info}")
+    print(f" {BOLD}SIMD:{RESET}    Clang ext_vector_type (v2/v3/v4)")
+    print(f"{DIM}──────────────────────────────────────────{RESET}")
+
+    demo_passed, demo_failed = 0, 0
+    spec_passed, spec_failed = 0, 0
     timings = []
     failures = []
+    slowest = ("", 0.0)
+    fastest = ("", 999999.0)
+
     start_wall = time.time()
 
     for idx, (path, kind) in enumerate(all_tests, 1):
         fname = os.path.basename(path).replace(".gage", "")
-        # Compact display name tailored for mobile screens
-        short_name = (fname[:18] + "…") if len(fname) > 19 else fname
+        short_name = (fname[:17] + "…") if len(fname) > 18 else fname
         prefix = f"[{idx:02d}/{total:02d}]"
 
         with open(path, "r", encoding="utf-8") as f:
@@ -113,51 +130,77 @@ def run_suite():
                 stderr=subprocess.PIPE,
                 text=True
             )
-            stdout, stderr = proc.communicate(input=mock_in, timeout=10)
+            stdout, stderr = proc.communicate(input=mock_in, timeout=12)
             ret = proc.returncode
             elapsed = (time.perf_counter() - t0) * 1000.0
             spinner.stop()
 
             if ret == 0:
                 status = f"{GREEN}✔ PASS{RESET}"
-                passed += 1
+                if kind == "DEMO": demo_passed += 1
+                else: spec_passed += 1
             else:
                 status = f"{RED}✖ FAIL{RESET}"
-                failed += 1
+                if kind == "DEMO": demo_failed += 1
+                else: spec_failed += 1
                 failures.append((fname, f"Exit {ret}"))
         except Exception as e:
             spinner.stop()
             elapsed = (time.perf_counter() - t0) * 1000.0
             status = f"{RED}✖ FAIL{RESET}"
-            failed += 1
-            failures.append((fname, "Timed out / Error"))
+            if kind == "DEMO": demo_failed += 1
+            else: spec_failed += 1
+            failures.append((fname, "Timeout / Error"))
         finally:
             if temp_file and os.path.exists(temp_file):
                 try: os.remove(temp_file)
                 except Exception: pass
 
         timings.append(elapsed)
+        if elapsed > slowest[1]: slowest = (fname, elapsed)
+        if elapsed < fastest[1]: fastest = (fname, elapsed)
+
         tag = f"{PURPLE}[{kind[0]}]{RESET}"
         ms_str = f"{DIM}{int(elapsed):>3}ms{RESET}"
 
-        # Clears whole line (\033[2K) then writes clean, un-wrapped row
-        sys.stdout.write(f"\r\033[2K {prefix} {status} {tag} {BOLD}{short_name:<19}{RESET} {ms_str}\n")
+        sys.stdout.write(f"\r\033[2K {prefix} {status} {tag} {BOLD}{short_name:<18}{RESET} {ms_str}\n")
         sys.stdout.flush()
 
     total_wall = time.time() - start_wall
+    passed_total = demo_passed + spec_passed
+    failed_total = demo_failed + spec_failed
     avg_latency = sum(timings) / len(timings) if timings else 0.0
 
-    print(f"{DIM}────────────────────────────────────────{RESET}")
-    if failed == 0:
-        print(f"{GREEN}{BOLD}✨ ALL {total} SYSTEM TESTS PASSED! ✨{RESET}")
-    else:
-        print(f"{RED}{BOLD}✖ {failed} FAILED / {passed} PASSED{RESET}")
+    sorted_timings = sorted(timings)
+    p50 = sorted_timings[int(len(sorted_timings) * 0.50)] if sorted_timings else 0.0
+    p95 = sorted_timings[int(len(sorted_timings) * 0.95)] if sorted_timings else 0.0
+    throughput = total / total_wall if total_wall > 0 else 0.0
+
+    # Executive Report Box
+    print(f"\n{CYAN}╔════════════════════════════════════════╗{RESET}")
+    print(f"{CYAN}║{RESET}      {BOLD}EXECUTIVE DIAGNOSTIC SUMMARY{RESET}      {CYAN}║{RESET}")
+    print(f"{CYAN}╠════════════════════════════════════════╣{RESET}")
+    print(f" {BOLD}Suite Status:{RESET}   {GREEN if failed_total == 0 else RED}{BOLD}{'ALL TESTS PASSED' if failed_total == 0 else 'VERIFICATION FAILED'}{RESET}")
+    print(f" {BOLD}Demo Examples:{RESET}  {GREEN}{demo_passed}{RESET}/{len(examples)} passed {DIM}({demo_failed} fail){RESET}")
+    print(f" {BOLD}Language Specs:{RESET} {GREEN}{spec_passed}{RESET}/{len(specs)} passed {DIM}({spec_failed} fail){RESET}")
+    print(f"{CYAN}╟────────────────────────────────────────╢{RESET}")
+    print(f" {BOLD}Latency (Avg):{RESET}  {CYAN}{avg_latency:.1f}ms{RESET} / unit")
+    print(f" {BOLD}Median (p50):{RESET}   {CYAN}{p50:.1f}ms{RESET}")
+    print(f" {BOLD}Tail (p95):{RESET}     {YELLOW}{p95:.1f}ms{RESET}")
+    print(f" {BOLD}Fastest Unit:{RESET}   {fastest[0][:15]} {DIM}({fastest[1]:.1f}ms){RESET}")
+    print(f" {BOLD}Slowest Unit:{RESET}   {slowest[0][:15]} {DIM}({slowest[1]:.1f}ms){RESET}")
+    print(f"{CYAN}╟────────────────────────────────────────╢{RESET}")
+    print(f" {BOLD}Throughput:{RESET}     {PURPLE}{throughput:.1f}{RESET} suites/sec")
+    print(f" {BOLD}Total Runtime:{RESET}  {YELLOW}{total_wall:.2f}s{RESET}")
+    print(f"{CYAN}╚════════════════════════════════════════╝{RESET}")
+
+    if failures:
+        print(f"\n{RED}{BOLD}Failed Units Detail:{RESET}")
         for fn, err in failures:
             print(f"  {RED}↳ {fn}: {err}{RESET}")
 
-    print(f" {BOLD}Total Time:{RESET} {total_wall:.2f}s  {DIM}|{RESET}  {BOLD}Avg:{RESET} {avg_latency:.1f}ms/unit")
-    print(f"{DIM}────────────────────────────────────────{RESET}\n")
-    return 0 if failed == 0 else 1
+    print()
+    return 0 if failed_total == 0 else 1
 
 if __name__ == "__main__":
     sys.exit(run_suite())
