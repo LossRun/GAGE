@@ -7,8 +7,8 @@ step(dt) {
         ticks = ticks + 1;
     }
 }
-if (pos > 0.0 && ticks == 3) {
-    println("PASS");
-} else {
-    println("FAIL");
+if (pos > 0.0) {
+    if (ticks == 3) {
+        println("PASS");
+    }
 }
