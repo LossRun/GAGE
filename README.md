@@ -1371,7 +1371,7 @@ See the following file for the complete license text:
 
 ### GAGE
 
-**A compact programming language built around native execution, mathematics, and simulation.**
+**A programming language built around native execution, mathematics, and simulation.**
 
 ⭐ Star the repository if you find the project interesting.
 
