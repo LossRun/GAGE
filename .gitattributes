@@ -1,7 +1,0 @@
-*.gage linguist-documentation
-*.py linguist-vendored
-*.sh linguist-vendored
-*.ps1 linguist-vendored
-tests_suite/** linguist-vendored
-test_runner.py linguist-vendored
-fix_codegen.py linguist-vendored
