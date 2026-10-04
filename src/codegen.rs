@@ -73,6 +73,11 @@ impl CodeGen {
         self.emit_line("static inline double lerp(double a, double b, double t) { return a + (b - a) * t; }");
         self.emit_line("static inline double gage_random(void) { return (double)rand() / (double)RAND_MAX; }");
         self.emit_line("static inline void clear_screen(void) { printf(\"\\x1b[H\\x1b[2J\"); fflush(stdout); }");
+        self.emit_line(r#"static inline void color_cyan(void) { printf("\x1b[1;36m"); }"#);
+        self.emit_line(r#"static inline void color_magenta(void) { printf("\x1b[35m"); }"#);
+        self.emit_line(r#"static inline void color_yellow(void) { printf("\x1b[1;33m"); }"#);
+        self.emit_line(r#"static inline void color_green(void) { printf("\x1b[1;32m"); }"#);
+        self.emit_line(r#"static inline void color_reset(void) { printf("\x1b[0m"); }"#);
         self.emit_line("static inline long long parse_int(const char* str) { return str ? atoll(str) : 0; }");
         self.emit_line("typedef struct { double m[16]; } gage_mat4;");
         self.emit_line("static inline gage_mat4 mat4_identity(void) { gage_mat4 res = {0}; res.m[0] = 1.0; res.m[5] = 1.0; res.m[10] = 1.0; res.m[15] = 1.0; return res; }");

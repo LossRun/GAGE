@@ -1,4 +1,4 @@
-// High-Detail 30-Second 3D Multi-Axis Wireframe Cube with Neon ANSI Colors
+// High-Detail 30-Second 3D Wireframe Cube with Clean Native Colors
 
 fn edge_dist_sq(px, py, x1, y1, x2, y2) {
     let dx = x2 - x1;
@@ -17,15 +17,15 @@ fn edge_dist_sq(px, py, x1, y1, x2, y2) {
 }
 
 let frame = 0;
-let total_frames = 800; // ~30 seconds of real-time animation
+let total_frames = 800; // ~30 seconds of animation
 
 while (frame < total_frames) {
     clear_screen();
-    print("\x1b[1;32m");
+    color_green();
     println("╔══════════════════════════════════════════════════════════╗");
     println("║    ⚡ GAGE 3D NEON WIREFRAME ENGINE (mat4 + SIMD)         ║");
     println("╚══════════════════════════════════════════════════════════╝");
-    print("\x1b[0m");
+    color_reset();
 
     let sec = floor(frame * 0.038);
     print("  Time: ");
@@ -35,7 +35,6 @@ while (frame < total_frames) {
     print(" / ");
     println(total_frames);
 
-    // Continuous 3-axis tumbling with sine/cosine variation
     let pitch = frame * 0.055 + sin(frame * 0.02) * 0.35;
     let yaw   = frame * 0.085;
     let roll  = frame * 0.035 + cos(frame * 0.015) * 0.25;
@@ -46,67 +45,64 @@ while (frame < total_frames) {
     let sr = sin(roll);
 
     let rot_y = mat4_rotate_y(yaw);
-
-    // Cube half-size
     let sz = 1.35;
 
-    // V0: (-sz, -sz, -sz)
+    // V0
     let y0_p = -sz * cp - (-sz) * sp;
     let z0_p = -sz * sp + (-sz) * cp;
     let x0_r = -sz * cr - y0_p * sr;
     let y0_r = -sz * sr + y0_p * cr;
     let v0 = mat4_transform_vec3(rot_y, vec3(x0_r, y0_r, z0_p));
 
-    // V1: ( sz, -sz, -sz)
+    // V1
     let y1_p = -sz * cp - (-sz) * sp;
     let z1_p = -sz * sp + (-sz) * cp;
     let x1_r =  sz * cr - y1_p * sr;
     let y1_r =  sz * sr + y1_p * cr;
     let v1 = mat4_transform_vec3(rot_y, vec3(x1_r, y1_r, z1_p));
 
-    // V2: ( sz,  sz, -sz)
+    // V2
     let y2_p =  sz * cp - (-sz) * sp;
     let z2_p =  sz * sp + (-sz) * cp;
     let x2_r =  sz * cr - y2_p * sr;
     let y2_r =  sz * sr + y2_p * cr;
     let v2 = mat4_transform_vec3(rot_y, vec3(x2_r, y2_r, z2_p));
 
-    // V3: (-sz,  sz, -sz)
+    // V3
     let y3_p =  sz * cp - (-sz) * sp;
     let z3_p =  sz * sp + (-sz) * cp;
     let x3_r = -sz * cr - y3_p * sr;
     let y3_r = -sz * sr + y3_p * cr;
     let v3 = mat4_transform_vec3(rot_y, vec3(x3_r, y3_r, z3_p));
 
-    // V4: (-sz, -sz,  sz)
+    // V4
     let y4_p = -sz * cp - ( sz) * sp;
     let z4_p = -sz * sp + ( sz) * cp;
     let x4_r = -sz * cr - y4_p * sr;
     let y4_r = -sz * sr + y4_p * cr;
     let v4 = mat4_transform_vec3(rot_y, vec3(x4_r, y4_r, z4_p));
 
-    // V5: ( sz, -sz,  sz)
+    // V5
     let y5_p = -sz * cp - ( sz) * sp;
     let z5_p = -sz * sp + ( sz) * cp;
     let x5_r =  sz * cr - y5_p * sr;
     let y5_r =  sz * sr + y5_p * cr;
     let v5 = mat4_transform_vec3(rot_y, vec3(x5_r, y5_r, z5_p));
 
-    // V6: ( sz,  sz,  sz)
+    // V6
     let y6_p =  sz * cp - ( sz) * sp;
     let z6_p =  sz * sp + ( sz) * cp;
     let x6_r =  sz * cr - y6_p * sr;
     let y6_r =  sz * sr + y6_p * cr;
     let v6 = mat4_transform_vec3(rot_y, vec3(x6_r, y6_r, z6_p));
 
-    // V7: (-sz,  sz,  sz)
+    // V7
     let y7_p =  sz * cp - ( sz) * sp;
     let z7_p =  sz * sp + ( sz) * cp;
     let x7_r = -sz * cr - y7_p * sr;
     let y7_r = -sz * sr + y7_p * cr;
     let v7 = mat4_transform_vec3(rot_y, vec3(x7_r, y7_r, z7_p));
 
-    // Perspective projection onto 50x22 screen grid
     let cam_dist = 4.2;
     let p0x = floor((v0.x / (v0.z + cam_dist)) * 38.0 + 25.0);
     let p0y = floor((v0.y / (v0.z + cam_dist)) * 18.0 + 11.0);
@@ -126,7 +122,6 @@ while (frame < total_frames) {
     let p7x = floor((v7.x / (v7.z + cam_dist)) * 38.0 + 25.0);
     let p7y = floor((v7.y / (v7.z + cam_dist)) * 18.0 + 11.0);
 
-    // Rasterize 51x23 screen frame with continuous edges and ANSI colors
     let y = 0.0;
     while (y < 23.0) {
         let x = 0.0;
@@ -134,7 +129,6 @@ while (frame < total_frames) {
             let hit = 0;
             let is_front = 0;
 
-            // Check 8 Vertices
             if ((x - p0x)*(x - p0x) + (y - p0y)*(y - p0y)*4.0 < 2.0) { hit = 2; }
             if (hit == 0 && (x - p1x)*(x - p1x) + (y - p1y)*(y - p1y)*4.0 < 2.0) { hit = 2; }
             if (hit == 0 && (x - p2x)*(x - p2x) + (y - p2y)*(y - p2y)*4.0 < 2.0) { hit = 2; }
@@ -144,21 +138,17 @@ while (frame < total_frames) {
             if (hit == 0 && (x - p6x)*(x - p6x) + (y - p6y)*(y - p6y)*4.0 < 2.0) { hit = 2; }
             if (hit == 0 && (x - p7x)*(x - p7x) + (y - p7y)*(y - p7y)*4.0 < 2.0) { hit = 2; }
 
-            // Continuous Edge Distance Checks (12 Wireframe Edges)
             if (hit == 0) {
-                // Back Face
                 if (edge_dist_sq(x, y, p0x, p0y, p1x, p1y) < 1.3) { hit = 1; if (v0.z + v1.z < 0.0) { is_front = 1; } }
                 if (hit == 0 && edge_dist_sq(x, y, p1x, p1y, p2x, p2y) < 1.3) { hit = 1; if (v1.z + v2.z < 0.0) { is_front = 1; } }
                 if (hit == 0 && edge_dist_sq(x, y, p2x, p2y, p3x, p3y) < 1.3) { hit = 1; if (v2.z + v3.z < 0.0) { is_front = 1; } }
                 if (hit == 0 && edge_dist_sq(x, y, p3x, p3y, p0x, p0y) < 1.3) { hit = 1; if (v3.z + v0.z < 0.0) { is_front = 1; } }
 
-                // Front Face
                 if (hit == 0 && edge_dist_sq(x, y, p4x, p4y, p5x, p5y) < 1.3) { hit = 1; if (v4.z + v5.z < 0.0) { is_front = 1; } }
                 if (hit == 0 && edge_dist_sq(x, y, p5x, p5y, p6x, p6y) < 1.3) { hit = 1; if (v5.z + v6.z < 0.0) { is_front = 1; } }
                 if (hit == 0 && edge_dist_sq(x, y, p6x, p6y, p7x, p7y) < 1.3) { hit = 1; if (v6.z + v7.z < 0.0) { is_front = 1; } }
                 if (hit == 0 && edge_dist_sq(x, y, p7x, p7y, p4x, p4y) < 1.3) { hit = 1; if (v7.z + v4.z < 0.0) { is_front = 1; } }
 
-                // Connecting Pillars
                 if (hit == 0 && edge_dist_sq(x, y, p0x, p0y, p4x, p4y) < 1.3) { hit = 1; if (v0.z + v4.z < 0.0) { is_front = 1; } }
                 if (hit == 0 && edge_dist_sq(x, y, p1x, p1y, p5x, p5y) < 1.3) { hit = 1; if (v1.z + v5.z < 0.0) { is_front = 1; } }
                 if (hit == 0 && edge_dist_sq(x, y, p2x, p2y, p6x, p6y) < 1.3) { hit = 1; if (v2.z + v6.z < 0.0) { is_front = 1; } }
@@ -166,13 +156,19 @@ while (frame < total_frames) {
             }
 
             if (hit == 2) {
-                print("\x1b[1;33m@\x1b[0m");
+                color_yellow();
+                print("@");
+                color_reset();
             } else {
                 if (hit == 1) {
                     if (is_front == 1) {
-                        print("\x1b[1;36m#\x1b[0m");
+                        color_cyan();
+                        print("#");
+                        color_reset();
                     } else {
-                        print("\x1b[35m·\x1b[0m");
+                        color_magenta();
+                        print(".");
+                        color_reset();
                     }
                 } else {
                     print(" ");
