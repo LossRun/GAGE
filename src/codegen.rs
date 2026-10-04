@@ -53,41 +53,34 @@ impl CodeGen {
         self.emit_line("#define PI 3.14159265358979323846");
         self.emit_line("#define TAU 6.28318530717958647692");
         self.emit_line("static inline void gage_sleep(double ms) { usleep((useconds_t)(ms * 1000.0)); }");
+        self.emit_line("typedef double gage_vec2 __attribute__((ext_vector_type(2)));");
+        self.emit_line("typedef double gage_vec3 __attribute__((ext_vector_type(3)));");
+        self.emit_line("typedef double gage_vec4 __attribute__((ext_vector_type(4)));\n");
+        self.emit_line("static inline gage_vec2 make_vec2(double x, double y) { return (gage_vec2){x, y}; }");
+        self.emit_line("static inline gage_vec3 make_vec3(double x, double y, double z) { return (gage_vec3){x, y, z}; }");
+        self.emit_line("static inline gage_vec4 make_vec4(double x, double y, double z, double w) { return (gage_vec4){x, y, z, w}; }\n");
+        self.emit_line("static inline double gage_dot_vec3(gage_vec3 a, gage_vec3 b) { return a.x*b.x + a.y*b.y + a.z*b.z; }");
+        self.emit_line("static inline gage_vec3 gage_cross_vec3(gage_vec3 a, gage_vec3 b) { return (gage_vec3){a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x}; }");
+        self.emit_line("static inline double gage_length_vec3(gage_vec3 v) { return sqrt(v.x*v.x + v.y*v.y + v.z*v.z); }");
+        self.emit_line("static inline gage_vec3 gage_normalize_vec3(gage_vec3 v) { double l = gage_length_vec3(v); return (gage_vec3){v.x/l, v.y/l, v.z/l}; }");
+        self.emit_line("static inline gage_vec3 cross(gage_vec3 a, gage_vec3 b) { return gage_cross_vec3(a, b); }");
+        self.emit_line("static inline double length(gage_vec3 v) { return gage_length_vec3(v); }");
+        self.emit_line("static inline gage_vec3 normalize(gage_vec3 v) { return gage_normalize_vec3(v); }");
+        self.emit_line("static inline double dot(gage_vec3 a, gage_vec3 b) { return a.x*b.x + a.y*b.y + a.z*b.z; }");
+        self.emit_line("static inline double distance(gage_vec3 a, gage_vec3 b) { double dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z; return sqrt(dx*dx + dy*dy + dz*dz); }");
+        self.emit_line("static inline gage_vec3 reflect(gage_vec3 v, gage_vec3 n) { double d = 2.0 * (v.x*n.x + v.y*n.y + v.z*n.z); return (gage_vec3){v.x - d*n.x, v.y - d*n.y, v.z - d*n.z}; }");
+        self.emit_line("static inline double clamp(double val, double min_v, double max_v) { if (val < min_v) return min_v; if (val > max_v) return max_v; return val; }");
+        self.emit_line("static inline double lerp(double a, double b, double t) { return a + (b - a) * t; }");
+        self.emit_line("static inline double gage_random(void) { return (double)rand() / (double)RAND_MAX; }");
+        self.emit_line("static inline void clear_screen(void) { printf(\"\\x1b[H\\x1b[2J\"); fflush(stdout); }");
+        self.emit_line("static inline long long parse_int(const char* str) { return str ? atoll(str) : 0; }");
         self.emit_line("typedef struct { double m[16]; } gage_mat4;");
         self.emit_line("static inline gage_mat4 mat4_identity(void) { gage_mat4 res = {0}; res.m[0] = 1.0; res.m[5] = 1.0; res.m[10] = 1.0; res.m[15] = 1.0; return res; }");
         self.emit_line("static inline gage_mat4 mat4_translate(double tx, double ty, double tz) { gage_mat4 res = mat4_identity(); res.m[12] = tx; res.m[13] = ty; res.m[14] = tz; return res; }");
         self.emit_line("static inline gage_mat4 mat4_scale(double sx, double sy, double sz) { gage_mat4 res = {0}; res.m[0] = sx; res.m[5] = sy; res.m[10] = sz; res.m[15] = 1.0; return res; }");
         self.emit_line("static inline gage_mat4 mat4_rotate_y(double rad) { gage_mat4 res = mat4_identity(); double c = cos(rad), s = sin(rad); res.m[0] = c; res.m[2] = -s; res.m[8] = s; res.m[10] = c; return res; }");
         self.emit_line("static inline gage_mat4 mat4_mul(gage_mat4 a, gage_mat4 b) { gage_mat4 res = {0}; for (int r = 0; r < 4; r++) { for (int c = 0; c < 4; c++) { double sum = 0.0; for (int k = 0; k < 4; k++) sum += a.m[k * 4 + r] * b.m[c * 4 + k]; res.m[c * 4 + r] = sum; } } return res; }");
-        self.emit_line("static inline gage_vec3 mat4_transform_vec3(gage_mat4 m, gage_vec3 v) { double x = m.m[0]*v.x + m.m[4]*v.y + m.m[8]*v.z + m.m[12]; double y = m.m[1]*v.x + m.m[5]*v.y + m.m[9]*v.z + m.m[13]; double z = m.m[2]*v.x + m.m[6]*v.y + m.m[10]*v.z + m.m[14]; return (gage_vec3){x, y, z}; }");
-
-        self.emit_line("typedef double gage_vec2 __attribute__((ext_vector_type(2)));");
-        self.emit_line("typedef double gage_vec3 __attribute__((ext_vector_type(3)));");
-        self.emit_line("typedef double gage_vec4 __attribute__((ext_vector_type(4)));\n");
-
-        self.emit_line("static inline gage_vec2 make_vec2(double x, double y) { return (gage_vec2){x, y}; }");
-        self.emit_line("static inline gage_vec3 make_vec3(double x, double y, double z) { return (gage_vec3){x, y, z}; }");
-        self.emit_line("static inline gage_vec4 make_vec4(double x, double y, double z, double w) { return (gage_vec4){x, y, z, w}; }\n");
-
-        self.emit_line("static inline double gage_dot_vec3(gage_vec3 a, gage_vec3 b) { return a.x*b.x + a.y*b.y + a.z*b.z; }");
-        self.emit_line("static inline gage_vec3 gage_cross_vec3(gage_vec3 a, gage_vec3 b) { return (gage_vec3){a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x}; }");
-        self.emit_line("static inline double gage_length_vec3(gage_vec3 v) { return sqrt(v.x*v.x + v.y*v.y + v.z*v.z); }");
-        self.emit_line("
-static inline gage_vec3 cross(gage_vec3 a, gage_vec3 b) { return gage_cross_vec3(a, b); }
-static inline double length(gage_vec3 v) { return gage_length_vec3(v); }
-static inline gage_vec3 normalize(gage_vec3 v) { return gage_normalize_vec3(v); }
-
-static inline gage_vec3 gage_normalize_vec3(gage_vec3 v) { double l = gage_length_vec3(v); return (gage_vec3){v.x/l, v.y/l, v.z/l}; }\n");
-
-        self.emit_line("static inline double gage_random(void) { return (double)rand() / (double)RAND_MAX; }");
-        self.emit_line("static inline void clear_screen(void) { printf(\"\\x1b[H\\x1b[2J\"); fflush(stdout); }");
-        self.emit_line("static inline long long parse_int(const char* str) { return str ? atoll(str) : 0; }");
-        self.emit_line("static inline double clamp(double val, double min_v, double max_v) { if (val < min_v) return min_v; if (val > max_v) return max_v; return val; }");
-        self.emit_line("static inline double lerp(double a, double b, double t) { return a + (b - a) * t; }");
-        self.emit_line("static inline double distance(gage_vec3 a, gage_vec3 b) { double dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z; return sqrt(dx*dx + dy*dy + dz*dz); }");
-        self.emit_line("static inline gage_vec3 reflect(gage_vec3 v, gage_vec3 n) { double d = 2.0 * (v.x*n.x + v.y*n.y + v.z*n.z); return (gage_vec3){v.x - d*n.x, v.y - d*n.y, v.z - d*n.z}; }");
-        self.emit_line("static inline double dot(gage_vec3 a, gage_vec3 b) { return a.x*b.x + a.y*b.y + a.z*b.z; }");
-
+        self.emit_line("static inline gage_vec3 mat4_transform_vec3(gage_mat4 m, gage_vec3 v) { double x = m.m[0]*v.x + m.m[4]*v.y + m.m[8]*v.z + m.m[12]; double y = m.m[1]*v.x + m.m[5]*v.y + m.m[9]*v.z + m.m[13]; double z = m.m[2]*v.x + m.m[6]*v.y + m.m[10]*v.z + m.m[14]; return (gage_vec3){x, y, z}; }\n");
         // Safe dynamic array with bounds checking
         self.emit_line("typedef struct { double* data; size_t length; size_t capacity; } gage_array;");
         self.emit_line("static inline gage_array* gage_create_array(size_t cap) {");
