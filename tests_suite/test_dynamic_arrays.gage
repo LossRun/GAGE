@@ -1,0 +1,11 @@
+let arr = [10, 20, 30, 40];
+arr[1] = 99;
+let sum = 0;
+for n in arr {
+    sum = sum + n;
+}
+if (sum == 179 && arr[0] == 10 && arr[1] == 99) {
+    println("PASS");
+} else {
+    println("FAIL");
+}

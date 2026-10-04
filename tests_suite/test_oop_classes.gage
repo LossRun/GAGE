@@ -1,0 +1,13 @@
+class Calculator {
+    base;
+    fn setup(b) { this.base = b; }
+    fn multiply(val) { return this.base * val; }
+}
+let calc = new Calculator();
+calc.setup(12);
+let out = calc.multiply(5);
+if (out == 60) {
+    println("PASS");
+} else {
+    println("FAIL");
+}

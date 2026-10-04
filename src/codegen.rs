@@ -289,7 +289,7 @@ impl CodeGen {
             }
             Stmt::Break => self.emit_line("break;"),
             Stmt::Step { dt_var, body } => {
-                self.emit_line("{");
+                self.emit_line("for (int _step_i = 0; _step_i < 10; ++_step_i) {");
                 self.indent_level += 1;
                 self.emit_line(&format!("double {} = 0.016667;", dt_var));
                 for s in body { self.gen_stmt(s); }

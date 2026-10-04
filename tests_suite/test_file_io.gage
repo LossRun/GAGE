@@ -1,0 +1,12 @@
+let fname = "gage_test_tmp.txt";
+let ok = write_file(fname, "gage_io_ok");
+if (ok) {
+    let content = read_file(fname);
+    if (content == "gage_io_ok") {
+        println("PASS");
+    } else {
+        println("FAIL");
+    }
+} else {
+    println("FAIL");
+}

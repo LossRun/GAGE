@@ -1,0 +1,12 @@
+let a = 15;
+let b = 4;
+let sum = a + b;
+let sub = a - b;
+let mul = a * b;
+let div = a / b;
+let neg = -a;
+if (sum == 19 && sub == 11 && mul == 60 && div == 3 && neg == -15) {
+    println("PASS");
+} else {
+    println("FAIL");
+}

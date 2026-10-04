@@ -1,0 +1,14 @@
+let pos = 0.0;
+let vel = 100.0;
+let ticks = 0;
+step(dt) {
+    if (ticks < 3) {
+        pos = pos + (vel * dt);
+        ticks = ticks + 1;
+    }
+}
+if (pos > 0.0 && ticks == 3) {
+    println("PASS");
+} else {
+    println("FAIL");
+}
