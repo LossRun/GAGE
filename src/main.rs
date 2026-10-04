@@ -122,8 +122,8 @@ fn print_usage() {
 }
 
 fn start_repl() {
-    println!("\x1b[1;36m⚡ Gage 2.0 Interactive Shell\x1b[0m");
-    println!("\x1b[90mType code directly. Arrow keys navigate history. Type \x1b[33mexit\x1b[90m to quit.\x1b[0m\n");
+    println!("GAGE 0.2.0 (native-aot, Oct 2026) [Clang AOT on aarch64-linux-android]");
+    println!("Type \"help\", \"copyright\", \"credits\" or \"license\" for more information.");
 
     let mut rl = Editor::new().unwrap();
     rl.set_helper(Some(GageHelper));
@@ -132,35 +132,158 @@ fn start_repl() {
     let _ = rl.load_history(&history_path);
 
     let mut session_code = String::new();
+    let mut multi_buf: Vec<String> = Vec::new();
 
     loop {
-        let readline = rl.readline("\x1b[1;37m❯\x1b[0m ");
-        match readline {
+        let is_continuation = !multi_buf.is_empty();
+        // Bold Purple / Magenta ANSI: \x1b[1;35m
+        let prompt = if is_continuation { "\x1b[1;35m... \x1b[0m" } else { "\x1b[1;35m>>> \x1b[0m" };
+
+        match rl.readline(prompt) {
             Ok(line) => {
                 let trimmed = line.trim();
+
                 if trimmed.is_empty() {
-                    continue;
-                }
-                let _ = rl.add_history_entry(line.as_str());
-
-                if trimmed == "exit" || trimmed == "quit" {
-                    println!("\x1b[90mGoodbye!\x1b[0m");
-                    break;
-                }
-                if trimmed == "clear" {
-                    print!("\x1b[H\x1b[2J");
-                    let _ = io::stdout().flush();
-                    continue;
-                }
-
-                let to_compile = if !trimmed.ends_with(';') && !trimmed.ends_with('}') {
-                    if trimmed.starts_with("let ") || trimmed.contains('=') {
-                        format!("{};\n", trimmed)
-                    } else {
-                        format!("println({});\n", trimmed)
+                    if !is_continuation {
+                        continue;
                     }
                 } else {
-                    format!("{}\n", trimmed)
+                    let _ = rl.add_history_entry(line.as_str());
+                }
+
+                // Python-style Top Level Commands
+                if !is_continuation {
+                    match trimmed {
+                        "exit" | "quit" | "exit()" | "quit()" => {
+                            break;
+                        }
+                        "clear" | "clear()" => {
+                            print!("\x1b[H\x1b[2J");
+                            let _ = io::stdout().flush();
+                            continue;
+                        }
+                        "help" => {
+                            println!("Type help() for interactive help, or check out these basics:");
+                            println!("  • Variables:     let x = 42;");
+                            println!("  • SIMD Vectors:  let v = vec3(1.0, 2.0, 3.0) * 2.0;");
+                            println!("  • Canvas:        let c = gage_canvas_create(40, 15);");
+                            println!("  • Functions:     fn add(a, b) {{ return a + b; }}");
+                            println!("  • Exit:          exit or Ctrl+D");
+                            continue;
+                        }
+                        "help()" => {
+                            println!("Welcome to GAGE 0.2.0 interactive help utility!");
+                            println!("\nGAGE is a high-performance simulation language with native SIMD support.");
+                            println!("Expressions typed directly at the '>>>' prompt are evaluated immediately.");
+                            println!("Statements like 'let', 'fn', and assignments persist in session memory.");
+                            continue;
+                        }
+                        "license" => {
+                            println!("Type license() to see the full license text");
+                            continue;
+                        }
+                        "license()" => {
+                            println!("GAGE Software License");
+                            println!("=====================");
+                            println!("");
+                            println!("MIT License");
+                            println!("");
+                            println!("Copyright (c) 2026 LossRun / GAGE Project Contributors");
+                            println!("");
+                            println!("Permission is hereby granted, free of charge, to any person obtaining a copy");
+                            println!("of this software and associated documentation files (the \"Software\"), to deal");
+                            println!("in the Software without restriction, including without limitation the rights");
+                            println!("to use, copy, modify, merge, publish, distribute, sublicense, and/or sell");
+                            println!("copies of the Software, and to permit persons to whom the Software is");
+                            println!("furnished to do so, subject to the following conditions:");
+                            println!("");
+                            println!("The above copyright notice and this permission notice shall be included in all");
+                            println!("copies or substantial portions of the Software.");
+                            println!("");
+                            println!("THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR");
+                            println!("IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,");
+                            println!("FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE");
+                            println!("AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER");
+                            println!("LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,");
+                            println!("OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE");
+                            println!("SOFTWARE.");
+                            continue;
+                        }
+                        "copyright" | "copyright()" => {
+                            println!("Copyright (c) 2026 LossRun / GAGE Project Contributors.");
+                            println!("All Rights Reserved.");
+                            continue;
+                        }
+                        "credits" | "credits()" => {
+                            println!("Thanks to all contributors and the open-source systems community.");
+                            println!("GAGE is powered by Rust, LLVM/Clang AOT compilation, and native SIMD.");
+                            continue;
+                        }
+                        _ => {}
+                    }
+                }
+
+                multi_buf.push(line);
+
+                let combined_input = multi_buf.join("\n");
+                let mut balance: i32 = 0;
+                for c in combined_input.chars() {
+                    match c {
+                        '{' | '(' | '[' => balance += 1,
+                        '}' | ')' | ']' => balance -= 1,
+                        _ => {}
+                    }
+                }
+
+                if balance > 0 {
+                    continue;
+                }
+
+                let current_input = combined_input.trim().to_string();
+                multi_buf.clear();
+
+                if current_input.is_empty() {
+                    continue;
+                }
+
+                let is_assignment = {
+                    let chars: Vec<char> = current_input.chars().collect();
+                    let mut found = false;
+                    for i in 0..chars.len() {
+                        if chars[i] == '=' {
+                            let prev = if i > 0 { chars[i - 1] } else { ' ' };
+                            let next = if i + 1 < chars.len() { chars[i + 1] } else { ' ' };
+                            if prev != '=' && prev != '!' && prev != '<' && prev != '>' && next != '=' {
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    found
+                };
+
+                let is_explicit_print = current_input.starts_with("println(") || current_input.starts_with("print(");
+
+                let is_stmt = current_input.starts_with("let ")
+                    || current_input.starts_with("fn ")
+                    || current_input.starts_with("class ")
+                    || current_input.starts_with("while ")
+                    || current_input.starts_with("for ")
+                    || current_input.starts_with("if ")
+                    || is_assignment;
+
+                let (to_compile, persist) = if is_explicit_print {
+                    let mut s = current_input.clone();
+                    if !s.ends_with(';') { s.push(';'); }
+                    (format!("{}\n", s), false)
+                } else if is_stmt {
+                    let mut s = current_input.clone();
+                    if !s.ends_with(';') && !s.ends_with('}') { s.push(';'); }
+                    (format!("{}\n", s), true)
+                } else {
+                    let mut expr = current_input.clone();
+                    if expr.ends_with(';') { expr.pop(); }
+                    (format!("println({});\n", expr), false)
                 };
 
                 let candidate_code = format!("{}{}", session_code, to_compile);
@@ -169,7 +292,8 @@ fn start_repl() {
                 let tokens = match lexer.tokenize() {
                     Ok(t) => t,
                     Err(e) => {
-                        eprintln!("\x1b[31m[Lex Error]\x1b[0m Line {}:{}: {}", e.line, e.column, e.message);
+                        eprintln!("  File \"<stdin>\", line {}:{}", e.line, e.column);
+                        eprintln!("\x1b[31mSyntaxError:\x1b[0m {}", e.message);
                         continue;
                     }
                 };
@@ -178,14 +302,16 @@ fn start_repl() {
                 let program = match parser.parse() {
                     Ok(p) => p,
                     Err(e) => {
-                        eprintln!("\x1b[31m[Parse Error]\x1b[0m Line {}:{}: {}", e.line, e.column, e.message);
+                        eprintln!("  File \"<stdin>\", line {}:{}", e.line, e.column);
+                        eprintln!("\x1b[31mSyntaxError:\x1b[0m {}", e.message);
                         continue;
                     }
                 };
 
                 let mut checker = TypeChecker::new();
                 if let Err(e) = checker.check(&program) {
-                    eprintln!("\x1b[31m[Type Error]\x1b[0m {}", e);
+                    eprintln!("  File \"<stdin>\", line 1");
+                    eprintln!("\x1b[31mTypeError:\x1b[0m {}", e);
                     continue;
                 }
 
@@ -196,7 +322,7 @@ fn start_repl() {
                 let temp_bin = "/data/data/com.termux/files/usr/tmp/gage_repl.tmp";
 
                 if fs::write(temp_c, &c_code).is_err() {
-                    eprintln!("\x1b[31m[IO Error]\x1b[0m Failed to write temporary REPL source");
+                    eprintln!("\x1b[31mOSError:\x1b[0m Failed to write temporary REPL source");
                     continue;
                 }
 
@@ -207,13 +333,15 @@ fn start_repl() {
                 match clang_status {
                     Ok(out) if out.status.success() => {
                         let _ = Command::new(temp_bin).status();
-                        session_code.push_str(&to_compile);
+                        if persist {
+                            session_code.push_str(&to_compile);
+                        }
                     }
                     Ok(out) => {
-                        eprintln!("\x1b[31m[Clang Error]\x1b[0m\n{}", String::from_utf8_lossy(&out.stderr));
+                        eprintln!("\x1b[31mRuntimeError:\x1b[0m Compilation failed\n{}", String::from_utf8_lossy(&out.stderr));
                     }
                     Err(e) => {
-                        eprintln!("\x1b[31m[Toolchain Error]\x1b[0m Failed to invoke clang: {}", e);
+                        eprintln!("\x1b[31mToolchainError:\x1b[0m Failed to invoke clang: {}", e);
                     }
                 }
 
@@ -221,10 +349,14 @@ fn start_repl() {
                 let _ = fs::remove_file(temp_bin);
             }
             Err(ReadlineError::Interrupted) => {
-                println!("\x1b[90m(Ctrl+C) Type exit to quit\x1b[0m");
+                if !multi_buf.is_empty() {
+                    multi_buf.clear();
+                    println!("\nKeyboardInterrupt");
+                } else {
+                    println!("\nKeyboardInterrupt (Use exit or Ctrl+D to quit)");
+                }
             }
             Err(ReadlineError::Eof) => {
-                println!("\n\x1b[90mGoodbye!\x1b[0m");
                 break;
             }
             Err(err) => {
@@ -236,7 +368,6 @@ fn start_repl() {
 
     let _ = rl.save_history(&history_path);
 }
-
 
 fn print_gage_banner() {
     println!("\x1b[1;36m   ⚡ GAGE v0.1.0\x1b[0m \x1b[90m— High-Performance SIMD Simulation Language\x1b[0m");
