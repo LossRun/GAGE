@@ -134,7 +134,7 @@ fn start_repl() {
     let mut session_code = String::new();
 
     loop {
-        let readline = rl.readline("\x1b[1;32mgage \x1b[1;34m❯\x1b[0m ");
+        let readline = rl.readline("\x1b[1;37m❯\x1b[0m ");
         match readline {
             Ok(line) => {
                 let trimmed = line.trim();
