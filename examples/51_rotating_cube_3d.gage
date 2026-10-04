@@ -1,65 +1,119 @@
-// Real-time 3D Wireframe Cube with Edge Interpolation
-let angle = 0.0;
+// Real-time 30-Second 3D Multi-Axis Tumbling Wireframe Cube
 let frame = 0;
+let total_frames = 750; // ~30 seconds at ~35ms per frame
 
-// Pre-calculated 30-degree pitch tilt for 3D depth
-let pitch_c = cos(0.55);
-let pitch_s = sin(0.55);
-
-while (frame < 24) {
+while (frame < total_frames) {
     clear_screen();
     println("╔════════════════════════════════════════════════════════╗");
-    println("║    ⚡ GAGE 3D REAL-TIME WIREFRAME ENGINE (mat4 + SIMD)  ║");
+    println("║    ⚡ GAGE 3D REAL-TIME MULTI-AXIS ENGINE (mat4+SIMD)  ║");
     println("╚════════════════════════════════════════════════════════╝");
-    print("Frame: ");
-    println(frame);
+    
+    let sec = floor(frame * 0.04);
+    print("Time: ");
+    print(sec);
+    print("s / 30s | Frame: ");
+    print(frame);
+    print(" / ");
+    println(total_frames);
 
-    let rot = mat4_rotate_y(angle);
+    // Continuous 3-axis rotation angles
+    let pitch = frame * 0.045;
+    let yaw   = frame * 0.065;
+    let roll  = frame * 0.025;
 
-    // 8 Cube Vertices with Isometric Pitch Tilt
-    let y0 = -1.2 * pitch_c - (-1.2) * pitch_s;
-    let z0 = -1.2 * pitch_s + (-1.2) * pitch_c;
-    let y1 =  1.2 * pitch_c - (-1.2) * pitch_s;
-    let z1 =  1.2 * pitch_s + (-1.2) * pitch_c;
-    let y2 =  1.2 * pitch_c - ( 1.2) * pitch_s;
-    let z2 =  1.2 * pitch_s + ( 1.2) * pitch_c;
-    let y3 = -1.2 * pitch_c - ( 1.2) * pitch_s;
-    let z3 = -1.2 * pitch_s + ( 1.2) * pitch_c;
+    let cp = cos(pitch);
+    let sp = sin(pitch);
+    let cr = cos(roll);
+    let sr = sin(roll);
 
-    let v0 = mat4_transform_vec3(rot, vec3(-1.2, y0, z0));
-    let v1 = mat4_transform_vec3(rot, vec3( 1.2, y0, z0));
-    let v2 = mat4_transform_vec3(rot, vec3( 1.2, y1, z1));
-    let v3 = mat4_transform_vec3(rot, vec3(-1.2, y1, z1));
-    let v4 = mat4_transform_vec3(rot, vec3(-1.2, y3, z3));
-    let v5 = mat4_transform_vec3(rot, vec3( 1.2, y3, z3));
-    let v6 = mat4_transform_vec3(rot, vec3( 1.2, y2, z2));
-    let v7 = mat4_transform_vec3(rot, vec3(-1.2, y2, z2));
+    let rot_y = mat4_rotate_y(yaw);
 
-    // Perspective Projection onto 48x22 Screen Grid
-    let p0x = floor((v0.x / (v0.z + 3.8)) * 36.0 + 24.0);
-    let p0y = floor((v0.y / (v0.z + 3.8)) * 16.0 + 11.0);
-    let p1x = floor((v1.x / (v1.z + 3.8)) * 36.0 + 24.0);
-    let p1y = floor((v1.y / (v1.z + 3.8)) * 16.0 + 11.0);
-    let p2x = floor((v2.x / (v2.z + 3.8)) * 36.0 + 24.0);
-    let p2y = floor((v2.y / (v2.z + 3.8)) * 16.0 + 11.0);
-    let p3x = floor((v3.x / (v3.z + 3.8)) * 36.0 + 24.0);
-    let p3y = floor((v3.y / (v3.z + 3.8)) * 16.0 + 11.0);
+    // Rotate 8 vertices across X (Pitch) and Z (Roll), then Y (Yaw via mat4)
+    // Cube local size = 1.25
+    let sz = 1.25;
 
-    let p4x = floor((v4.x / (v4.z + 3.8)) * 36.0 + 24.0);
-    let p4y = floor((v4.y / (v4.z + 3.8)) * 16.0 + 11.0);
-    let p5x = floor((v5.x / (v5.z + 3.8)) * 36.0 + 24.0);
-    let p5y = floor((v5.y / (v5.z + 3.8)) * 16.0 + 11.0);
-    let p6x = floor((v6.x / (v6.z + 3.8)) * 36.0 + 24.0);
-    let p6y = floor((v6.y / (v6.z + 3.8)) * 16.0 + 11.0);
-    let p7x = floor((v7.x / (v7.z + 3.8)) * 36.0 + 24.0);
-    let p7y = floor((v7.y / (v7.z + 3.8)) * 16.0 + 11.0);
+    // V0: (-sz, -sz, -sz)
+    let y0_p = -sz * cp - (-sz) * sp;
+    let z0_p = -sz * sp + (-sz) * cp;
+    let x0_r = -sz * cr - y0_p * sr;
+    let y0_r = -sz * sr + y0_p * cr;
+    let v0 = mat4_transform_vec3(rot_y, vec3(x0_r, y0_r, z0_p));
+
+    // V1: ( sz, -sz, -sz)
+    let y1_p = -sz * cp - (-sz) * sp;
+    let z1_p = -sz * sp + (-sz) * cp;
+    let x1_r =  sz * cr - y1_p * sr;
+    let y1_r =  sz * sr + y1_p * cr;
+    let v1 = mat4_transform_vec3(rot_y, vec3(x1_r, y1_r, z1_p));
+
+    // V2: ( sz,  sz, -sz)
+    let y2_p =  sz * cp - (-sz) * sp;
+    let z2_p =  sz * sp + (-sz) * cp;
+    let x2_r =  sz * cr - y2_p * sr;
+    let y2_r =  sz * sr + y2_p * cr;
+    let v2 = mat4_transform_vec3(rot_y, vec3(x2_r, y2_r, z2_p));
+
+    // V3: (-sz,  sz, -sz)
+    let y3_p =  sz * cp - (-sz) * sp;
+    let z3_p =  sz * sp + (-sz) * cp;
+    let x3_r = -sz * cr - y3_p * sr;
+    let y3_r = -sz * sr + y3_p * cr;
+    let v3 = mat4_transform_vec3(rot_y, vec3(x3_r, y3_r, z3_p));
+
+    // V4: (-sz, -sz,  sz)
+    let y4_p = -sz * cp - ( sz) * sp;
+    let z4_p = -sz * sp + ( sz) * cp;
+    let x4_r = -sz * cr - y4_p * sr;
+    let y4_r = -sz * sr + y4_p * cr;
+    let v4 = mat4_transform_vec3(rot_y, vec3(x4_r, y4_r, z4_p));
+
+    // V5: ( sz, -sz,  sz)
+    let y5_p = -sz * cp - ( sz) * sp;
+    let z5_p = -sz * sp + ( sz) * cp;
+    let x5_r =  sz * cr - y5_p * sr;
+    let y5_r =  sz * sr + y5_p * cr;
+    let v5 = mat4_transform_vec3(rot_y, vec3(x5_r, y5_r, z5_p));
+
+    // V6: ( sz,  sz,  sz)
+    let y6_p =  sz * cp - ( sz) * sp;
+    let z6_p =  sz * sp + ( sz) * cp;
+    let x6_r =  sz * cr - y6_p * sr;
+    let y6_r =  sz * sr + y6_p * cr;
+    let v6 = mat4_transform_vec3(rot_y, vec3(x6_r, y6_r, z6_p));
+
+    // V7: (-sz,  sz,  sz)
+    let y7_p =  sz * cp - ( sz) * sp;
+    let z7_p =  sz * sp + ( sz) * cp;
+    let x7_r = -sz * cr - y7_p * sr;
+    let y7_r = -sz * sr + y7_p * cr;
+    let v7 = mat4_transform_vec3(rot_y, vec3(x7_r, y7_r, z7_p));
+
+    // Perspective projection onto 48x22 screen grid
+    let cam_dist = 4.0;
+    let p0x = floor((v0.x / (v0.z + cam_dist)) * 36.0 + 24.0);
+    let p0y = floor((v0.y / (v0.z + cam_dist)) * 16.0 + 11.0);
+    let p1x = floor((v1.x / (v1.z + cam_dist)) * 36.0 + 24.0);
+    let p1y = floor((v1.y / (v1.z + cam_dist)) * 16.0 + 11.0);
+    let p2x = floor((v2.x / (v2.z + cam_dist)) * 36.0 + 24.0);
+    let p2y = floor((v2.y / (v2.z + cam_dist)) * 16.0 + 11.0);
+    let p3x = floor((v3.x / (v3.z + cam_dist)) * 36.0 + 24.0);
+    let p3y = floor((v3.y / (v3.z + cam_dist)) * 16.0 + 11.0);
+
+    let p4x = floor((v4.x / (v4.z + cam_dist)) * 36.0 + 24.0);
+    let p4y = floor((v4.y / (v4.z + cam_dist)) * 16.0 + 11.0);
+    let p5x = floor((v5.x / (v5.z + cam_dist)) * 36.0 + 24.0);
+    let p5y = floor((v5.y / (v5.z + cam_dist)) * 16.0 + 11.0);
+    let p6x = floor((v6.x / (v6.z + cam_dist)) * 36.0 + 24.0);
+    let p6y = floor((v6.y / (v6.z + cam_dist)) * 16.0 + 11.0);
+    let p7x = floor((v7.x / (v7.z + cam_dist)) * 36.0 + 24.0);
+    let p7y = floor((v7.y / (v7.z + cam_dist)) * 16.0 + 11.0);
 
     // Rasterize 48x22 Frame Buffer
     let y = 0.0;
     while (y < 23.0) {
         let x = 0.0;
         while (x < 49.0) {
-            let ch = 0; // 0: space, 1: wireframe edge, 2: vertex
+            let ch = 0; // 0: empty, 1: wireframe edge, 2: vertex
 
             // Check 8 Vertices
             if (x == p0x && y == p0y) { ch = 2; }
@@ -71,29 +125,21 @@ while (frame < 24) {
             if (x == p6x && y == p6y) { ch = 2; }
             if (x == p7x && y == p7y) { ch = 2; }
 
-            // Check Interpolated Wireframe Edges (t = 0.33, 0.66)
+            // Check 12 Interpolated Wireframe Edges
             if (ch == 0) {
-                // Bottom Face
-                if (x == floor(p0x * 0.66 + p1x * 0.33) && y == floor(p0y * 0.66 + p1y * 0.33)) { ch = 1; }
-                if (x == floor(p0x * 0.33 + p1x * 0.66) && y == floor(p0y * 0.33 + p1y * 0.66)) { ch = 1; }
-                if (x == floor(p1x * 0.66 + p2x * 0.33) && y == floor(p1y * 0.66 + p2y * 0.33)) { ch = 1; }
-                if (x == floor(p1x * 0.33 + p2x * 0.66) && y == floor(p1y * 0.33 + p2y * 0.66)) { ch = 1; }
-                if (x == floor(p2x * 0.66 + p3x * 0.33) && y == floor(p2y * 0.66 + p3y * 0.33)) { ch = 1; }
-                if (x == floor(p2x * 0.33 + p3x * 0.66) && y == floor(p2y * 0.33 + p3y * 0.66)) { ch = 1; }
-                if (x == floor(p3x * 0.66 + p0x * 0.33) && y == floor(p3y * 0.66 + p0y * 0.33)) { ch = 1; }
-                if (x == floor(p3x * 0.33 + p0x * 0.66) && y == floor(p3y * 0.33 + p0y * 0.66)) { ch = 1; }
+                // Back Face Edges
+                if (x == floor(p0x * 0.5 + p1x * 0.5) && y == floor(p0y * 0.5 + p1y * 0.5)) { ch = 1; }
+                if (x == floor(p1x * 0.5 + p2x * 0.5) && y == floor(p1y * 0.5 + p2y * 0.5)) { ch = 1; }
+                if (x == floor(p2x * 0.5 + p3x * 0.5) && y == floor(p2y * 0.5 + p3y * 0.5)) { ch = 1; }
+                if (x == floor(p3x * 0.5 + p0x * 0.5) && y == floor(p3y * 0.5 + p0y * 0.5)) { ch = 1; }
 
-                // Top Face
-                if (x == floor(p4x * 0.66 + p5x * 0.33) && y == floor(p4y * 0.66 + p5y * 0.33)) { ch = 1; }
-                if (x == floor(p4x * 0.33 + p5x * 0.66) && y == floor(p4y * 0.33 + p5y * 0.66)) { ch = 1; }
-                if (x == floor(p5x * 0.66 + p6x * 0.33) && y == floor(p5y * 0.66 + p6y * 0.33)) { ch = 1; }
-                if (x == floor(p5x * 0.33 + p6x * 0.66) && y == floor(p5y * 0.33 + p6y * 0.66)) { ch = 1; }
-                if (x == floor(p6x * 0.66 + p7x * 0.33) && y == floor(p6y * 0.66 + p7x * 0.33)) { ch = 1; }
-                if (x == floor(p6x * 0.33 + p7x * 0.66) && y == floor(p6y * 0.33 + p7x * 0.66)) { ch = 1; }
-                if (x == floor(p7x * 0.66 + p4x * 0.33) && y == floor(p7y * 0.66 + p4y * 0.33)) { ch = 1; }
-                if (x == floor(p7x * 0.33 + p4x * 0.66) && y == floor(p7y * 0.33 + p4y * 0.66)) { ch = 1; }
+                // Front Face Edges
+                if (x == floor(p4x * 0.5 + p5x * 0.5) && y == floor(p4y * 0.5 + p5y * 0.5)) { ch = 1; }
+                if (x == floor(p5x * 0.5 + p6x * 0.5) && y == floor(p5y * 0.5 + p6y * 0.5)) { ch = 1; }
+                if (x == floor(p6x * 0.5 + p7x * 0.5) && y == floor(p6y * 0.5 + p7y * 0.5)) { ch = 1; }
+                if (x == floor(p7x * 0.5 + p4x * 0.5) && y == floor(p7y * 0.5 + p4y * 0.5)) { ch = 1; }
 
-                // Vertical Pillars
+                // Connecting Edges
                 if (x == floor(p0x * 0.5 + p4x * 0.5) && y == floor(p0y * 0.5 + p4y * 0.5)) { ch = 1; }
                 if (x == floor(p1x * 0.5 + p5x * 0.5) && y == floor(p1y * 0.5 + p5y * 0.5)) { ch = 1; }
                 if (x == floor(p2x * 0.5 + p6x * 0.5) && y == floor(p2y * 0.5 + p6y * 0.5)) { ch = 1; }
@@ -115,7 +161,6 @@ while (frame < 24) {
         y = y + 1.0;
     }
 
-    angle = angle + 0.15;
     frame = frame + 1;
     gage_sleep(30.0);
 }

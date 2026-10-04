@@ -10,7 +10,7 @@ RESET = "\033[0m"
 test_dir = "/sdcard/GAGE/tests_suite"
 examples_dir = "/sdcard/GAGE/examples"
 
-example_files = sorted([os.path.join(examples_dir, f) for f in os.listdir(examples_dir) if f.endswith(".gage") and "31_interactive_input" not in f])
+example_files = sorted([os.path.join(examples_dir, f) for f in os.listdir(examples_dir) if f.endswith(".gage") and "31_interactive_input" not in f and "51_rotating_cube_3d" not in f])
 unit_files = sorted([os.path.join(test_dir, f) for f in os.listdir(test_dir) if f.endswith(".gage")])
 
 passed, failed = 0, 0
