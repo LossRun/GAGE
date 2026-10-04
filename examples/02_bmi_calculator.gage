@@ -1,13 +1,16 @@
-let weight_kg = 70.0;
-let height_m = 1.75;
-let height_sq = height_m * height_m;
-let bmi = weight_kg / height_sq;
-println("=== BMI Calculator ===");
-println(bmi);
-if (bmi < 18.5) {
-    println("Category: Underweight");
-} else if (bmi < 25.0) {
-    println("Category: Normal weight");
-} else {
-    println("Category: Overweight");
+// Interactive Fibonacci Sequence Generator
+fn fib(n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+fn main() {
+    println("=== GAGE Interactive Fibonacci Calculator ===");
+    println("Enter term N to calculate (e.g. 10):");
+    let n = gage_input_int();
+    let res = fib(n);
+    println("Result:");
+    println(res);
 }

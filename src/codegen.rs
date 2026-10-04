@@ -45,6 +45,44 @@ impl CodeGen {
         self.emit_line("#pragma GCC diagnostic ignored \"-Wunused-function\"");
         self.emit_line("#pragma GCC diagnostic ignored \"-Wunused-variable\"");
         self.emit_line("#include <stdio.h>");
+        self.emit_line(r#"#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <math.h>
+
+static inline int64_t gage_getenv_int(const char* name) {
+    const char* val = getenv(name);
+    return (val != NULL) ? (int64_t)atoll(val) : 0;
+}
+
+static inline void gage_input_str(char* buf, int max_len) {
+    if (fgets(buf, max_len, stdin) != NULL) {
+        size_t len = strlen(buf);
+        if (len > 0 && buf[len - 1] == 10) {
+            buf[len - 1] = 0;
+        }
+    } else {
+        buf[0] = 0;
+    }
+}
+
+static inline int64_t gage_input_int(void) {
+    char buf[64];
+    if (fgets(buf, sizeof(buf), stdin) != NULL) {
+        return (int64_t)atoll(buf);
+    }
+    return 0;
+}
+
+static inline double gage_input_float(void) {
+    char buf[64];
+    if (fgets(buf, sizeof(buf), stdin) != NULL) {
+        return atof(buf);
+    }
+    return 0.0;
+}
+"#);
         self.emit_line("#include <stdlib.h>");
         self.emit_line("#include <stdbool.h>");
         self.emit_line("#include <string.h>");

@@ -1,5 +1,17 @@
-let ray_dir = vec3(1.0, -1.0, 0.0);
-let surface_normal = vec3(0.0, 1.0, 0.0);
-let reflected = ray_dir - (surface_normal * -2.0);
-println("=== Vector Reflection ===");
-println(reflected);
+// Interactive Vector & Physics Simulator
+fn main() {
+    println("=== GAGE Interactive Vector Scaling ===");
+    println("Enter scale factor for 3D velocity vector (e.g. 2.5):");
+    let factor = gage_input_float();
+
+    let pos = vec3(1.0, 2.0, 3.0);
+    let vel = vec3(0.5, 1.0, 1.5) * factor;
+
+    let next_pos = pos + vel;
+    println("Position after 1s tick:");
+    println(next_pos);
+
+    let m = length(next_pos);
+    println("Magnitude:");
+    println(m);
+}

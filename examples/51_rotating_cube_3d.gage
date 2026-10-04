@@ -19,7 +19,7 @@ fn edge_dist_sq(px, py, x1, y1, x2, y2) {
 let frame = 0;
 let total_frames = 800; // ~30 seconds of animation
 
-while (frame < total_frames) {
+while (frame < 800) {
     clear_screen();
     color_green();
     println("╔══════════════════════════════════════════════════════════╗");

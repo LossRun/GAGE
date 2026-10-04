@@ -1,16 +1,17 @@
-// 27_vector_math.gage
-let forward = vec3(0.0, 0.0, 1.0);
-let up = vec3(0.0, 1.0, 0.0);
-let right = cross(forward, up);
+// Interactive Vector & Physics Simulator
+fn main() {
+    println("=== GAGE Interactive Vector Scaling ===");
+    println("Enter scale factor for 3D velocity vector (e.g. 2.5):");
+    let factor = gage_input_float();
 
-println("=== Vector Math ===");
-println(right);
+    let pos = vec3(1.0, 2.0, 3.0);
+    let vel = vec3(0.5, 1.0, 1.5) * factor;
 
-let v = vec3(3.0, 4.0, 0.0);
-let len = length(v);
-print("Length of (3, 4, 0): ");
-println(len);
+    let next_pos = pos + vel;
+    println("Position after 1s tick:");
+    println(next_pos);
 
-let d = dot(forward, up);
-print("dot(forward, up): ");
-println(d);
+    let m = length(next_pos);
+    println("Magnitude:");
+    println(m);
+}

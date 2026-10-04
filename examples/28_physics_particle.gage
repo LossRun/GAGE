@@ -1,16 +1,17 @@
-// 28_physics_particle.gage
-let y = 100.0;
-let velocity_y = 0.0;
-let gravity = -9.8;
-let frames = 0;
+// Interactive Vector & Physics Simulator
+fn main() {
+    println("=== GAGE Interactive Vector Scaling ===");
+    println("Enter scale factor for 3D velocity vector (e.g. 2.5):");
+    let factor = gage_input_float();
 
-println("=== Particle Physics Falling ===");
-step(dt) {
-    if (frames < 5) {
-        velocity_y = velocity_y + (gravity * dt);
-        y = y + (velocity_y * dt);
-        print("Frame Y position: ");
-        println(y);
-        frames = frames + 1;
-    }
+    let pos = vec3(1.0, 2.0, 3.0);
+    let vel = vec3(0.5, 1.0, 1.5) * factor;
+
+    let next_pos = pos + vel;
+    println("Position after 1s tick:");
+    println(next_pos);
+
+    let m = length(next_pos);
+    println("Magnitude:");
+    println(m);
 }

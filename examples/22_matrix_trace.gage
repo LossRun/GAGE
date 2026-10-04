@@ -1,6 +1,13 @@
-let m00 = 4.0;
-let m11 = 9.0;
-let m22 = 15.0;
-let trace = m00 + m11 + m22;
-println("=== Matrix Trace ===");
-println(trace);
+// Interactive Matrix Transform Engine
+fn main() {
+    println("=== GAGE Interactive Matrix Transformation ===");
+    println("Enter scale multiplier for identity matrix (e.g. 3.0):");
+    let s = gage_input_float();
+
+    let m = mat4_identity() * s;
+    let v = vec4(1.0, 1.0, 1.0, 1.0);
+    let transformed = m * v;
+
+    println("Transformed homogeneous vector:");
+    println(transformed);
+}

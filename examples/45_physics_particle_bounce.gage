@@ -1,24 +1,17 @@
-// Advanced Particle Physics Simulation with Surface Normal Reflection & Clamping
+// Interactive Vector & Physics Simulator
+fn main() {
+    println("=== GAGE Interactive Vector Scaling ===");
+    println("Enter scale factor for 3D velocity vector (e.g. 2.5):");
+    let factor = gage_input_float();
 
-let normal = vec3(0.0, 1.0, 0.0);
-let velocity = vec3(10.0, -15.0, 0.0);
-let pos = vec3(0.0, 5.0, 0.0);
+    let pos = vec3(1.0, 2.0, 3.0);
+    let vel = vec3(0.5, 1.0, 1.5) * factor;
 
-println("--- Starting Simulation Tick ---");
-println(pos);
+    let next_pos = pos + vel;
+    println("Position after 1s tick:");
+    println(next_pos);
 
-// Surface collision test:
-let bounced_vel = reflect(velocity, normal);
-let target_pos = vec3(10.0, 0.0, 0.0);
-let dist = distance(pos, target_pos);
-let smoothed_x = lerp(pos.x, 10.0, 0.5);
-let clamped_speed = clamp(length(bounced_vel), 0.0, 20.0);
-
-println("Bounced Velocity:");
-println(bounced_vel);
-println("Distance to Target:");
-println(dist);
-println("Smoothed Position X:");
-println(smoothed_x);
-println("Clamped Speed:");
-println(clamped_speed);
+    let m = length(next_pos);
+    println("Magnitude:");
+    println(m);
+}
