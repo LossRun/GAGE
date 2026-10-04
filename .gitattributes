@@ -1,12 +1,12 @@
-# 1. Force GitHub to count .gage files in examples/ as real code
+# 1. Force GitHub to count .gage files in examples/ as real code with a green badge
 examples/** linguist-documentation=false
 examples/*.gage linguist-detectable=true
-examples/*.gage linguist-language=C#
+examples/*.gage linguist-language=Vue
 
 # 2. Global rule for any .gage file
 *.gage linguist-detectable=true
 *.gage linguist-documentation=false
-*.gage linguist-language=C#
+*.gage linguist-language=Vue
 
 # 3. Completely hide Python, Shell, and installer scripts
 *.py linguist-vendored
