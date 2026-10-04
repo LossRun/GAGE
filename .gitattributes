@@ -1,7 +1,8 @@
-# Treat .gage source files as programming code (mapped to Rust syntax highlight)
-*.gage linguist-language=Rust
+# Map .gage files to a recognized green-badged language
+*.gage linguist-language=C#
+*.gage linguist-detectable=true
 
-# Exclude auxiliary test runners and scripts from language statistics
+# Keep helper scripts and test suites out of the language calculation
 test_runner.py linguist-vendored
 tests_suite/** linguist-vendored
 install.ps1 linguist-vendored
