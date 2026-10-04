@@ -1,3 +1,6 @@
 target/
 **/*.tmp.c
 **/.gage_exec_bin*
+
+game_event.log
+savegame.dat
