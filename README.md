@@ -1,4 +1,4 @@
-# ⚡ GAGE
+# GAGE
 
 <div align="center">
 
