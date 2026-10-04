@@ -61,7 +61,21 @@ impl CodeGen {
         self.emit_line("static inline double gage_dot_vec3(gage_vec3 a, gage_vec3 b) { return a.x*b.x + a.y*b.y + a.z*b.z; }");
         self.emit_line("static inline gage_vec3 gage_cross_vec3(gage_vec3 a, gage_vec3 b) { return (gage_vec3){a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x}; }");
         self.emit_line("static inline double gage_length_vec3(gage_vec3 v) { return sqrt(v.x*v.x + v.y*v.y + v.z*v.z); }");
-        self.emit_line("static inline gage_vec3 gage_normalize_vec3(gage_vec3 v) { double l = gage_length_vec3(v); return (gage_vec3){v.x/l, v.y/l, v.z/l}; }\n");
+        self.emit_line("
+static inline gage_vec3 cross(gage_vec3 a, gage_vec3 b) { return gage_cross_vec3(a, b); }
+static inline double length(gage_vec3 v) { return gage_length_vec3(v); }
+static inline gage_vec3 normalize(gage_vec3 v) { return gage_normalize_vec3(v); }
+
+static inline gage_vec3 gage_normalize_vec3(gage_vec3 v) { double l = gage_length_vec3(v); return (gage_vec3){v.x/l, v.y/l, v.z/l}; }\n");
+
+        self.emit_line("static inline double gage_random(void) { return (double)rand() / (double)RAND_MAX; }");
+        self.emit_line("static inline void clear_screen(void) { printf(\"\\x1b[H\\x1b[2J\"); fflush(stdout); }");
+        self.emit_line("static inline long long parse_int(const char* str) { return str ? atoll(str) : 0; }");
+        self.emit_line("static inline double clamp(double val, double min_v, double max_v) { if (val < min_v) return min_v; if (val > max_v) return max_v; return val; }");
+        self.emit_line("static inline double lerp(double a, double b, double t) { return a + (b - a) * t; }");
+        self.emit_line("static inline double distance(gage_vec3 a, gage_vec3 b) { double dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z; return sqrt(dx*dx + dy*dy + dz*dz); }");
+        self.emit_line("static inline gage_vec3 reflect(gage_vec3 v, gage_vec3 n) { double d = 2.0 * (v.x*n.x + v.y*n.y + v.z*n.z); return (gage_vec3){v.x - d*n.x, v.y - d*n.y, v.z - d*n.z}; }");
+        self.emit_line("static inline double dot(gage_vec3 a, gage_vec3 b) { return a.x*b.x + a.y*b.y + a.z*b.z; }");
 
         // Safe dynamic array with bounds checking
         self.emit_line("typedef struct { double* data; size_t length; size_t capacity; } gage_array;");
@@ -327,7 +341,7 @@ static inline void gage_array_push(gage_array* a, double item) {");
                 if member == "x" || member == "y" || member == "z" || member == "w" {
                     format!("(({}).{})", o, member)
                 } else {
-                    format!("(({})->{})", o, member)
+                    if member == "x" || member == "y" || member == "z" || member == "w" { format!("(({}).{})", o, member) } else { format!("(({})->{})", o, member) }
                 }
             }
             Expr::MethodCall(obj, method, args) => {
