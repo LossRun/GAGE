@@ -1,10 +1,17 @@
-# Map .gage files to a recognized green-badged language
-*.gage linguist-language=C#
-*.gage linguist-detectable=true
+# 1. Force GitHub to count .gage files in examples/ as real code
+examples/** linguist-documentation=false
+examples/*.gage linguist-detectable=true
+examples/*.gage linguist-language=C#
 
-# Keep helper scripts and test suites out of the language calculation
-test_runner.py linguist-vendored
+# 2. Global rule for any .gage file
+*.gage linguist-detectable=true
+*.gage linguist-documentation=false
+*.gage linguist-language=C#
+
+# 3. Completely hide Python, Shell, and installer scripts
+*.py linguist-vendored
+*.sh linguist-vendored
+*.ps1 linguist-vendored
 tests_suite/** linguist-vendored
-install.ps1 linguist-vendored
-gage-setup.sh linguist-vendored
+test_runner.py linguist-vendored
 fix_codegen.py linguist-vendored
