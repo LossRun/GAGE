@@ -2,7 +2,7 @@
 
 > Complete language, compiler, runtime, CLI, and development documentation for GAGE.
 
-GAGE is a compact programming language and compiler toolchain implemented in Rust.
+GAGE is a programming language and compiler toolchain implemented in Rust.
 
 It is designed around a small language core, native-oriented execution, mathematical primitives, simulation-oriented constructs, and two execution backends:
 
