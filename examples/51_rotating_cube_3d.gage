@@ -1,5 +1,4 @@
-// High-Detail 30-Second 3D Multi-Axis Wireframe Cube
-// Uses continuous segment distance rasterization for gapless lines
+// High-Detail 30-Second 3D Multi-Axis Wireframe Cube with Neon ANSI Colors
 
 fn edge_dist_sq(px, py, x1, y1, x2, y2) {
     let dx = x2 - x1;
@@ -22,9 +21,11 @@ let total_frames = 800; // ~30 seconds of real-time animation
 
 while (frame < total_frames) {
     clear_screen();
+    print("\x1b[1;32m");
     println("╔══════════════════════════════════════════════════════════╗");
-    println("║    ⚡ GAGE 3D REAL-TIME MULTI-AXIS ENGINE (mat4 + SIMD)   ║");
+    println("║    ⚡ GAGE 3D NEON WIREFRAME ENGINE (mat4 + SIMD)         ║");
     println("╚══════════════════════════════════════════════════════════╝");
+    print("\x1b[0m");
 
     let sec = floor(frame * 0.038);
     print("  Time: ");
@@ -125,7 +126,7 @@ while (frame < total_frames) {
     let p7x = floor((v7.x / (v7.z + cam_dist)) * 38.0 + 25.0);
     let p7y = floor((v7.y / (v7.z + cam_dist)) * 18.0 + 11.0);
 
-    // Rasterize 51x23 screen frame with continuous edges
+    // Rasterize 51x23 screen frame with continuous edges and ANSI colors
     let y = 0.0;
     while (y < 23.0) {
         let x = 0.0;
@@ -165,13 +166,13 @@ while (frame < total_frames) {
             }
 
             if (hit == 2) {
-                print("@");
+                print("\x1b[1;33m@\x1b[0m");
             } else {
                 if (hit == 1) {
                     if (is_front == 1) {
-                        print("#");
+                        print("\x1b[1;36m#\x1b[0m");
                     } else {
-                        print(".");
+                        print("\x1b[35m·\x1b[0m");
                     }
                 } else {
                     print(" ");
