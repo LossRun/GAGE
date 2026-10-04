@@ -45,6 +45,11 @@ impl CodeGen {
         self.emit_line("#pragma GCC diagnostic ignored \"-Wunused-function\"");
         self.emit_line("#pragma GCC diagnostic ignored \"-Wunused-variable\"");
         self.emit_line("#include <stdio.h>");
+        self.emit_line("#include <stdlib.h>");
+        self.emit_line("#include <stdbool.h>");
+        self.emit_line("#include <string.h>");
+        self.emit_line("#include <math.h>");
+        self.emit_line("#include <stdint.h>");
         self.emit_line(r#"#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -80,128 +85,6 @@ static inline double gage_input_float(void) {
     if (fgets(buf, sizeof(buf), stdin) != NULL) {
         return atof(buf);
     }
-
-// ==========================================
-// SET B & C RUNTIME ENGINE (Canvas, SIMD & Input)
-// ==========================================
-#include <termios.h>
-#include <unistd.h>
-#include <fcntl.h>
-
-// --- Terminal Double-Buffered Canvas ---
-typedef struct {
-    int width;
-    int height;
-    char* front_buf;
-    char* back_buf;
-} GageCanvas;
-
-static inline GageCanvas* gage_canvas_create(int w, int h) {
-    if (w <= 0) w = 40;
-    if (h <= 0) h = 20;
-    GageCanvas* c = (GageCanvas*)malloc(sizeof(GageCanvas));
-    c->width = w;
-    c->height = h;
-    int size = w * h;
-    c->front_buf = (char*)malloc(size);
-    c->back_buf = (char*)malloc(size);
-    memset(c->front_buf, ' ' , size);
-    memset(c->back_buf, ' ' , size);
-    return c;
-}
-
-static inline void gage_canvas_set(GageCanvas* c, int x, int y, const char* ch) {
-    if (!c || x < 0 || x >= c->width || y < 0 || y >= c->height) return;
-    c->back_buf[y * c->width + x] = (ch && ch[0]) ? ch[0] : '*\;
-}
-
-static inline void gage_canvas_line(GageCanvas* c, int x0, int y0, int x1, int y1, const char* ch) {
-    if (!c) return;
-    char draw_char = (ch && ch[0]) ? ch[0] : '#\;
-    int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-    int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-    int err = dx + dy, e2;
-    while (1) {
-        if (x0 >= 0 && x0 < c->width && y0 >= 0 && y0 < c->height) {
-            c->back_buf[y0 * c->width + x0] = draw_char;
-        }
-        if (x0 == x1 && y0 == y1) break;
-        e2 = 2 * err;
-        if (e2 >= dy) { err += dy; x0 += sx; }
-        if (e2 <= dx) { err += dx; y0 += sy; }
-    }
-}
-
-static inline void gage_canvas_text(GageCanvas* c, int x, int y, const char* text) {
-    if (!c || !text || y < 0 || y >= c->height) return;
-    int len = strlen(text);
-    for (int i = 0; i < len; i++) {
-        int px = x + i;
-        if (px >= 0 && px < c->width) {
-            c->back_buf[y * c->width + px] = text[i];
-        }
-    }
-}
-
-static inline void gage_canvas_clear(GageCanvas* c) {
-    if (!c) return;
-    memset(c->back_buf, ' ' , c->width * c->height);
-}
-
-static inline void gage_canvas_present(GageCanvas* c) {
-    if (!c) return;
-    // Differential ANSI presentation
-    printf("\033[H"); // Cursor to home
-    for (int y = 0; y < c->height; y++) {
-        for (int x = 0; x < c->width; x++) {
-            putchar(c->back_buf[y * c->width + x]);
-        }
-        putchar(10); // \n
-    }
-    fflush(stdout);
-    memcpy(c->front_buf, c->back_buf, c->width * c->height);
-}
-
-// Non-blocking keyboard poller
-static inline int gage_poll_key(void) {
-    struct termios oldt, newt;
-    int ch;
-    int oldf;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    fcntl(STDIN_FILENO, F_SETFL, oldf);
-    return ch;
-}
-
-// Additional 4x4 matrix perspective and transpose
-static inline Mat4 mat4_perspective(double fov_rad, double aspect, double near_z, double far_z) {
-    Mat4 m = mat4_identity();
-    double tan_half_fov = tan(fov_rad / 2.0);
-    m.m[0] = 1.0 / (aspect * tan_half_fov);
-    m.m[5] = 1.0 / tan_half_fov;
-    m.m[10] = -(far_z + near_z) / (far_z - near_z);
-    m.m[11] = -1.0;
-    m.m[14] = -(2.0 * far_z * near_z) / (far_z - near_z);
-    m.m[15] = 0.0;
-    return m;
-}
-
-static inline Mat4 mat4_transpose(Mat4 in) {
-    Mat4 m;
-    for (int r = 0; r < 4; r++) {
-        for (int c = 0; c < 4; c++) {
-            m.m[c * 4 + r] = in.m[r * 4 + c];
-        }
-    }
-    return m;
-}
-
     return 0.0;
 }
 "#);
@@ -246,7 +129,65 @@ static inline Mat4 mat4_transpose(Mat4 in) {
         self.emit_line("static inline gage_mat4 mat4_rotate_y(double rad) { gage_mat4 res = mat4_identity(); double c = cos(rad), s = sin(rad); res.m[0] = c; res.m[2] = -s; res.m[8] = s; res.m[10] = c; return res; }");
         self.emit_line("static inline gage_mat4 mat4_mul(gage_mat4 a, gage_mat4 b) { gage_mat4 res = {0}; for (int r = 0; r < 4; r++) { for (int c = 0; c < 4; c++) { double sum = 0.0; for (int k = 0; k < 4; k++) sum += a.m[k * 4 + r] * b.m[c * 4 + k]; res.m[c * 4 + r] = sum; } } return res; }");
         self.emit_line("static inline gage_vec3 mat4_transform_vec3(gage_mat4 m, gage_vec3 v) { double x = m.m[0]*v.x + m.m[4]*v.y + m.m[8]*v.z + m.m[12]; double y = m.m[1]*v.x + m.m[5]*v.y + m.m[9]*v.z + m.m[13]; double z = m.m[2]*v.x + m.m[6]*v.y + m.m[10]*v.z + m.m[14]; return (gage_vec3){x, y, z}; }\n");
+
+        self.emit_line("static inline gage_mat4 mat4_perspective(double fov, double asp, double zn, double zf) {");
+        self.emit_line("    gage_mat4 res = mat4_identity(); double th = tan(fov / 2.0);");
+        self.emit_line("    res.m[0] = 1.0 / (asp * th); res.m[5] = 1.0 / th;");
+        self.emit_line("    res.m[10] = -(zf + zn) / (zf - zn); res.m[11] = -1.0;");
+        self.emit_line("    res.m[14] = -(2.0 * zf * zn) / (zf - zn); res.m[15] = 0.0; return res;");
+        self.emit_line("}");
+        self.emit_line("static inline gage_mat4 mat4_transpose(gage_mat4 in) {");
+        self.emit_line("    gage_mat4 res;");
+        self.emit_line("    for (int r = 0; r < 4; r++) { for (int c = 0; c < 4; c++) res.m[c * 4 + r] = in.m[r * 4 + c]; }");
+        self.emit_line("    return res;");
+        self.emit_line("}");
         // Safe dynamic array with bounds checking
+
+        self.emit_line("typedef struct { int width; int height; char* front_buf; char* back_buf; } GageCanvas;");
+        self.emit_line("static inline GageCanvas* gage_canvas_create(int w, int h) {");
+        self.emit_line("    if (w <= 0) w = 40; if (h <= 0) h = 20;");
+        self.emit_line("    GageCanvas* c = (GageCanvas*)malloc(sizeof(GageCanvas));");
+        self.emit_line("    c->width = w; c->height = h; int size = w * h;");
+        self.emit_line("    c->front_buf = (char*)malloc(size); c->back_buf = (char*)malloc(size);");
+        self.emit_line("    memset(c->front_buf, 32, size); memset(c->back_buf, 32, size); return c;");
+        self.emit_line("}");
+        self.emit_line("static inline void gage_canvas_clear(GageCanvas* c) { if (c) memset(c->back_buf, 32, c->width * c->height); }");
+        self.emit_line("static inline void gage_canvas_set(GageCanvas* c, int x, int y, const char* ch) {");
+        self.emit_line("    if (!c || x < 0 || x >= c->width || y < 0 || y >= c->height) return;");
+        self.emit_line("    c->back_buf[y * c->width + x] = (ch && ch[0]) ? ch[0] : 42;");
+        self.emit_line("}");
+        self.emit_line("static inline void gage_canvas_line(GageCanvas* c, int x0, int y0, int x1, int y1, const char* ch) {");
+        self.emit_line("    if (!c) return;");
+        self.emit_line("    char ch_val = (ch && ch[0]) ? ch[0] : 35;");
+        self.emit_line("    int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;");
+        self.emit_line("    int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;");
+        self.emit_line("    int err = dx + dy;");
+        self.emit_line("    while (1) {");
+        self.emit_line("        if (x0 >= 0 && x0 < c->width && y0 >= 0 && y0 < c->height) c->back_buf[y0 * c->width + x0] = ch_val;");
+        self.emit_line("        if (x0 == x1 && y0 == y1) break;");
+        self.emit_line("        int e2 = 2 * err;");
+        self.emit_line("        if (e2 >= dy) { err += dy; x0 += sx; }");
+        self.emit_line("        if (e2 <= dx) { err += dx; y0 += sy; }");
+        self.emit_line("    }");
+        self.emit_line("}");
+        self.emit_line("static inline void gage_canvas_text(GageCanvas* c, int x, int y, const char* txt) {");
+        self.emit_line("    if (!c || !txt || y < 0 || y >= c->height) return;");
+        self.emit_line("    int len = strlen(txt);");
+        self.emit_line("    for (int i = 0; i < len; i++) {");
+        self.emit_line("        int px = x + i; if (px >= 0 && px < c->width) c->back_buf[y * c->width + px] = txt[i];");
+        self.emit_line("    }");
+        self.emit_line("}");
+        self.emit_line("static inline void gage_canvas_present(GageCanvas* c) {");
+        self.emit_line("    if (!c) return;");
+        self.emit_line("    putchar(27); putchar(91); putchar(72);");
+        self.emit_line("    for (int y = 0; y < c->height; y++) {");
+        self.emit_line("        for (int x = 0; x < c->width; x++) putchar(c->back_buf[y * c->width + x]);");
+        self.emit_line("        putchar(10);");
+        self.emit_line("    }");
+        self.emit_line("    fflush(stdout);");
+        self.emit_line("    memcpy(c->front_buf, c->back_buf, c->width * c->height);");
+        self.emit_line("}");
+
         self.emit_line("typedef struct { double* data; size_t length; size_t capacity; } gage_array;");
         self.emit_line("static inline gage_array* gage_create_array(size_t cap) {");
         self.emit_line("  gage_array* a = (gage_array*)malloc(sizeof(gage_array));");
