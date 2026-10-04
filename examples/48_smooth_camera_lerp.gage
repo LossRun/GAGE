@@ -1,0 +1,13 @@
+// Smooth Follow Camera with Lerp and Clamping
+let cam_x = 0.0;
+let player_x = 50.0;
+
+let step_i = 0;
+while (step_i < 5) {
+    cam_x = lerp(cam_x, player_x, 0.2);
+    cam_x = clamp(cam_x, 0.0, 45.0);
+    step_i = step_i + 1;
+}
+
+println("Damped Camera Position X:");
+println(cam_x);

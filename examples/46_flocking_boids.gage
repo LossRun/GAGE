@@ -1,0 +1,15 @@
+// Flocking Boids Steering & Distance Cohesion
+let boid_pos = vec3(0.0, 10.0, 5.0);
+let target_pos = vec3(20.0, 10.0, 5.0);
+let speed = 2.0;
+
+let dist = distance(boid_pos, target_pos);
+println("Initial distance to flock target:");
+println(dist);
+
+let dir = normalize(target_pos - boid_pos);
+boid_pos = boid_pos + (dir * speed);
+
+let new_dist = distance(boid_pos, target_pos);
+println("Updated distance after step:");
+println(new_dist);

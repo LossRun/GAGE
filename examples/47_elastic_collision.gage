@@ -1,0 +1,12 @@
+// 3D Elastic Surface Collision & Specular Bounce
+let incident_ray = vec3(5.0, -10.0, 0.0);
+let surface_normal = vec3(0.0, 1.0, 0.0);
+
+let reflected = reflect(incident_ray, surface_normal);
+let initial_speed = length(incident_ray);
+let bounced_speed = length(reflected);
+
+println("Initial Speed:");
+println(initial_speed);
+println("Reflected Speed (Elastic Conservation):");
+println(bounced_speed);
