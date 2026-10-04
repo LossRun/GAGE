@@ -1,0 +1,99 @@
+// 44_tic_tac_toe.gage
+class TicTacToe {
+    c0; c1; c2;
+    c3; c4; c5;
+    c6; c7; c8;
+
+    fn init() {
+        this.c0 = 0; this.c1 = 0; this.c2 = 0;
+        this.c3 = 0; this.c4 = 0; this.c5 = 0;
+        this.c6 = 0; this.c7 = 0; this.c8 = 0;
+    }
+
+    fn show_cell(val) {
+        if (val == 1) {
+            print(" X ");
+        } else if (val == 2) {
+            print(" O ");
+        } else {
+            print(" . ");
+        }
+    }
+
+    fn print_board() {
+        println("-------------");
+        this.show_cell(this.c0); print("|"); this.show_cell(this.c1); print("|"); this.show_cell(this.c2); println("");
+        println("----+---+----");
+        this.show_cell(this.c3); print("|"); this.show_cell(this.c4); print("|"); this.show_cell(this.c5); println("");
+        println("----+---+----");
+        this.show_cell(this.c6); print("|"); this.show_cell(this.c7); print("|"); this.show_cell(this.c8); println("");
+        println("-------------");
+    }
+
+    fn play_move(pos, player) {
+        if (pos == 0) { if (this.c0 != 0) { return 0; } this.c0 = player; return 1; }
+        if (pos == 1) { if (this.c1 != 0) { return 0; } this.c1 = player; return 1; }
+        if (pos == 2) { if (this.c2 != 0) { return 0; } this.c2 = player; return 1; }
+        if (pos == 3) { if (this.c3 != 0) { return 0; } this.c3 = player; return 1; }
+        if (pos == 4) { if (this.c4 != 0) { return 0; } this.c4 = player; return 1; }
+        if (pos == 5) { if (this.c5 != 0) { return 0; } this.c5 = player; return 1; }
+        if (pos == 6) { if (this.c6 != 0) { return 0; } this.c6 = player; return 1; }
+        if (pos == 7) { if (this.c7 != 0) { return 0; } this.c7 = player; return 1; }
+        if (pos == 8) { if (this.c8 != 0) { return 0; } this.c8 = player; return 1; }
+        return 0;
+    }
+
+    fn check_winner() {
+        // Horizontal rows
+        if (this.c0 != 0 && this.c0 == this.c1 && this.c1 == this.c2) { return this.c0; }
+        if (this.c3 != 0 && this.c3 == this.c4 && this.c4 == this.c5) { return this.c3; }
+        if (this.c6 != 0 && this.c6 == this.c7 && this.c7 == this.c8) { return this.c6; }
+
+        // Vertical columns
+        if (this.c0 != 0 && this.c0 == this.c3 && this.c3 == this.c6) { return this.c0; }
+        if (this.c1 != 0 && this.c1 == this.c4 && this.c4 == this.c7) { return this.c1; }
+        if (this.c2 != 0 && this.c2 == this.c5 && this.c5 == this.c8) { return this.c2; }
+
+        // Diagonals
+        if (this.c0 != 0 && this.c0 == this.c4 && this.c4 == this.c8) { return this.c0; }
+        if (this.c2 != 0 && this.c2 == this.c4 && this.c4 == this.c6) { return this.c2; }
+
+        return 0;
+    }
+}
+
+// Start Game
+let game = new TicTacToe();
+game.init();
+
+println("=== Gage Tic-Tac-Toe Arena ===");
+game.print_board();
+
+println("Turn 1: Player X takes Center (4)");
+game.play_move(4, 1);
+game.print_board();
+
+println("Turn 2: Player O takes Top-Left (0)");
+game.play_move(0, 2);
+game.print_board();
+
+println("Turn 3: Player X takes Top-Right (2)");
+game.play_move(2, 1);
+game.print_board();
+
+println("Turn 4: Player O takes Top-Center (1)");
+game.play_move(1, 2);
+game.print_board();
+
+println("Turn 5: Player X takes Bottom-Left (6)");
+game.play_move(6, 1);
+game.print_board();
+
+let winner = game.check_winner();
+if (winner == 1) {
+    println("🏆 Player X Wins (Diagonal 2-4-6)!");
+} else if (winner == 2) {
+    println("🏆 Player O Wins!");
+} else {
+    println("It is a Draw!");
+}
