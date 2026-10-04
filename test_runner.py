@@ -23,7 +23,8 @@ def run_test(label, filepath, verify_pass=False):
     res = subprocess.run(["gage", filepath], capture_output=True, text=True)
     dt = (time.time() - t0) * 1000.0
     total_time += dt
-    if res.returncode == 0 and (not verify_pass or "PASS" in res.stdout):
+    has_err = res.returncode != 0 or len(res.stderr.strip()) > 0 or "error:" in res.stdout.lower()
+    if not has_err and (not verify_pass or "PASS" in res.stdout):
         passed += 1
         print(f"  [{GREEN}✔ PASS{RESET}] {label:<38} {dt:>6.1f} ms")
     else:

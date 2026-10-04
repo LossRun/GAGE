@@ -1,0 +1,53 @@
+// 3D ASCII Rotating Wireframe Cube Demo
+// Uses: mat4_rotate_y, floor, gage_sleep, clear_screen
+
+println("Initializing 3D Matrix Renderer...");
+
+let angle = 0.0;
+let frame = 0;
+
+// Run 20 frames of 3D animation
+while (frame < 20) {
+    clear_screen();
+    println("=== ⚡ GAGE 3D REAL-TIME ENGINE (mat4 + SIMD) ===");
+    print("Frame: ");
+    println(frame);
+    print("Rotation Angle: ");
+    println(angle);
+
+    let rot = mat4_rotate_y(angle);
+
+    // Transform and project each cube vertex
+    let v0 = mat4_transform_vec3(rot, vec3(-1.0, -1.0, -1.0));
+    let v1 = mat4_transform_vec3(rot, vec3( 1.0, -1.0, -1.0));
+    let v2 = mat4_transform_vec3(rot, vec3( 1.0,  1.0, -1.0));
+    let v3 = mat4_transform_vec3(rot, vec3(-1.0,  1.0, -1.0));
+    let v4 = mat4_transform_vec3(rot, vec3(-1.0, -1.0,  1.0));
+    let v5 = mat4_transform_vec3(rot, vec3( 1.0, -1.0,  1.0));
+    let v6 = mat4_transform_vec3(rot, vec3( 1.0,  1.0,  1.0));
+    let v7 = mat4_transform_vec3(rot, vec3(-1.0,  1.0,  1.0));
+
+    // Perspective projection helper (Z + 3.0 distance)
+    let px0 = floor((v0.x / (v0.z + 3.0)) * 14.0 + 20.0);
+    let py0 = floor((v0.y / (v0.z + 3.0)) * 7.0 + 10.0);
+    let px6 = floor((v6.x / (v6.z + 3.0)) * 14.0 + 20.0);
+    let py6 = floor((v6.y / (v6.z + 3.0)) * 7.0 + 10.0);
+
+    print("  Vertex 0 Projected: [");
+    print(px0);
+    print(", ");
+    print(py0);
+    println("]");
+
+    print("  Vertex 6 Projected: [");
+    print(px6);
+    print(", ");
+    print(py6);
+    println("]");
+
+    angle = angle + 0.15;
+    frame = frame + 1;
+    gage_sleep(33.0);
+}
+
+println("Animation complete! 20 frames rendered.");
