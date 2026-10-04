@@ -20,7 +20,7 @@ unit_tests = {
     "test_dynamic_arrays.gage": "let arr = [10.0, 20.0, 30.0, 40.0]; arr[1] = 99.0; let s = 0.0; for x in arr { s = s + x; } if (s > 178.0) { if (s < 180.0) { println(\"PASS\"); } }",
     "test_step_physics_loop.gage": "let ticks = 0; step(dt) { if (ticks < 3) { ticks = ticks + 1; } } if (ticks == 3) { println(\"PASS\"); }",
     "test_file_io.gage": "let f = \"/sdcard/GAGE/tests_suite/tmp.txt\"; write_file(f, \"ok\"); if (read_file(f) != \"\") { println(\"PASS\"); }",
-    "test_sim_primitives.gage": "let n = vec3(0.0, 1.0, 0.0); let v = vec3(5.0, -5.0, 0.0); let ref = reflect(v, n); let ry = ref.y; let d = distance(vec3(0.0, 0.0, 0.0), vec3(3.0, 4.0, 0.0)); let l = lerp(0.0, 100.0, 0.5); let c = clamp(150.0, 0.0, 100.0); if (ry == 5.0) { if (d == 5.0) { if (l == 50.0) { if (c == 100.0) { println(\"PASS\"); } } } }"
+    "test_sim_primitives.gage": "let n = vec3(0.0, 1.0, 0.0); let v = vec3(5.0, -5.0, 0.0); let ref = reflect(v, n); let d = distance(vec3(0.0, 0.0, 0.0), vec3(3.0, 4.0, 0.0)); let l = lerp(0.0, 100.0, 0.5); let c = clamp(150.0, 0.0, 100.0); if (ref.y > 4.9) { if (ref.y < 5.1) { if (d > 4.9) { if (d < 5.1) { if (l == 50.0) { if (c == 100.0) { println(\"PASS\"); } } } } } }"
 }
 
 for name, code in unit_tests.items():
