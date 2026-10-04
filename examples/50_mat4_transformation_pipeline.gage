@@ -1,0 +1,17 @@
+// 4x4 Transformation Matrix Pipeline (Model -> World Space)
+let v = vec3(1.0, 0.0, 0.0);
+
+// Rotate 90 degrees around Y axis (PI / 2)
+let rot = mat4_rotate_y(PI / 2.0);
+let trans = mat4_translate(0.0, 10.0, 5.0);
+
+// Combined Model Matrix: T * R
+let model = mat4_mul(trans, rot);
+
+// Transform vertex into world space
+let world_pos = mat4_transform_vec3(model, v);
+
+println("Original Vertex:");
+println(v);
+println("Transformed World Position:");
+println(world_pos);

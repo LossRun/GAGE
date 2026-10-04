@@ -1,0 +1,27 @@
+// Test Math, Trig, and mat4 Transformation
+let s = sin(0.0);
+let c = cos(0.0);
+let sq = sqrt(16.0);
+let p = pow(2.0, 3.0);
+
+let v = vec3(1.0, 0.0, 0.0);
+let t = mat4_translate(5.0, 10.0, 15.0);
+let res = mat4_transform_vec3(t, v);
+
+if (s == 0.0) {
+    if (c == 1.0) {
+        if (sq == 4.0) {
+            if (p == 8.0) {
+                if (res.x > 5.9) {
+                    if (res.x < 6.1) {
+                        if (res.y > 9.9) {
+                            if (res.y < 10.1) {
+                                println("PASS");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

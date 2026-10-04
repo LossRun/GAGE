@@ -1,0 +1,19 @@
+// Trigonometry and Standard Math Functions
+let angle = PI / 4.0;
+let s = sin(angle);
+let c = cos(angle);
+let hyp = sqrt(pow(s, 2.0) + pow(c, 2.0));
+
+let fl = floor(4.8);
+let cl = ceil(4.2);
+
+println("sin(PI/4):");
+println(s);
+println("cos(PI/4):");
+println(c);
+println("Pythagorean Identity (sqrt(s^2 + c^2)):");
+println(hyp);
+println("Floor of 4.8:");
+println(fl);
+println("Ceil of 4.2:");
+println(cl);

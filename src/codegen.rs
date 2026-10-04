@@ -49,6 +49,17 @@ impl CodeGen {
         self.emit_line("#include <stdbool.h>");
         self.emit_line("#include <string.h>");
         self.emit_line("#include <math.h>\n");
+        self.emit_line("#include <unistd.h>");
+        self.emit_line("#define PI 3.14159265358979323846");
+        self.emit_line("#define TAU 6.28318530717958647692");
+        self.emit_line("static inline void gage_sleep(double ms) { usleep((useconds_t)(ms * 1000.0)); }");
+        self.emit_line("typedef struct { double m[16]; } gage_mat4;");
+        self.emit_line("static inline gage_mat4 mat4_identity(void) { gage_mat4 res = {0}; res.m[0] = 1.0; res.m[5] = 1.0; res.m[10] = 1.0; res.m[15] = 1.0; return res; }");
+        self.emit_line("static inline gage_mat4 mat4_translate(double tx, double ty, double tz) { gage_mat4 res = mat4_identity(); res.m[12] = tx; res.m[13] = ty; res.m[14] = tz; return res; }");
+        self.emit_line("static inline gage_mat4 mat4_scale(double sx, double sy, double sz) { gage_mat4 res = {0}; res.m[0] = sx; res.m[5] = sy; res.m[10] = sz; res.m[15] = 1.0; return res; }");
+        self.emit_line("static inline gage_mat4 mat4_rotate_y(double rad) { gage_mat4 res = mat4_identity(); double c = cos(rad), s = sin(rad); res.m[0] = c; res.m[2] = -s; res.m[8] = s; res.m[10] = c; return res; }");
+        self.emit_line("static inline gage_mat4 mat4_mul(gage_mat4 a, gage_mat4 b) { gage_mat4 res = {0}; for (int r = 0; r < 4; r++) { for (int c = 0; c < 4; c++) { double sum = 0.0; for (int k = 0; k < 4; k++) sum += a.m[k * 4 + r] * b.m[c * 4 + k]; res.m[c * 4 + r] = sum; } } return res; }");
+        self.emit_line("static inline gage_vec3 mat4_transform_vec3(gage_mat4 m, gage_vec3 v) { double x = m.m[0]*v.x + m.m[4]*v.y + m.m[8]*v.z + m.m[12]; double y = m.m[1]*v.x + m.m[5]*v.y + m.m[9]*v.z + m.m[13]; double z = m.m[2]*v.x + m.m[6]*v.y + m.m[10]*v.z + m.m[14]; return (gage_vec3){x, y, z}; }");
 
         self.emit_line("typedef double gage_vec2 __attribute__((ext_vector_type(2)));");
         self.emit_line("typedef double gage_vec3 __attribute__((ext_vector_type(3)));");
