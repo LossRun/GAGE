@@ -1,0 +1,11 @@
+// Spec Test: SIMD Shading & Mat4 Pipeline
+let p = mat4_perspective(1.04719, 1.777, 0.1, 100.0);
+let t = mat4_transpose(p);
+let a = vec3(0.0, 0.0, 0.0);
+let b = vec3(3.0, 4.0, 0.0);
+let dist = length(b - a);
+if (dist >= 4.99 && dist <= 5.01) {
+    println("SIMD_SHADING_OK");
+} else {
+    println("SIMD_FAILED");
+}

@@ -1,0 +1,8 @@
+// Spec Test: Double-Buffered Canvas Engine
+let canvas = gage_canvas_create(40, 20);
+gage_canvas_clear(canvas);
+gage_canvas_set(canvas, 10, 10, "*");
+gage_canvas_line(canvas, 0, 0, 5, 5, "#");
+gage_canvas_text(canvas, 2, 2, "GAGE ENGINE");
+gage_canvas_present(canvas);
+println("CANVAS_OK");

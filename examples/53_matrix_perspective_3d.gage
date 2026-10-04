@@ -1,0 +1,18 @@
+// Example 53: 3D Perspective Projection & Normal Matrix Pipeline
+println("=== 3D Perspective Transformation Pipeline ===");
+
+let fov = 1.047197; // 60 degrees in radians
+let aspect = 1.77777; // 16:9 aspect ratio
+let near = 0.1;
+let far = 100.0;
+
+let proj = mat4_perspective(fov, aspect, near, far);
+let transposed = mat4_transpose(proj);
+
+let vertex = vec3(2.0, 3.0, -10.0);
+let projected = mat4_transform_vec3(proj, vertex);
+
+println("Original Vertex:");
+println(vertex);
+println("Perspective Projected:");
+println(projected);

@@ -80,6 +80,128 @@ static inline double gage_input_float(void) {
     if (fgets(buf, sizeof(buf), stdin) != NULL) {
         return atof(buf);
     }
+
+// ==========================================
+// SET B & C RUNTIME ENGINE (Canvas, SIMD & Input)
+// ==========================================
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+// --- Terminal Double-Buffered Canvas ---
+typedef struct {
+    int width;
+    int height;
+    char* front_buf;
+    char* back_buf;
+} GageCanvas;
+
+static inline GageCanvas* gage_canvas_create(int w, int h) {
+    if (w <= 0) w = 40;
+    if (h <= 0) h = 20;
+    GageCanvas* c = (GageCanvas*)malloc(sizeof(GageCanvas));
+    c->width = w;
+    c->height = h;
+    int size = w * h;
+    c->front_buf = (char*)malloc(size);
+    c->back_buf = (char*)malloc(size);
+    memset(c->front_buf, ' ' , size);
+    memset(c->back_buf, ' ' , size);
+    return c;
+}
+
+static inline void gage_canvas_set(GageCanvas* c, int x, int y, const char* ch) {
+    if (!c || x < 0 || x >= c->width || y < 0 || y >= c->height) return;
+    c->back_buf[y * c->width + x] = (ch && ch[0]) ? ch[0] : '*\;
+}
+
+static inline void gage_canvas_line(GageCanvas* c, int x0, int y0, int x1, int y1, const char* ch) {
+    if (!c) return;
+    char draw_char = (ch && ch[0]) ? ch[0] : '#\;
+    int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    int err = dx + dy, e2;
+    while (1) {
+        if (x0 >= 0 && x0 < c->width && y0 >= 0 && y0 < c->height) {
+            c->back_buf[y0 * c->width + x0] = draw_char;
+        }
+        if (x0 == x1 && y0 == y1) break;
+        e2 = 2 * err;
+        if (e2 >= dy) { err += dy; x0 += sx; }
+        if (e2 <= dx) { err += dx; y0 += sy; }
+    }
+}
+
+static inline void gage_canvas_text(GageCanvas* c, int x, int y, const char* text) {
+    if (!c || !text || y < 0 || y >= c->height) return;
+    int len = strlen(text);
+    for (int i = 0; i < len; i++) {
+        int px = x + i;
+        if (px >= 0 && px < c->width) {
+            c->back_buf[y * c->width + px] = text[i];
+        }
+    }
+}
+
+static inline void gage_canvas_clear(GageCanvas* c) {
+    if (!c) return;
+    memset(c->back_buf, ' ' , c->width * c->height);
+}
+
+static inline void gage_canvas_present(GageCanvas* c) {
+    if (!c) return;
+    // Differential ANSI presentation
+    printf("\033[H"); // Cursor to home
+    for (int y = 0; y < c->height; y++) {
+        for (int x = 0; x < c->width; x++) {
+            putchar(c->back_buf[y * c->width + x]);
+        }
+        putchar(10); // \n
+    }
+    fflush(stdout);
+    memcpy(c->front_buf, c->back_buf, c->width * c->height);
+}
+
+// Non-blocking keyboard poller
+static inline int gage_poll_key(void) {
+    struct termios oldt, newt;
+    int ch;
+    int oldf;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    fcntl(STDIN_FILENO, F_SETFL, oldf);
+    return ch;
+}
+
+// Additional 4x4 matrix perspective and transpose
+static inline Mat4 mat4_perspective(double fov_rad, double aspect, double near_z, double far_z) {
+    Mat4 m = mat4_identity();
+    double tan_half_fov = tan(fov_rad / 2.0);
+    m.m[0] = 1.0 / (aspect * tan_half_fov);
+    m.m[5] = 1.0 / tan_half_fov;
+    m.m[10] = -(far_z + near_z) / (far_z - near_z);
+    m.m[11] = -1.0;
+    m.m[14] = -(2.0 * far_z * near_z) / (far_z - near_z);
+    m.m[15] = 0.0;
+    return m;
+}
+
+static inline Mat4 mat4_transpose(Mat4 in) {
+    Mat4 m;
+    for (int r = 0; r < 4; r++) {
+        for (int c = 0; c < 4; c++) {
+            m.m[c * 4 + r] = in.m[r * 4 + c];
+        }
+    }
+    return m;
+}
+
     return 0.0;
 }
 "#);

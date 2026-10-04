@@ -1,0 +1,18 @@
+// Example 52: Double-Buffered Interactive Canvas Engine
+println("Initializing 40x15 Double-Buffered ASCII Canvas...");
+let canvas = gage_canvas_create(40, 15);
+gage_canvas_clear(canvas);
+
+// Draw border box
+gage_canvas_line(canvas, 0, 0, 39, 0, "-");
+gage_canvas_line(canvas, 0, 14, 39, 14, "-");
+gage_canvas_line(canvas, 0, 0, 0, 14, "|");
+gage_canvas_line(canvas, 39, 0, 39, 14, "|");
+
+// Draw internal geometry & text
+gage_canvas_line(canvas, 5, 2, 20, 10, "/");
+gage_canvas_line(canvas, 20, 10, 35, 2, "\\");
+gage_canvas_text(canvas, 8, 12, "GAGE V0.3.0 RENDERER");
+
+gage_canvas_present(canvas);
+println("Render complete with zero terminal flicker!");
