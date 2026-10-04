@@ -2,6 +2,7 @@
 use crate::ast::*;
 use crate::token::{Token, TokenType};
 
+#[derive(Debug, Clone)]
 pub struct ParseError { pub line: usize, pub column: usize, pub message: String }
 
 pub struct Parser {

@@ -13,283 +13,282 @@ mod compiler;
 use std::env;
 use std::fs;
 use std::io::{self, Write};
-use std::path::{Path, PathBuf};
-use std::process::{exit, Command};
+use std::process::Command;
+use std::time::Instant;
 
-use codegen::CodeGen;
-use compiler::Compiler;
 use lexer::Lexer;
 use parser::Parser;
 use types::TypeChecker;
+use codegen::CodeGen;
+use compiler::Compiler;
 use vm::VM;
 
-const VERSION: &str = "0.1.0-cross-platform";
-
-fn print_banner() {
-    println!("\x1b[38;5;51m");
-    println!("   ______      ___       ______   _______ ");
-    println!("  / _____|    /   \\     / _____| |  _____|");
-    println!(" | |  __     / /_\\ \\   | |  __   | |____  ");
-    println!(" | | |_ |   / _____ \\  | | |_ |  |  ____| ");
-    println!(" | |__| |  / /     \\ \\ | |__| |  | |_____ ");
-    println!("  \\_____/ /_/       \\_\\_____/   |_______|");
-    println!("\x1b[0m");
-    println!("\x1b[38;5;238m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m");
-    println!(" \x1b[1m\x1b[38;5;255mGAGE UNIFIED TOOLCHAIN\x1b[0m \x1b[38;5;244m|\x1b[0m Native LLVM Compiler & Fast VM");
-    println!("\x1b[38;5;238m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m\n");
-}
-
 fn print_usage() {
-    print_banner();
-    println!("\x1b[1mUSAGE:\x1b[0m");
-    println!("  \x1b[38;5;48mgage build\x1b[0m \x1b[38;5;220m<file.gage>\x1b[0m [-o <bin>]    Compile source to native ELF/EXE binary");
-    println!("  \x1b[38;5;48mgage run\x1b[0m   \x1b[38;5;220m<file.gage>\x1b[0m                  Compile and execute at native CPU speed");
-    println!("  \x1b[38;5;48mgage vm\x1b[0m    \x1b[38;5;220m<file.gage>\x1b[0m                  Execute instantly via bytecode VM (no clang required)");
-    println!("  \x1b[38;5;48mgage check\x1b[0m \x1b[38;5;220m<file.gage>\x1b[0m                  Run full semantic and type validation");
-    println!("  \x1b[38;5;48mgage emit-c\x1b[0m\x1b[38;5;220m<file.gage>\x1b[0m                  Inspect generated intermediate C code");
-    println!("  \x1b[38;5;48mgage delete\x1b[0m                            Safely uninstall Gage binaries");
-    println!("\n\x1b[1mFLAGS:\x1b[0m");
-    println!("  \x1b[38;5;81m-v, --version\x1b[0m                          Show compiler version");
-    println!("  \x1b[38;5;81m-h, --help\x1b[0m                             Display this help manual");
-    println!("  \x1b[38;5;81m--info\x1b[0m                                 Display architecture and pipeline stats\n");
+    println!("⚡ Gage Programming Language (v2.0)");
+    println!("Usage:");
+    println!("  gage                         Launch interactive REPL");
+    println!("  gage <file.gage>             Compile and run natively (AOT Clang)");
+    println!("  gage --vm <file.gage>        Execute via Bytecode VM");
+    println!("  gage --time <file.gage>      Benchmark compilation and execution times");
+    println!("  gage emit-c <file.gage> -o <out.c>  Emit generated C source file");
 }
 
-fn parse_and_validate(source: &str) -> Result<ast::Program, String> {
-    let mut lexer = Lexer::new(source);
-    let tokens = lexer.tokenize().map_err(|e| format!("[Lexer Error] Line {}:{} -> {}", e.line, e.column, e.message))?;
+fn start_repl() {
+    println!("⚡ Gage 2.0 Interactive REPL");
+    println!("Type 'exit' or press Ctrl+D to quit.\n");
 
-    let mut parser = Parser::new(tokens);
-    let program = parser.parse().map_err(|e| format!("[Parse Error] Line {}:{} -> {}", e.line, e.column, e.message))?;
+    let mut session_code = String::new();
 
-    let mut type_checker = TypeChecker::new();
-    type_checker.check(&program)?;
+    loop {
+        print!(">>> ");
+        io::stdout().flush().unwrap();
 
-    Ok(program)
-}
+        let mut line = String::new();
+        if io::stdin().read_line(&mut line).unwrap() == 0 {
+            println!("\nGoodbye!");
+            break;
+        }
 
-fn compile_to_c(source: &str) -> Result<String, String> {
-    let program = parse_and_validate(source)?;
-    let codegen = CodeGen::new();
-    Ok(codegen.generate(&program))
-}
+        let trimmed = line.trim();
+        if trimmed == "exit" || trimmed == "quit" {
+            break;
+        }
+        if trimmed.is_empty() {
+            continue;
+        }
 
-fn run_via_vm(source: &str) -> Result<(), String> {
-    let program = parse_and_validate(source)?;
-    let mut comp = Compiler::new();
-    let chunk = comp.compile(&program).map_err(|e| format!("[Bytecode Error] {:?}", e))?;
-    let mut vm = VM::new(chunk);
-    vm.run().map_err(|e| format!("[Runtime Error] {:?}", e))?;
-    Ok(())
-}
+        // Auto-wrap bare expressions in println() for quick evaluation
+        let to_compile = if !trimmed.ends_with(';') && !trimmed.ends_with('}') {
+            if trimmed.starts_with("let ") || trimmed.contains('=') {
+                format!("{};\n", trimmed)
+            } else {
+                format!("println({});\n", trimmed)
+            }
+        } else {
+            format!("{}\n", trimmed)
+        };
 
-fn get_temp_binary_path() -> PathBuf {
-    let mut temp = env::temp_dir();
-    let ext = if cfg!(target_os = "windows") { "gage_exec.exe" } else { "gage_exec" };
-    temp.push(ext);
-    temp
-}
+        let candidate_code = format!("{}{}", session_code, to_compile);
 
-fn invoke_c_compiler(c_code: &str, output_binary: &Path) -> Result<(), String> {
-    let temp_c = output_binary.with_extension("tmp.c");
-    fs::write(&temp_c, c_code).map_err(|e| format!("Failed to create intermediate C file: {}", e))?;
+        let mut lexer = Lexer::new(&candidate_code);
+        let tokens = match lexer.tokenize() {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("[Lex Error] Line {}:{}: {}", e.line, e.column, e.message);
+                continue;
+            }
+        };
 
-    let compilers = if cfg!(target_os = "windows") { vec!["clang-cl", "clang", "gcc"] } else { vec!["clang", "gcc"] };
-    let mut success = false;
-    let mut primary_err = String::new();
+        let mut parser = Parser::new(tokens);
+        let program = match parser.parse() {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("[Parse Error] Line {}:{}: {}", e.line, e.column, e.message);
+                continue;
+            }
+        };
 
-    for cc in compilers {
-        let mut cmd = Command::new(cc);
-        cmd.arg("-O3").arg("-w").arg(&temp_c).arg("-o").arg(output_binary);
-        if !cfg!(target_os = "windows") { cmd.arg("-lm"); }
+        let mut checker = TypeChecker::new();
+        if let Err(e) = checker.check(&program) {
+            eprintln!("{}", e);
+            continue;
+        }
 
-        match cmd.output() {
-            Ok(output) if output.status.success() => { success = true; break; }
-            Ok(output) => {
-                if primary_err.is_empty() {
-                    primary_err = format!("{} error:
-{}", cc, String::from_utf8_lossy(&output.stderr));
-                }
+        let codegen = CodeGen::new();
+        let c_code = codegen.generate(&program);
+
+        let temp_c = "/data/data/com.termux/files/usr/tmp/gage_repl.tmp.c";
+        let temp_bin = "/data/data/com.termux/files/usr/tmp/gage_repl.tmp";
+
+        if fs::write(temp_c, &c_code).is_err() {
+            eprintln!("[IO Error] Failed to write temporary REPL source");
+            continue;
+        }
+
+        let clang_status = Command::new("clang")
+            .args(&["-O0", "-lm", temp_c, "-o", temp_bin])
+            .output();
+
+        match clang_status {
+            Ok(out) if out.status.success() => {
+                let _ = Command::new(temp_bin).status();
+                session_code.push_str(&to_compile);
+            }
+            Ok(out) => {
+                eprintln!("[Clang Error]\n{}", String::from_utf8_lossy(&out.stderr));
             }
             Err(e) => {
-                if primary_err.is_empty() {
-                    primary_err = format!("Could not launch {}: {}", cc, e);
-                }
+                eprintln!("[Toolchain Error] Failed to invoke clang: {}", e);
             }
         }
-    }
 
-    let _ = fs::remove_file(temp_c);
-
-    if !success {
-        return Err(format!("Native compilation failed.
-Details:
-{}", primary_err));
+        let _ = fs::remove_file(temp_c);
+        let _ = fs::remove_file(temp_bin);
     }
-    Ok(())
-}
-
-fn handle_delete() {
-    println!("\x1b[38;5;196m\x1b[1m⚠️  WARNING: Uninstalling Gage Toolchain\x1b[0m");
-    print!("Are you sure you want to proceed? [y/N]: ");
-    io::stdout().flush().unwrap();
-
-    let mut input = String::new();
-    if io::stdin().read_line(&mut input).is_err() { return; }
-    let trimmed = input.trim().to_lowercase();
-    if trimmed != "y" && trimmed != "yes" {
-        println!("\x1b[38;5;81mAborted. No files were removed.\x1b[0m");
-        return;
-    }
-
-    if let Ok(current_exe) = env::current_exe() {
-        let _ = fs::remove_file(&current_exe);
-    }
-    if let Ok(prefix) = env::var("PREFIX") {
-        let _ = fs::remove_file(format!("{}/bin/gage", prefix));
-        let _ = fs::remove_dir_all(format!("{}/share/gage", prefix));
-    }
-    if let Ok(home) = env::var("HOME") {
-        let _ = fs::remove_dir_all(format!("{}/.gage_build", home));
-        let _ = fs::remove_file(format!("{}/.local/bin/gage", home));
-    }
-    println!("\x1b[38;5;48m✔ Gage has been cleanly uninstalled.\x1b[0m");
 }
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() < 2 {
+    if args.len() == 1 {
+        start_repl();
+        return;
+    }
+
+    if args[1] == "-h" || args[1] == "--help" {
         print_usage();
-        exit(0);
+        return;
     }
 
-    match args[1].as_str() {
-        "delete" | "-d" | "--delete" => handle_delete(),
-        "-v" | "--version" => {
-            println!("\x1b[38;5;48m\x1b[1mgage version {}\x1b[0m ({}-{})", VERSION, env::consts::OS, env::consts::ARCH);
+    // Command: gage emit-c <file.gage> -o <out.c>
+    if args[1] == "emit-c" {
+        if args.len() < 3 {
+            print_usage();
+            return;
         }
-        "--info" => {
-            println!("\x1b[38;5;51mEngine Pipelines\x1b[0m       : Native AOT (LLVM/Clang) + Fast Bytecode VM");
-            println!("\x1b[38;5;51mSemantic Validation\x1b[0m    : Active (types.rs)");
-            println!("\x1b[38;5;51mTarget Architecture\x1b[0m    : {} ({})", env::consts::ARCH, env::consts::OS);
-        }
-        "-h" | "--help" => print_usage(),
-        "check" => {
-            if args.len() < 3 {
-                eprintln!("\x1b[38;5;196mError:\x1b[0m Source file required. Example: gage check main.gage");
-                exit(1);
-            }
-            let source = fs::read_to_string(&args[2]).expect("Cannot read input file");
-            match parse_and_validate(&source) {
-                Ok(_) => println!("  \x1b[38;5;48m✔ [Verified]\x1b[0m '{}' passed lexer, parser, and type checks.", args[2]),
-                Err(e) => {
-                    eprintln!("  \x1b[38;5;196m✖ {}\x1b[0m", e);
-                    exit(1);
-                }
-            }
-        }
-        "vm" => {
-            if args.len() < 3 {
-                eprintln!("\x1b[38;5;196mError:\x1b[0m Source file required. Example: gage vm main.gage");
-                exit(1);
-            }
-            let source = fs::read_to_string(&args[2]).expect("Cannot read input file");
-            if let Err(e) = run_via_vm(&source) {
-                eprintln!("  \x1b[38;5;196m{}\x1b[0m", e);
-                exit(1);
-            }
-        }
-        "emit-c" => {
-            if args.len() < 3 {
-                eprintln!("\x1b[38;5;196mError:\x1b[0m Source file required. Example: gage emit-c main.gage");
-                exit(1);
-            }
-            let source = fs::read_to_string(&args[2]).expect("Cannot read input file");
-            match compile_to_c(&source) {
-                Ok(c) => println!("{}", c),
-                Err(e) => eprintln!("  \x1b[38;5;196m✖ {}\x1b[0m", e),
-            }
-        }
-        "build" => {
-            if args.len() < 3 {
-                eprintln!("\x1b[38;5;196mError:\x1b[0m Source file required. Example: gage build main.gage -o app");
-                exit(1);
-            }
-            let input_path = &args[2];
-            let raw_out_name = if args.len() >= 5 && args[3] == "-o" {
-                args[4].clone()
-            } else {
-                Path::new(input_path).file_stem().unwrap().to_str().unwrap().to_string()
-            };
-            let out_name = if cfg!(target_os = "windows") && !raw_out_name.ends_with(".exe") {
-                format!("{}.exe", raw_out_name)
-            } else {
-                raw_out_name
-            };
+        let in_file = &args[2];
+        let out_file = if args.len() >= 5 && args[3] == "-o" {
+            &args[4]
+        } else {
+            "out.c"
+        };
 
-            let source = fs::read_to_string(input_path).expect("Could not open source file");
-            println!("  \x1b[38;5;51m➜\x1b[0m  Validating types and generating machine code for \x1b[1m{}\x1b[0m...", input_path);
+        let source = fs::read_to_string(in_file).expect("Failed to read input gage file");
+        let mut lexer = Lexer::new(&source);
+        let tokens = lexer.tokenize().expect("Lex error");
+        let mut parser = Parser::new(tokens);
+        let program = parser.parse().expect("Parse error");
+        let mut checker = TypeChecker::new();
+        checker.check(&program).expect("Semantic error");
 
-            let c_code = match compile_to_c(&source) {
-                Ok(c) => c,
-                Err(e) => {
-                    eprintln!("  \x1b[38;5;196m✖ {}\x1b[0m", e);
-                    exit(1);
-                }
-            };
+        let c_code = CodeGen::new().generate(&program);
+        fs::write(out_file, &c_code).expect("Failed to write output C file");
+        println!("✔ Emitted native C code to: {}", out_file);
+        return;
+    }
 
-            if let Err(e) = invoke_c_compiler(&c_code, Path::new(&out_name)) {
-                eprintln!("  \x1b[38;5;196m✖ {}\x1b[0m", e);
-                exit(1);
-            }
-            println!("  \x1b[38;5;48m✔\x1b[0m  Native binary compiled: \x1b[1m./{}\x1b[0m\n", out_name);
+    let mut benchmark = false;
+    let mut use_vm = false;
+    let mut file_idx = 1;
+
+    if args[1] == "--time" {
+        benchmark = true;
+        file_idx = 2;
+    } else if args[1] == "--vm" {
+        use_vm = true;
+        file_idx = 2;
+    }
+
+    if file_idx >= args.len() {
+        print_usage();
+        return;
+    }
+
+    let filepath = &args[file_idx];
+    let source = match fs::read_to_string(filepath) {
+        Ok(s) => s,
+        Err(_) => {
+            eprintln!("[Error] Could not find file: {}", filepath);
+            return;
         }
-        "run" => {
-            if args.len() < 3 {
-                eprintln!("\x1b[38;5;196mError:\x1b[0m Source file required. Example: gage run main.gage");
-                exit(1);
-            }
-            let input_path = &args[2];
-            let temp_bin = get_temp_binary_path();
-            let source = fs::read_to_string(input_path).expect("Could not open source file");
+    };
 
-            let c_code = match compile_to_c(&source) {
-                Ok(c) => c,
-                Err(e) => {
-                    eprintln!("  \x1b[38;5;196m✖ {}\x1b[0m", e);
-                    exit(1);
-                }
-            };
+    let t_start = Instant::now();
 
-            if let Err(e) = invoke_c_compiler(&c_code, &temp_bin) {
-                eprintln!("  \x1b[38;5;196m✖ {}\x1b[0m", e);
-                exit(1);
-            }
-
-            let _ = Command::new(&temp_bin).status();
-            let _ = fs::remove_file(temp_bin);
+    // 1. Lexing
+    let mut lexer = Lexer::new(&source);
+    let tokens = match lexer.tokenize() {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("[Lex Error] Line {}:{}: {}", e.line, e.column, e.message);
+            return;
         }
-        _ => {
-            if Path::new(&args[1]).exists() {
-                let temp_bin = get_temp_binary_path();
-                let source = fs::read_to_string(&args[1]).expect("Could not open source file");
-                let c_code = match compile_to_c(&source) {
-                    Ok(c) => c,
-                    Err(e) => {
-                        eprintln!("  \x1b[38;5;196m✖ {}\x1b[0m", e);
-                        exit(1);
-                    }
-                };
-                if let Err(e) = invoke_c_compiler(&c_code, &temp_bin) {
-                    eprintln!("  \x1b[38;5;196m✖ {}\x1b[0m", e);
-                    exit(1);
-                }
-                let _ = Command::new(&temp_bin).status();
-                let _ = fs::remove_file(temp_bin);
-            } else {
-                eprintln!("\x1b[38;5;196mUnknown command or file:\x1b[0m '{}'. Run \x1b[38;5;48mgage --help\x1b[0m", args[1]);
-                exit(1);
+    };
+
+    // 2. Parsing
+    let mut parser = Parser::new(tokens);
+    let program = match parser.parse() {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("[Parse Error] Line {}:{}: {}", e.line, e.column, e.message);
+            return;
+        }
+    };
+
+    // 3. Type Checking
+    let mut checker = TypeChecker::new();
+    if let Err(e) = checker.check(&program) {
+        eprintln!("{}", e);
+        return;
+    }
+
+    let t_frontend = Instant::now();
+
+    // VM Execution
+    if use_vm {
+        let mut comp = Compiler::new();
+        let chunk = match comp.compile(&program) {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("[Compiler Error] {}", e);
+                return;
             }
+        };
+
+        let mut vm = VM::new(chunk);
+        let vm_start = Instant::now();
+        if let Err(e) = vm.run() {
+            eprintln!("[VM Runtime Error] {:?}", e);
+        }
+        let vm_end = Instant::now();
+
+        if benchmark {
+            println!("\n⏱️  Benchmark Results (VM):");
+            println!("  Frontend (Lex + Parse + Check): {:.2} ms", (t_frontend - t_start).as_secs_f64() * 1000.0);
+            println!("  VM Execution Time:              {:.2} ms", (vm_end - vm_start).as_secs_f64() * 1000.0);
+            println!("  Total Time:                     {:.2} ms", (vm_end - t_start).as_secs_f64() * 1000.0);
+        }
+        return;
+    }
+
+    // Native Compilation
+    let codegen = CodeGen::new();
+    let c_code = codegen.generate(&program);
+
+    let temp_c = "/data/data/com.termux/files/usr/tmp/gage_exec.tmp.c";
+    let temp_bin = "/data/data/com.termux/files/usr/tmp/gage_exec.tmp";
+
+    fs::write(temp_c, &c_code).expect("Failed to write temporary C file");
+
+    let t_compile_start = Instant::now();
+    let clang_status = Command::new("clang")
+        .args(&["-O2", "-lm", temp_c, "-o", temp_bin])
+        .output();
+
+    let t_compile_end = Instant::now();
+
+    match clang_status {
+        Ok(out) if out.status.success() => {
+            let t_exec_start = Instant::now();
+            let _ = Command::new(temp_bin).status();
+            let t_exec_end = Instant::now();
+
+            if benchmark {
+                println!("\n⏱️  Benchmark Results (Native AOT):");
+                println!("  Frontend (Lex + Parse + Check): {:.2} ms", (t_frontend - t_start).as_secs_f64() * 1000.0);
+                println!("  Clang C Compilation (-O2):       {:.2} ms", (t_compile_end - t_compile_start).as_secs_f64() * 1000.0);
+                println!("  Native Execution Time:           {:.2} ms", (t_exec_end - t_exec_start).as_secs_f64() * 1000.0);
+                println!("  Total End-to-End:                {:.2} ms", (t_exec_end - t_start).as_secs_f64() * 1000.0);
+            }
+        }
+        Ok(out) => {
+            eprintln!("  ✖ Native compilation failed.\nDetails:\nclang error:\n{}", String::from_utf8_lossy(&out.stderr));
+        }
+        Err(e) => {
+            eprintln!("  ✖ Failed to execute clang: {}", e);
         }
     }
+
+    let _ = fs::remove_file(temp_c);
+    let _ = fs::remove_file(temp_bin);
 }

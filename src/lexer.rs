@@ -1,6 +1,7 @@
 #![allow(warnings)]
 use crate::token::{Token, TokenType};
 
+#[derive(Debug, Clone)]
 pub struct LexError {
     pub line: usize,
     pub column: usize,

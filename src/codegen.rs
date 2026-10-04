@@ -27,7 +27,6 @@ impl CodeGen {
     }
 
     pub fn generate(mut self, program: &Program) -> String {
-        // Collect class methods and variable instance classes
         for stmt in &program.statements {
             if let Stmt::Class(c) = stmt {
                 for m in &c.methods {
@@ -51,7 +50,6 @@ impl CodeGen {
         self.emit_line("#include <string.h>");
         self.emit_line("#include <math.h>\n");
 
-        // Clang native SIMD vector types supporting +, -, * operators
         self.emit_line("typedef double gage_vec2 __attribute__((ext_vector_type(2)));");
         self.emit_line("typedef double gage_vec3 __attribute__((ext_vector_type(3)));");
         self.emit_line("typedef double gage_vec4 __attribute__((ext_vector_type(4)));\n");
@@ -65,20 +63,33 @@ impl CodeGen {
         self.emit_line("static inline double gage_length_vec3(gage_vec3 v) { return sqrt(v.x*v.x + v.y*v.y + v.z*v.z); }");
         self.emit_line("static inline gage_vec3 gage_normalize_vec3(gage_vec3 v) { double l = gage_length_vec3(v); return (gage_vec3){v.x/l, v.y/l, v.z/l}; }\n");
 
-        // Native Double Array Runtime
+        // Safe dynamic array with bounds checking
         self.emit_line("typedef struct { double* data; size_t length; size_t capacity; } gage_array;");
         self.emit_line("static inline gage_array* gage_create_array(size_t cap) {");
-        self.emit_line("  gage_array* a = malloc(sizeof(gage_array));");
+        self.emit_line("  gage_array* a = (gage_array*)malloc(sizeof(gage_array));");
         self.emit_line("  a->length = 0; a->capacity = cap > 0 ? cap : 8;");
-        self.emit_line("  a->data = malloc(sizeof(double) * a->capacity);");
+        self.emit_line("  a->data = (double*)malloc(sizeof(double) * a->capacity);");
         self.emit_line("  return a;");
         self.emit_line("}");
         self.emit_line("static inline void gage_array_push(gage_array* a, double item) {");
-        self.emit_line("  if (a->length >= a->capacity) { a->capacity *= 2; a->data = realloc(a->data, sizeof(double) * a->capacity); }");
+        self.emit_line("  if (a->length >= a->capacity) { a->capacity *= 2; a->data = (double*)realloc(a->data, sizeof(double) * a->capacity); }");
         self.emit_line("  a->data[a->length++] = item;");
+        self.emit_line("}");
+        self.emit_line("static inline double gage_array_get(gage_array* a, long long idx) {");
+        self.emit_line("  if (idx < 0 || (size_t)idx >= a->length) {");
+        self.emit_line("    fprintf(stderr, \"[Runtime Error] Index out of bounds: index %lld on array of length %zu\\n\", idx, a->length);");
+        self.emit_line("    exit(1);");
+        self.emit_line("  }");
+        self.emit_line("  return a->data[(size_t)idx];");
+        self.emit_line("}");
+        self.emit_line("static inline void gage_array_set(gage_array* a, long long idx, double val) {");
+        self.emit_line("  if (idx < 0 || (size_t)idx >= a->length) {");
+        self.emit_line("    fprintf(stderr, \"[Runtime Error] Index out of bounds: index %lld on array of length %zu\\n\", idx, a->length);");
+        self.emit_line("    exit(1);");
+        self.emit_line("  }");
+        self.emit_line("  a->data[(size_t)idx] = val;");
         self.emit_line("}\n");
 
-        // Runtime I/O Helpers
         self.emit_line("static inline char* gage_input(const char* prompt) {");
         self.emit_line("  if (prompt && strlen(prompt) > 0) { printf(\"%s\", prompt); fflush(stdout); }");
         self.emit_line("  char buffer[4096];");
@@ -92,7 +103,7 @@ impl CodeGen {
         self.emit_line("static inline char* gage_read_file(const char* path) {");
         self.emit_line("  FILE *f = fopen(path, \"rb\"); if (!f) return strdup(\"\");");
         self.emit_line("  fseek(f, 0, SEEK_END); long size = ftell(f); fseek(f, 0, SEEK_SET);");
-        self.emit_line("  char *str = malloc(size + 1); fread(str, 1, size, f); fclose(f);");
+        self.emit_line("  char *str = (char*)malloc(size + 1); fread(str, 1, size, f); fclose(f);");
         self.emit_line("  str[size] = '\\0'; return str;");
         self.emit_line("}");
         self.emit_line("static inline bool gage_write_file(const char* path, const char* content) {");
@@ -100,7 +111,6 @@ impl CodeGen {
         self.emit_line("  fputs(content, f); fclose(f); return true;");
         self.emit_line("}\n");
 
-        // C11 Generic Dispatchers
         self.emit_line("static inline void _gage_print_i64(long long v) { printf(\"%lld\", v); }");
         self.emit_line("static inline void _gage_print_f64(double v) { printf(\"%g\", v); }");
         self.emit_line("static inline void _gage_print_str(const char* v) { printf(\"%s\", v ? v : \"\"); }");
@@ -129,7 +139,6 @@ impl CodeGen {
         self.emit_line(")(x)");
         self.emit_line("#define gage_println(x) do { gage_print(x); printf(\"\\n\"); fflush(stdout); } while(0)\n");
 
-        // Forward declare classes
         for stmt in &program.statements {
             if let Stmt::Class(c) = stmt {
                 self.emit_line(&format!("typedef struct {} {{", c.name));
@@ -148,7 +157,6 @@ impl CodeGen {
             }
         }
 
-        // Functions
         for stmt in &program.statements {
             if let Stmt::Function(f) = stmt {
                 let mut params_str = String::new();
@@ -165,7 +173,6 @@ impl CodeGen {
             }
         }
 
-        // Class Methods
         for stmt in &program.statements {
             if let Stmt::Class(c) = stmt {
                 self.current_class = Some(c.name.clone());
@@ -183,7 +190,6 @@ impl CodeGen {
             }
         }
 
-        // Main
         self.emit_line("int main(void) {");
         self.indent_level += 1;
         for stmt in &program.statements {
@@ -220,7 +226,7 @@ impl CodeGen {
                 let a = self.gen_expr(arr);
                 let i = self.gen_expr(idx);
                 let e = self.gen_expr(expr);
-                self.emit_line(&format!("(({})->data[(size_t)({})]) = (double)({});", a, i, e));
+                self.emit_line(&format!("gage_array_set({}, (long long)({}), (double)({}));", a, i, e));
             }
             Stmt::Print(expr) => {
                 let e = self.gen_expr(expr);
@@ -346,7 +352,7 @@ impl CodeGen {
                 s
             }
             Expr::IndexAccess(arr, idx) => {
-                format!("(({})->data[(size_t)({})])", self.gen_expr(arr), self.gen_expr(idx))
+                format!("gage_array_get({}, (long long)({}))", self.gen_expr(arr), self.gen_expr(idx))
             }
             Expr::Vec2(x, y) => format!("make_vec2({}, {})", self.gen_expr(x), self.gen_expr(y)),
             Expr::Vec3(x, y, z) => format!("make_vec3({}, {}, {})", self.gen_expr(x), self.gen_expr(y), self.gen_expr(z)),
