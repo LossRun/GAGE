@@ -4,18 +4,12 @@ let sum = 0;
 for n in arr {
     sum = sum + n;
 }
-let ok = 0;
-if (sum == 179) {
-    ok = ok + 1;
-}
-if (arr[0] == 10) {
-    ok = ok + 1;
-}
-if (arr[1] == 99) {
-    ok = ok + 1;
-}
-if (ok == 3) {
-    println("PASS");
+if (sum > 178 && sum < 180) {
+    if (arr[0] == 10 && arr[1] == 99) {
+        println("PASS");
+    } else {
+        println("FAIL");
+    }
 } else {
     println("FAIL");
 }
