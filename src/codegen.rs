@@ -71,7 +71,12 @@ impl CodeGen {
         self.emit_line("  a->data = (double*)malloc(sizeof(double) * a->capacity);");
         self.emit_line("  return a;");
         self.emit_line("}");
-        self.emit_line("static inline void gage_array_push(gage_array* a, double item) {");
+        self.emit_line("static inline gage_array* gage_make_array(size_t n, double items[]) {
+  gage_array* a = gage_create_array(n);
+  for (size_t i = 0; i < n; i++) { a->data[a->length++] = items[i]; }
+  return a;
+}
+static inline void gage_array_push(gage_array* a, double item) {");
         self.emit_line("  if (a->length >= a->capacity) { a->capacity *= 2; a->data = (double*)realloc(a->data, sizeof(double) * a->capacity); }");
         self.emit_line("  a->data[a->length++] = item;");
         self.emit_line("}");
@@ -345,11 +350,13 @@ impl CodeGen {
                 format!("{}({})", name, args_str)
             }
             Expr::Array(elements) => {
-                let mut s = format!("gage_create_array({})", elements.len());
-                for el in elements {
-                    s = format!("(gage_array_push({}, (double)({})), {})", s, self.gen_expr(el), s);
+                if elements.is_empty() { return "gage_create_array(0)".into(); }
+                let mut items = String::new();
+                for (i, el) in elements.iter().enumerate() {
+                    if i > 0 { items.push_str(", "); }
+                    items.push_str(&format!("(double)({})", self.gen_expr(el)));
                 }
-                s
+                format!("gage_make_array({}, (double[]){{ {} }})", elements.len(), items)
             }
             Expr::IndexAccess(arr, idx) => {
                 format!("gage_array_get({}, (long long)({}))", self.gen_expr(arr), self.gen_expr(idx))

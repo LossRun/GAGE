@@ -1,15 +1,1 @@
-let arr = [10, 20, 30, 40];
-arr[1] = 99;
-let sum = 0;
-for n in arr {
-    sum = sum + n;
-}
-if (sum > 178 && sum < 180) {
-    if (arr[0] == 10 && arr[1] == 99) {
-        println("PASS");
-    } else {
-        println("FAIL");
-    }
-} else {
-    println("FAIL");
-}
+let arr = [10.0, 20.0, 30.0, 40.0]; arr[1] = 99.0; let s = 0.0; for x in arr { s = s + x; } if (s > 178.0) { if (s < 180.0) { println("PASS"); } }

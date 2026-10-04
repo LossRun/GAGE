@@ -374,40 +374,27 @@ fn main() {
     let codegen = CodeGen::new();
     let c_code = codegen.generate(&program);
 
-    let temp_c = "/data/data/com.termux/files/usr/tmp/gage_exec.tmp.c";
-    let temp_bin = "/data/data/com.termux/files/usr/tmp/gage_exec.tmp";
+        let cache_dir = "/data/data/com.termux/files/usr/tmp/gage_cache";
+    let _ = fs::create_dir_all(cache_dir);
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    std::hash::Hash::hash(&source, &mut hasher);
+    let h = std::hash::Hasher::finish(&hasher);
+    let cached_bin = format!("{}/bin_{:x}", cache_dir, h);
 
-    fs::write(temp_c, &c_code).expect("Failed to write temporary C file");
-
-    let t_compile_start = Instant::now();
-    let clang_status = Command::new("clang")
-        .args(&["-O2", "-lm", temp_c, "-o", temp_bin])
-        .output();
-
-    let t_compile_end = Instant::now();
-
-    match clang_status {
-        Ok(out) if out.status.success() => {
-            let t_exec_start = Instant::now();
-            let _ = Command::new(temp_bin).status();
-            let t_exec_end = Instant::now();
-
-            if benchmark {
-                println!("\n⏱️  \x1b[1;36mBenchmark Results (Native AOT):\x1b[0m");
-                println!("  Frontend (Lex + Parse + Check): {:.2} ms", (t_frontend - t_start).as_secs_f64() * 1000.0);
-                println!("  Clang C Compilation (-O2):       {:.2} ms", (t_compile_end - t_compile_start).as_secs_f64() * 1000.0);
-                println!("  Native Execution Time:           {:.2} ms", (t_exec_end - t_exec_start).as_secs_f64() * 1000.0);
-                println!("  Total End-to-End:                {:.2} ms", (t_exec_end - t_start).as_secs_f64() * 1000.0);
-            }
-        }
-        Ok(out) => {
-            eprintln!("\x1b[31m  ✖ Native compilation failed.\x1b[0m\nDetails:\nclang error:\n{}", String::from_utf8_lossy(&out.stderr));
-        }
-        Err(e) => {
-            eprintln!("\x1b[31m  ✖ Failed to execute clang: {}\x1b[0m", e);
+    if !std::path::Path::new(&cached_bin).exists() {
+        let codegen = CodeGen::new();
+        let c_code = codegen.generate(&program);
+        let temp_c = format!("{}/src_{:x}.c", cache_dir, h);
+        let _ = fs::write(&temp_c, &c_code);
+        let clang_status = Command::new("clang").args(&["-O1", "-lm", &temp_c, "-o", &cached_bin]).output();
+        let _ = fs::remove_file(&temp_c);
+        match clang_status {
+            Ok(out) if out.status.success() => { let _ = Command::new("chmod").args(&["+x", &cached_bin]).status(); }
+            Ok(out) => { eprintln!("Compilation error:
+{}", String::from_utf8_lossy(&out.stderr)); return; }
+            Err(e) => { eprintln!("Failed to run clang: {}", e); return; }
         }
     }
 
-    let _ = fs::remove_file(temp_c);
-    let _ = fs::remove_file(temp_bin);
+    let _ = Command::new(&cached_bin).status();
 }

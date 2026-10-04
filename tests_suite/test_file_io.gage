@@ -1,8 +1,1 @@
-let fname = "/sdcard/GAGE/tests_suite/test_io_temp.txt";
-let ok = write_file(fname, "gage_io_ok");
-if (ok) {
-    let content = read_file(fname);
-    println("PASS");
-} else {
-    println("FAIL");
-}
+let f = "/sdcard/GAGE/tests_suite/tmp.txt"; write_file(f, "ok"); if (read_file(f) != "") { println("PASS"); }

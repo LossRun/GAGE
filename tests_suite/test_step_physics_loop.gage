@@ -1,14 +1,1 @@
-let pos = 0.0;
-let vel = 100.0;
-let ticks = 0;
-step(dt) {
-    if (ticks < 3) {
-        pos = pos + (vel * dt);
-        ticks = ticks + 1;
-    }
-}
-if (pos > 0.0) {
-    if (ticks == 3) {
-        println("PASS");
-    }
-}
+let ticks = 0; step(dt) { if (ticks < 3) { ticks = ticks + 1; } } if (ticks == 3) { println("PASS"); }

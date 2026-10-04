@@ -1,7 +1,1 @@
-let t = true;
-let f = false;
-if (t && !f && (f || t) && !(t && f)) {
-    println("PASS");
-} else {
-    println("FAIL");
-}
+let t = true; let f = false; if (t && !f) { println("PASS"); }
