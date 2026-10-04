@@ -1,53 +1,67 @@
-// Full Wireframe 3D Rotating Cube Demo
+// Real-time 3D Wireframe Cube with Edge Interpolation
 let angle = 0.0;
 let frame = 0;
 
-while (frame < 30) {
-    clear_screen();
-    println("╔════════════════════════════════════════════════════╗");
-    println("║    ⚡ GAGE 3D REAL-TIME WIREFRAME ENGINE (mat4)    ║");
-    println("╚════════════════════════════════════════════════════╝");
+// Pre-calculated 30-degree pitch tilt for 3D depth
+let pitch_c = cos(0.55);
+let pitch_s = sin(0.55);
 
-    // Dual-axis rotation: Rotate around Y, scale slightly for terminal aspect ratio
+while (frame < 24) {
+    clear_screen();
+    println("╔════════════════════════════════════════════════════════╗");
+    println("║    ⚡ GAGE 3D REAL-TIME WIREFRAME ENGINE (mat4 + SIMD)  ║");
+    println("╚════════════════════════════════════════════════════════╝");
+    print("Frame: ");
+    println(frame);
+
     let rot = mat4_rotate_y(angle);
 
-    // 8 Cube Vertices in local coordinates
-    let v0 = mat4_transform_vec3(rot, vec3(-1.2, -1.2, -1.2));
-    let v1 = mat4_transform_vec3(rot, vec3( 1.2, -1.2, -1.2));
-    let v2 = mat4_transform_vec3(rot, vec3( 1.2,  1.2, -1.2));
-    let v3 = mat4_transform_vec3(rot, vec3(-1.2,  1.2, -1.2));
-    let v4 = mat4_transform_vec3(rot, vec3(-1.2, -1.2,  1.2));
-    let v5 = mat4_transform_vec3(rot, vec3( 1.2, -1.2,  1.2));
-    let v6 = mat4_transform_vec3(rot, vec3( 1.2,  1.2,  1.2));
-    let v7 = mat4_transform_vec3(rot, vec3(-1.2,  1.2,  1.2));
+    // 8 Cube Vertices with Isometric Pitch Tilt
+    let y0 = -1.2 * pitch_c - (-1.2) * pitch_s;
+    let z0 = -1.2 * pitch_s + (-1.2) * pitch_c;
+    let y1 =  1.2 * pitch_c - (-1.2) * pitch_s;
+    let z1 =  1.2 * pitch_s + (-1.2) * pitch_c;
+    let y2 =  1.2 * pitch_c - ( 1.2) * pitch_s;
+    let z2 =  1.2 * pitch_s + ( 1.2) * pitch_c;
+    let y3 = -1.2 * pitch_c - ( 1.2) * pitch_s;
+    let z3 = -1.2 * pitch_s + ( 1.2) * pitch_c;
 
-    // Perspective projection onto a large 46x20 screen buffer
-    let p0x = floor((v0.x / (v0.z + 3.5)) * 32.0 + 23.0);
-    let p0y = floor((v0.y / (v0.z + 3.5)) * 16.0 + 10.0);
-    let p1x = floor((v1.x / (v1.z + 3.5)) * 32.0 + 23.0);
-    let p1y = floor((v1.y / (v1.z + 3.5)) * 16.0 + 10.0);
-    let p2x = floor((v2.x / (v2.z + 3.5)) * 32.0 + 23.0);
-    let p2y = floor((v2.y / (v2.z + 3.5)) * 16.0 + 10.0);
-    let p3x = floor((v3.x / (v3.z + 3.5)) * 32.0 + 23.0);
-    let p3y = floor((v3.y / (v3.z + 3.5)) * 16.0 + 10.0);
+    let v0 = mat4_transform_vec3(rot, vec3(-1.2, y0, z0));
+    let v1 = mat4_transform_vec3(rot, vec3( 1.2, y0, z0));
+    let v2 = mat4_transform_vec3(rot, vec3( 1.2, y1, z1));
+    let v3 = mat4_transform_vec3(rot, vec3(-1.2, y1, z1));
+    let v4 = mat4_transform_vec3(rot, vec3(-1.2, y3, z3));
+    let v5 = mat4_transform_vec3(rot, vec3( 1.2, y3, z3));
+    let v6 = mat4_transform_vec3(rot, vec3( 1.2, y2, z2));
+    let v7 = mat4_transform_vec3(rot, vec3(-1.2, y2, z2));
 
-    let p4x = floor((v4.x / (v4.z + 3.5)) * 32.0 + 23.0);
-    let p4y = floor((v4.y / (v4.z + 3.5)) * 16.0 + 10.0);
-    let p5x = floor((v5.x / (v5.z + 3.5)) * 32.0 + 23.0);
-    let p5y = floor((v5.y / (v5.z + 3.5)) * 16.0 + 10.0);
-    let p6x = floor((v6.x / (v6.z + 3.5)) * 32.0 + 23.0);
-    let p6y = floor((v6.y / (v6.z + 3.5)) * 16.0 + 10.0);
-    let p7x = floor((v7.x / (v7.z + 3.5)) * 32.0 + 23.0);
-    let p7y = floor((v7.y / (v7.z + 3.5)) * 16.0 + 10.0);
+    // Perspective Projection onto 48x22 Screen Grid
+    let p0x = floor((v0.x / (v0.z + 3.8)) * 36.0 + 24.0);
+    let p0y = floor((v0.y / (v0.z + 3.8)) * 16.0 + 11.0);
+    let p1x = floor((v1.x / (v1.z + 3.8)) * 36.0 + 24.0);
+    let p1y = floor((v1.y / (v1.z + 3.8)) * 16.0 + 11.0);
+    let p2x = floor((v2.x / (v2.z + 3.8)) * 36.0 + 24.0);
+    let p2y = floor((v2.y / (v2.z + 3.8)) * 16.0 + 11.0);
+    let p3x = floor((v3.x / (v3.z + 3.8)) * 36.0 + 24.0);
+    let p3y = floor((v3.y / (v3.z + 3.8)) * 16.0 + 11.0);
 
-    // Rasterize 46x20 ASCII frame
+    let p4x = floor((v4.x / (v4.z + 3.8)) * 36.0 + 24.0);
+    let p4y = floor((v4.y / (v4.z + 3.8)) * 16.0 + 11.0);
+    let p5x = floor((v5.x / (v5.z + 3.8)) * 36.0 + 24.0);
+    let p5y = floor((v5.y / (v5.z + 3.8)) * 16.0 + 11.0);
+    let p6x = floor((v6.x / (v6.z + 3.8)) * 36.0 + 24.0);
+    let p6y = floor((v6.y / (v6.z + 3.8)) * 16.0 + 11.0);
+    let p7x = floor((v7.x / (v7.z + 3.8)) * 36.0 + 24.0);
+    let p7y = floor((v7.y / (v7.z + 3.8)) * 16.0 + 11.0);
+
+    // Rasterize 48x22 Frame Buffer
     let y = 0.0;
-    while (y < 21.0) {
+    while (y < 23.0) {
         let x = 0.0;
-        while (x < 47.0) {
-            let ch = 0; // 0: space, 1: edge, 2: vertex
+        while (x < 49.0) {
+            let ch = 0; // 0: space, 1: wireframe edge, 2: vertex
 
-            // Check Vertices
+            // Check 8 Vertices
             if (x == p0x && y == p0y) { ch = 2; }
             if (x == p1x && y == p1y) { ch = 2; }
             if (x == p2x && y == p2y) { ch = 2; }
@@ -57,29 +71,40 @@ while (frame < 30) {
             if (x == p6x && y == p6y) { ch = 2; }
             if (x == p7x && y == p7y) { ch = 2; }
 
-            // Check interpolated edge midpoints for wireframe structure
+            // Check Interpolated Wireframe Edges (t = 0.33, 0.66)
             if (ch == 0) {
-                if (x == floor((p0x + p1x) / 2.0) && y == floor((p0y + p1y) / 2.0)) { ch = 1; }
-                if (x == floor((p1x + p2x) / 2.0) && y == floor((p1y + p2y) / 2.0)) { ch = 1; }
-                if (x == floor((p2x + p3x) / 2.0) && y == floor((p2y + p3y) / 2.0)) { ch = 1; }
-                if (x == floor((p3x + p0x) / 2.0) && y == floor((p3y + p0y) / 2.0)) { ch = 1; }
+                // Bottom Face
+                if (x == floor(p0x * 0.66 + p1x * 0.33) && y == floor(p0y * 0.66 + p1y * 0.33)) { ch = 1; }
+                if (x == floor(p0x * 0.33 + p1x * 0.66) && y == floor(p0y * 0.33 + p1y * 0.66)) { ch = 1; }
+                if (x == floor(p1x * 0.66 + p2x * 0.33) && y == floor(p1y * 0.66 + p2y * 0.33)) { ch = 1; }
+                if (x == floor(p1x * 0.33 + p2x * 0.66) && y == floor(p1y * 0.33 + p2y * 0.66)) { ch = 1; }
+                if (x == floor(p2x * 0.66 + p3x * 0.33) && y == floor(p2y * 0.66 + p3y * 0.33)) { ch = 1; }
+                if (x == floor(p2x * 0.33 + p3x * 0.66) && y == floor(p2y * 0.33 + p3y * 0.66)) { ch = 1; }
+                if (x == floor(p3x * 0.66 + p0x * 0.33) && y == floor(p3y * 0.66 + p0y * 0.33)) { ch = 1; }
+                if (x == floor(p3x * 0.33 + p0x * 0.66) && y == floor(p3y * 0.33 + p0y * 0.66)) { ch = 1; }
 
-                if (x == floor((p4x + p5x) / 2.0) && y == floor((p4y + p5y) / 2.0)) { ch = 1; }
-                if (x == floor((p5x + p6x) / 2.0) && y == floor((p5y + p6y) / 2.0)) { ch = 1; }
-                if (x == floor((p6x + p7x) / 2.0) && y == floor((p6y + p7y) / 2.0)) { ch = 1; }
-                if (x == floor((p7x + p4x) / 2.0) && y == floor((p7y + p4y) / 2.0)) { ch = 1; }
+                // Top Face
+                if (x == floor(p4x * 0.66 + p5x * 0.33) && y == floor(p4y * 0.66 + p5y * 0.33)) { ch = 1; }
+                if (x == floor(p4x * 0.33 + p5x * 0.66) && y == floor(p4y * 0.33 + p5y * 0.66)) { ch = 1; }
+                if (x == floor(p5x * 0.66 + p6x * 0.33) && y == floor(p5y * 0.66 + p6y * 0.33)) { ch = 1; }
+                if (x == floor(p5x * 0.33 + p6x * 0.66) && y == floor(p5y * 0.33 + p6y * 0.66)) { ch = 1; }
+                if (x == floor(p6x * 0.66 + p7x * 0.33) && y == floor(p6y * 0.66 + p7x * 0.33)) { ch = 1; }
+                if (x == floor(p6x * 0.33 + p7x * 0.66) && y == floor(p6y * 0.33 + p7x * 0.66)) { ch = 1; }
+                if (x == floor(p7x * 0.66 + p4x * 0.33) && y == floor(p7y * 0.66 + p4y * 0.33)) { ch = 1; }
+                if (x == floor(p7x * 0.33 + p4x * 0.66) && y == floor(p7y * 0.33 + p4y * 0.66)) { ch = 1; }
 
-                if (x == floor((p0x + p4x) / 2.0) && y == floor((p0y + p4y) / 2.0)) { ch = 1; }
-                if (x == floor((p1x + p5x) / 2.0) && y == floor((p1y + p5y) / 2.0)) { ch = 1; }
-                if (x == floor((p2x + p6x) / 2.0) && y == floor((p2y + p6y) / 2.0)) { ch = 1; }
-                if (x == floor((p3x + p7x) / 2.0) && y == floor((p3y + p7y) / 2.0)) { ch = 1; }
+                // Vertical Pillars
+                if (x == floor(p0x * 0.5 + p4x * 0.5) && y == floor(p0y * 0.5 + p4y * 0.5)) { ch = 1; }
+                if (x == floor(p1x * 0.5 + p5x * 0.5) && y == floor(p1y * 0.5 + p5y * 0.5)) { ch = 1; }
+                if (x == floor(p2x * 0.5 + p6x * 0.5) && y == floor(p2y * 0.5 + p6y * 0.5)) { ch = 1; }
+                if (x == floor(p3x * 0.5 + p7x * 0.5) && y == floor(p3y * 0.5 + p7y * 0.5)) { ch = 1; }
             }
 
             if (ch == 2) {
-                print("█");
+                print("#");
             } else {
                 if (ch == 1) {
-                    print("·");
+                    print(".");
                 } else {
                     print(" ");
                 }
@@ -90,7 +115,7 @@ while (frame < 30) {
         y = y + 1.0;
     }
 
-    angle = angle + 0.12;
+    angle = angle + 0.15;
     frame = frame + 1;
-    gage_sleep(33.0);
+    gage_sleep(30.0);
 }

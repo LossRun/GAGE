@@ -42,6 +42,7 @@ impl TypeChecker {
     }
 
     fn lookup(&self, name: &str) -> Option<Type> {
+        if name == "PI" || name == "TAU" { return Some(Type::Float); }
         for scope in self.scopes.iter().rev() {
             if let Some(ty) = scope.get(name) { return Some(ty.clone()); }
         }
