@@ -1,0 +1,6 @@
+# Highlight and count .gage files as code
+*.gage linguist-language=Rust
+
+# Ignore installer scripts from the repository language breakdown
+install.ps1 linguist-vendored
+gage-setup.sh linguist-vendored
