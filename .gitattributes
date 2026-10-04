@@ -1,6 +1,9 @@
-# Highlight and count .gage files as code
+# Treat .gage source files as programming code (mapped to Rust syntax highlight)
 *.gage linguist-language=Rust
 
-# Ignore installer scripts from the repository language breakdown
+# Exclude auxiliary test runners and scripts from language statistics
+test_runner.py linguist-vendored
+tests_suite/** linguist-vendored
 install.ps1 linguist-vendored
 gage-setup.sh linguist-vendored
+fix_codegen.py linguist-vendored
