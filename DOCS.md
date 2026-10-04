@@ -1,414 +1,251 @@
-# 📘 GAGE Language & Toolchain Documentation
+# GAGE Documentation
 
-> Complete reference for the GAGE programming language, compiler pipeline, command-line interface, execution engines, language syntax, built-in functionality, and troubleshooting.
+> Complete language, compiler, runtime, CLI, and development documentation for GAGE.
 
-GAGE is a compact programming language and compiler toolchain implemented in Rust. It provides a custom lexer, parser, semantic/type-checking stage, native C code generation backend, bytecode compiler, and stack-based virtual machine.
+GAGE is a compact programming language and compiler toolchain implemented in Rust.
 
-This document describes the language and the current implementation.
+It is designed around a small language core, native-oriented execution, mathematical primitives, simulation-oriented constructs, and two execution backends:
 
----
+- Native compilation through generated C and an external C compiler.
+- Bytecode compilation and execution through the built-in GAGE virtual machine.
 
-## 📑 Table of Contents
-
-- [1. Overview](#1-overview)
-- [2. Architecture](#2-architecture)
-- [3. Requirements](#3-requirements)
-- [4. Installation](#4-installation)
-  - [Android / Termux](#android--termux)
-  - [Linux](#linux)
-  - [macOS](#macos)
-  - [Windows](#windows)
-  - [Building from Source](#building-from-source)
-- [5. Command-Line Interface](#5-command-line-interface)
-- [6. Source Validation](#6-source-validation)
-- [7. Native Compilation](#7-native-compilation)
-- [8. Bytecode Virtual Machine](#8-bytecode-virtual-machine)
-- [9. Language Fundamentals](#9-language-fundamentals)
-  - [Comments](#comments)
-  - [Statements](#statements)
-  - [Identifiers](#identifiers)
-  - [Variables](#variables)
-  - [Assignments](#assignments)
-- [10. Data Types](#10-data-types)
-  - [Integer](#integer)
-  - [Float](#float)
-  - [Boolean](#boolean)
-  - [String](#string)
-  - [Nil](#nil)
-  - [Vectors](#vectors)
-  - [Arrays](#arrays)
-  - [Classes](#classes)
-- [11. Operators](#11-operators)
-- [12. Expressions](#12-expressions)
-- [13. Control Flow](#13-control-flow)
-  - [`if` / `else`](#if--else)
-  - [`while`](#while)
-  - [`loop`](#loop)
-  - [`for ... in`](#for--in)
-  - [`break`](#break)
-  - [`step(dt)`](#stepdt)
-- [14. Functions](#14-functions)
-- [15. Classes and Objects](#15-classes-and-objects)
-  - [Class Fields](#class-fields)
-  - [Methods](#methods)
-  - [`this`](#this)
-  - [`new`](#new)
-  - [Member Access](#member-access)
-- [16. Vector Mathematics](#16-vector-mathematics)
-  - [`vec2`](#vec2)
-  - [`vec3`](#vec3)
-  - [`vec4`](#vec4)
-  - [`dot`](#dot)
-  - [`cross`](#cross)
-  - [`length`](#length)
-  - [`normalize`](#normalize)
-- [17. Input and Output](#17-input-and-output)
-  - [`print`](#print)
-  - [`println`](#println)
-  - [`input`](#input)
-- [18. File Operations](#18-file-operations)
-  - [`read_file`](#read_file)
-  - [`write_file`](#write_file)
-- [19. Expression Precedence](#19-expression-precedence)
-- [20. Lexer](#20-lexer)
-- [21. Parser](#21-parser)
-- [22. Semantic and Type Checking](#22-semantic-and-type-checking)
-- [23. Native Backend](#23-native-backend)
-- [24. Bytecode Backend](#24-bytecode-backend)
-- [25. Virtual Machine](#25-virtual-machine)
-- [26. Runtime Behavior](#26-runtime-behavior)
-- [27. Error Reference](#27-error-reference)
-- [28. Debugging Generated C](#28-debugging-generated-c)
-- [29. Project Structure](#29-project-structure)
-- [30. Example Programs](#30-example-programs)
-- [31. Development Guide](#31-development-guide)
-- [32. Current Implementation Notes](#32-current-implementation-notes)
-- [33. Troubleshooting](#33-troubleshooting)
-- [34. License](#34-license)
+This document contains the detailed language and toolchain reference. The README is intentionally kept focused on introducing the project, while this document covers the practical and technical details required to use, understand, and develop GAGE.
 
 ---
 
-# 1. Overview
+# Table of Contents
 
-GAGE is designed as a small, native-oriented programming language with a particular focus on:
+1. [Overview](#overview)
+2. [Project Status](#project-status)
+3. [Requirements](#requirements)
+4. [Building GAGE](#building-gage)
+5. [Command-Line Interface](#command-line-interface)
+6. [Compiler Pipeline](#compiler-pipeline)
+7. [Lexer](#lexer)
+8. [Tokens](#tokens)
+9. [Parser](#parser)
+10. [Abstract Syntax Tree](#abstract-syntax-tree)
+11. [Semantic Analysis and Type Checking](#semantic-analysis-and-type-checking)
+12. [Variables](#variables)
+13. [Primitive Values](#primitive-values)
+14. [Expressions](#expressions)
+15. [Operators](#operators)
+16. [Strings](#strings)
+17. [Booleans](#booleans)
+18. [Nil and Any](#nil-and-any)
+19. [Functions](#functions)
+20. [Return Values](#return-values)
+21. [Recursion](#recursion)
+22. [Classes](#classes)
+23. [Fields](#fields)
+24. [Methods](#methods)
+25. [The `this` Binding](#the-this-binding)
+26. [Object Construction](#object-construction)
+27. [Member Access](#member-access)
+28. [Arrays](#arrays)
+29. [Array Indexing](#array-indexing)
+30. [Array Mutation](#array-mutation)
+31. [Array Iteration](#array-iteration)
+32. [Conditional Execution](#conditional-execution)
+33. [While Loops](#while-loops)
+34. [Loop Statements](#loop-statements)
+35. [For-In Iteration](#for-in-iteration)
+36. [Break](#break)
+37. [Simulation Steps](#simulation-steps)
+38. [Vectors](#vectors)
+39. [Vector Construction](#vector-construction)
+40. [Vector Arithmetic](#vector-arithmetic)
+41. [Vector Functions](#vector-functions)
+42. [Input and Output](#input-and-output)
+43. [File I/O](#file-io)
+44. [Native Backend](#native-backend)
+45. [Generated C](#generated-c)
+46. [Bytecode Backend](#bytecode-backend)
+47. [Bytecode Chunks](#bytecode-chunks)
+48. [Virtual Machine](#virtual-machine)
+49. [Execution Models](#execution-models)
+50. [Diagnostics](#diagnostics)
+51. [Repository Structure](#repository-structure)
+52. [Source Code Guide](#source-code-guide)
+53. [Examples](#examples)
+54. [Testing](#testing)
+55. [Development Workflow](#development-workflow)
+56. [Extending GAGE](#extending-gage)
+57. [Platform Notes](#platform-notes)
+58. [Limitations](#limitations)
+59. [License](#license)
 
-- simple imperative programming
-- mathematical expressions
-- vector operations
-- simulation-oriented code
-- game-style state management
-- object-oriented structures
-- native compilation
-- bytecode execution
+---
 
-A GAGE program uses the `.gage` file extension.
+# Overview
 
-For example:
+GAGE is an experimental programming language implemented from scratch in Rust.
 
-```gage
-let message = "Hello from GAGE!";
-println(message);
-```
+The implementation contains the major components normally found in a programming language toolchain:
 
-GAGE processes source code through the following stages:
+- Source lexer
+- Token definitions
+- Parser
+- Abstract syntax tree
+- Semantic analysis
+- Type checking
+- Native C code generation
+- Bytecode representation
+- Bytecode compiler
+- Stack-based virtual machine
+- Command-line interface
+- Runtime support for I/O, vectors, arrays, and classes
+
+A GAGE source file normally uses the `.gage` extension.
+
+A source program can follow either of two execution paths.
+
+## Native execution
+
+The native pipeline transforms GAGE source into C source and then invokes an available C compiler.
 
 ```text
-                ┌────────────────────┐
-                │    .gage Source     │
-                └──────────┬─────────┘
-                           │
-                           ▼
-                ┌────────────────────┐
-                │       Lexer        │
-                │ Source → Tokens    │
-                └──────────┬─────────┘
-                           │
-                           ▼
-                ┌────────────────────┐
-                │       Parser       │
-                │ Tokens → AST       │
-                └──────────┬─────────┘
-                           │
-                           ▼
-                ┌────────────────────┐
-                │   Type Checker     │
-                │ Semantic Analysis  │
-                └──────────┬─────────┘
-                           │
-                 ┌─────────┴─────────┐
-                 │                   │
-                 ▼                   ▼
-        ┌─────────────────┐   ┌─────────────────┐
-        │   Native Path   │   │  Bytecode Path  │
-        └────────┬────────┘   └────────┬────────┘
-                 │                     │
-                 ▼                     ▼
-        ┌─────────────────┐   ┌─────────────────┐
-        │ Generated C     │   │ GAGE Bytecode   │
-        └────────┬────────┘   └────────┬────────┘
-                 │                     │
-                 ▼                     ▼
-        ┌─────────────────┐   ┌─────────────────┐
-        │ Clang / GCC     │   │ GAGE VM         │
-        └────────┬────────┘   └────────┬────────┘
-                 │                     │
-                 ▼                     ▼
-           Native Binary            Execution
+GAGE source
+    |
+    v
+Lexer
+    |
+    v
+Parser
+    |
+    v
+AST
+    |
+    v
+Type Checker
+    |
+    v
+C Code Generator
+    |
+    v
+Generated C
+    |
+    v
+Clang / GCC / clang-cl
+    |
+    v
+Native executable
 ```
 
----
+## Bytecode execution
 
-# 2. Architecture
-
-The compiler is implemented as separate Rust modules.
-
-The major components are:
+The VM path converts the validated program into GAGE bytecode and executes it directly using the built-in virtual machine.
 
 ```text
-src/
-├── token.rs
-├── lexer.rs
-├── ast.rs
-├── parser.rs
-├── types.rs
-├── codegen.rs
-├── bytecode.rs
-├── compiler.rs
-├── vm.rs
-└── main.rs
+GAGE source
+    |
+    v
+Lexer
+    |
+    v
+Parser
+    |
+    v
+AST
+    |
+    v
+Type Checker
+    |
+    v
+Bytecode Compiler
+    |
+    v
+Bytecode Chunk
+    |
+    v
+GAGE Virtual Machine
+    |
+    v
+Program output
 ```
 
-Each module has a specific responsibility.
-
-| Module | Purpose |
-|---|---|
-| `token.rs` | Token definitions |
-| `lexer.rs` | Converts source text into tokens |
-| `ast.rs` | Defines the abstract syntax tree |
-| `parser.rs` | Converts tokens into AST nodes |
-| `types.rs` | Semantic and type validation |
-| `codegen.rs` | Generates native C code |
-| `bytecode.rs` | Defines VM values, instructions, and chunks |
-| `compiler.rs` | Converts AST into bytecode |
-| `vm.rs` | Executes bytecode |
-| `main.rs` | CLI and compiler orchestration |
-
-The command-line driver first validates source code and then selects either the native or VM execution path.
+Both execution models operate on the same GAGE language syntax.
 
 ---
 
-# 3. Requirements
+# Project Status
+
+GAGE is an experimental language and compiler project.
+
+The implementation is intentionally compact and is suitable for:
+
+- Learning compiler implementation
+- Experimenting with programming-language design
+- Native-code-generation experiments
+- Vector and mathematical programs
+- Small simulations
+- Game-oriented scripting experiments
+- Exploring bytecode execution
+- Studying compiler architecture
+
+GAGE should not currently be treated as a drop-in replacement for mature production languages.
+
+The language and implementation may continue to change as the project evolves.
+
+---
+
+# Requirements
 
 ## Rust
 
-GAGE is a Rust Cargo project.
+GAGE is implemented as a Rust Cargo project.
 
-You need:
+A working Rust installation with Cargo is required to build the compiler.
 
-```text
-Rust
-Cargo
-```
-
-To verify:
+Check the installation with:
 
 ```bash
 rustc --version
 cargo --version
 ```
 
-## Native C Compiler
+## Native C compiler
 
-Native execution requires a C compiler.
+The native backend generates C source code and requires an external C compiler.
 
-Supported compiler candidates are:
+Supported compiler choices include:
 
-```text
-clang
-gcc
+- Clang
+- GCC
+- clang-cl on supported Windows environments
+
+Check for Clang:
+
+```bash
+clang --version
 ```
 
-On Windows, GAGE additionally checks:
+Check for GCC:
 
-```text
-clang-cl
+```bash
+gcc --version
 ```
 
-The compiler is searched through the system `PATH`.
-
-The bytecode VM does not require an external C compiler.
+The bytecode VM does not require an external C compiler for execution.
 
 ---
 
-# 4. Installation
-
-## Android / Termux
-
-Install the required packages:
-
-```bash
-pkg update -y
-pkg install git rust clang -y
-```
-
-Clone GAGE:
-
-```bash
-git clone https://github.com/LossRun/GAGE.git
-cd GAGE
-```
-
-Run the repository setup script:
-
-```bash
-bash gage-setup.sh
-```
-
-Verify the installation:
-
-```bash
-gage --version
-gage --info
-gage --help
-```
-
----
-
-## Linux
-
-### Ubuntu / Debian
-
-Install the required tools:
-
-```bash
-sudo apt update
-sudo apt install git curl clang build-essential -y
-```
-
-Clone GAGE:
-
-```bash
-git clone https://github.com/LossRun/GAGE.git
-cd GAGE
-```
-
-Run:
-
-```bash
-bash gage-setup.sh
-```
-
-If the setup script requires elevated installation permissions:
-
-```bash
-sudo bash gage-setup.sh
-```
-
----
-
-### Arch Linux
-
-Install:
-
-```bash
-sudo pacman -S git clang base-devel
-```
-
-Then:
-
-```bash
-git clone https://github.com/LossRun/GAGE.git
-cd GAGE
-bash gage-setup.sh
-```
-
----
-
-### Fedora
-
-Install:
-
-```bash
-sudo dnf install git clang gcc
-```
-
-Then:
-
-```bash
-git clone https://github.com/LossRun/GAGE.git
-cd GAGE
-bash gage-setup.sh
-```
-
----
-
-## macOS
-
-Install Apple's command-line development tools:
-
-```bash
-xcode-select --install
-```
-
-If Rust is not already installed:
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-Clone GAGE:
-
-```bash
-git clone https://github.com/LossRun/GAGE.git
-cd GAGE
-```
-
-Run:
-
-```bash
-bash gage-setup.sh
-```
-
----
-
-## Windows
-
-GAGE requires Rust and a usable C compiler.
-
-Install Rust through `rustup` and install Clang through LLVM or the Visual Studio C++ toolchain.
+# Building GAGE
 
 Clone the repository:
 
-```powershell
+```bash
 git clone https://github.com/LossRun/GAGE.git
 cd GAGE
 ```
 
-Run the installation script:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1
-```
-
-Verify:
-
-```powershell
-gage --version
-gage --info
-gage --help
-```
-
----
-
-## Building from Source
-
-From the repository root:
+Build the debug version:
 
 ```bash
 cargo build
 ```
 
-For an optimized build:
+Build the optimized release version:
 
 ```bash
 cargo build --release
@@ -420,1081 +257,566 @@ The release executable is produced under:
 target/release/gage
 ```
 
-On Windows:
+The debug executable is produced under:
 
 ```text
-target/release/gage.exe
+target/debug/gage
+```
+
+GAGE can also be executed directly through Cargo:
+
+```bash
+cargo run -- --help
 ```
 
 ---
 
-# 5. Command-Line Interface
+# Command-Line Interface
 
-The GAGE executable is called:
+The GAGE command-line tool provides several operations.
 
-```text
-gage
-```
-
-Running it without a command displays the usage information.
-
-```bash
-gage
-```
-
----
-
-## `gage build`
-
-Compile a `.gage` source file into a native executable.
-
-```bash
-gage build program.gage
-```
-
-The output name is derived from the source filename.
-
-For an explicit output name:
-
-```bash
-gage build program.gage -o program
-```
-
-The native build pipeline is:
-
-```text
-program.gage
-     ↓
-Lexer
-     ↓
-Parser
-     ↓
-Type Checker
-     ↓
-C Code Generation
-     ↓
-Clang / GCC
-     ↓
-program
-```
-
----
-
-## `gage run`
-
-Compile and execute a GAGE program through the native backend.
-
-```bash
-gage run program.gage
-```
-
-The compiler creates a temporary executable, runs it, and removes the temporary binary afterward.
-
-The native C compiler is therefore required for this command.
-
----
-
-## `gage vm`
-
-Execute a GAGE program through the built-in bytecode VM.
-
-```bash
-gage vm program.gage
-```
-
-The pipeline is:
-
-```text
-Source
-  ↓
-Lexer
-  ↓
-Parser
-  ↓
-Type Checker
-  ↓
-Bytecode Compiler
-  ↓
-Bytecode
-  ↓
-VM
-```
-
-This path does not invoke Clang or GCC.
-
----
-
-## `gage check`
-
-Validate a source file without generating a native executable.
-
-```bash
-gage check program.gage
-```
-
-The command performs:
-
-```text
-Lexing
-Parsing
-Semantic validation
-Type checking
-```
-
-A successful result reports that the source passed the validation stages.
-
----
-
-## `gage emit-c`
-
-Generate and display the intermediate C representation.
-
-```bash
-gage emit-c program.gage
-```
-
-This is useful when:
-
-- debugging native code generation
-- studying the compiler
-- inspecting generated runtime code
-- investigating native compilation errors
-
-The generated C is printed to standard output.
-
-You can save it to a file:
-
-```bash
-gage emit-c program.gage > generated.c
-```
-
----
-
-## `gage delete`
-
-The `delete` command removes installed GAGE binaries and known GAGE installation directories.
-
-```bash
-gage delete
-```
-
-The command asks for confirmation before deleting anything.
-
-Use:
-
-```text
-y
-```
-
-or:
-
-```text
-yes
-```
-
-to confirm.
-
-Any other response aborts the operation.
-
----
-
-## `gage --version`
-
-Display the compiler version and target information:
-
-```bash
-gage --version
-```
-
-Short form:
-
-```bash
-gage -v
-```
-
----
-
-## `gage --info`
-
-Display information about the execution engines and target platform:
-
-```bash
-gage --info
-```
-
----
-
-## `gage --help`
-
-Display the CLI help:
+## Help
 
 ```bash
 gage --help
 ```
 
-Short form:
+Displays the available commands and command-line options.
+
+## Version
 
 ```bash
-gage -h
+gage --version
 ```
 
----
+Displays the current GAGE version.
 
-## Direct File Execution
-
-A source file can also be supplied directly:
+## Toolchain information
 
 ```bash
-gage program.gage
+gage --info
 ```
 
-When the first argument is an existing file rather than a recognized command, GAGE uses the native compilation path, executes the temporary binary, and removes it afterward.
+Displays information about the GAGE toolchain and available native compilation environment.
 
----
-
-# 6. Source Validation
-
-Every native build begins with source validation.
-
-The validation pipeline is:
-
-```text
-Source
-  ↓
-Lexer
-  ↓
-Parser
-  ↓
-Type Checker
-  ↓
-Validated AST
-```
-
-If any stage fails, native code generation does not continue.
-
-For example:
+## Native build
 
 ```bash
-gage check main.gage
+gage build program.gage -o program
 ```
 
-can produce:
+The build command validates the GAGE source, generates C code, invokes the available native compiler, and produces a native executable.
 
-```text
-✔ [Verified] 'main.gage' passed lexer, parser, and type checks.
+## Native run
+
+```bash
+gage run program.gage
 ```
+
+The run command performs the native compilation process and executes the resulting program.
+
+## Bytecode VM
+
+```bash
+gage vm program.gage
+```
+
+The VM command sends the program through the bytecode compiler and executes it with the built-in GAGE virtual machine.
+
+## Validation
+
+```bash
+gage check program.gage
+```
+
+The check command validates the program without producing a native executable.
+
+The validation process includes lexical analysis, parsing, and semantic/type checking.
+
+## Emit generated C
+
+```bash
+gage emit-c program.gage
+```
+
+This command prints the C source generated by the native backend.
+
+It is useful for:
+
+- Understanding the native backend
+- Debugging code generation
+- Inspecting how GAGE constructs are lowered
+- Investigating generated runtime support
 
 ---
 
-# 7. Native Compilation
+# Compiler Pipeline
 
-The native backend converts the GAGE AST into C source code.
-
-The generated C is then compiled using the first suitable compiler found.
-
-On non-Windows platforms, GAGE checks:
+GAGE is organized as a sequence of compiler stages.
 
 ```text
-clang
-gcc
+Source Characters
+       |
+       v
+     Lexer
+       |
+       v
+     Tokens
+       |
+       v
+    Parser
+       |
+       v
+      AST
+       |
+       v
+ Type Checker
+       |
+       +----------------------+
+       |                      |
+       v                      v
+   CodeGen                Compiler
+       |                      |
+       v                      v
+ Generated C              Bytecode
+       |                      |
+       v                      v
+ Clang / GCC                 VM
+       |                      |
+       v                      v
+ Native Output            Program Output
 ```
 
-On Windows:
+Each stage has a separate responsibility.
 
-```text
-clang-cl
-clang
-gcc
-```
+The front end is responsible for understanding the language.
 
-The compiler is invoked with optimization enabled.
+The native backend converts the language representation into C.
 
-The generated command uses:
-
-```text
--O3
-```
-
-and suppresses compiler warnings using:
-
-```text
--w
-```
-
-On non-Windows platforms, the math library is also linked with:
-
-```text
--lm
-```
+The bytecode backend converts the language representation into executable bytecode.
 
 ---
 
-## Native Build Flow
+# Lexer
+
+The lexer is implemented in:
 
 ```text
-                    GAGE Source
-                         │
-                         ▼
-                       Lexer
-                         │
-                         ▼
-                       Parser
-                         │
-                         ▼
-                    Type Checker
-                         │
-                         ▼
-                    GAGE AST
-                         │
-                         ▼
-                     CodeGen
-                         │
-                         ▼
-                   Generated C
-                         │
-               ┌─────────┴─────────┐
-               │                   │
-             Clang                GCC
-               │                   │
-               └─────────┬─────────┘
-                         ▼
-                  Native Executable
+src/lexer.rs
 ```
 
----
-
-# 8. Bytecode Virtual Machine
-
-GAGE contains a separate bytecode execution engine.
-
-The bytecode system consists primarily of:
+Token definitions are implemented in:
 
 ```text
-src/bytecode.rs
-src/compiler.rs
-src/vm.rs
+src/token.rs
 ```
 
-The compiler creates a `Chunk`.
-
-A chunk contains:
-
-```text
-instructions
-constants
-source line information
-```
-
-The VM executes the instruction stream using:
-
-```text
-instruction pointer
-evaluation stack
-global variable table
-```
+The lexer converts raw source characters into tokens.
 
 Conceptually:
 
 ```text
-AST
- │
- ▼
-Bytecode Compiler
- │
- ▼
-Chunk
- ├── Code
- ├── Constants
- └── Line Information
- │
- ▼
-Virtual Machine
- ├── Instruction Pointer
- ├── Stack
- └── Globals
+Source characters
+       |
+       v
+     Lexer
+       |
+       v
+     Tokens
 ```
 
----
-
-# 9. Language Fundamentals
-
-## Comments
-
-GAGE supports single-line comments beginning with:
-
-```text
-//
-```
-
-Example:
-
-```gage
-// This is a comment.
-let value = 42;
-```
-
-The lexer ignores everything from `//` until the end of the line.
-
----
-
-## Statements
-
-Most executable statements end with:
-
-```text
-;
-```
-
-Example:
-
-```gage
-let x = 10;
-println(x);
-```
-
-Missing semicolons generally produce a parse error.
-
----
-
-## Identifiers
-
-Identifiers may contain:
-
-- letters
-- digits after the first character
-- underscores
-
-Examples:
-
-```gage
-player
-player_health
-velocity2
-_position
-```
-
-An identifier cannot begin with a digit.
-
-Reserved keywords cannot be used as ordinary identifiers.
-
----
-
-## Reserved Keywords
-
-The lexer recognizes the following language keywords and built-ins:
-
-```text
-let
-fn
-return
-
-class
-new
-this
-
-if
-else
-while
-for
-in
-loop
-break
-step
-
-true
-false
-nil
-
-print
-println
-input
-read_file
-write_file
-
-dot
-cross
-length
-normalize
-
-vec2
-vec3
-vec4
-```
-
----
-
-# 10. Data Types
-
-The semantic type system defines the following types:
-
-```text
-Int
-Float
-Bool
-Str
-Vec2
-Vec3
-Vec4
-Array
-Custom
-Nil
-Any
-```
-
----
-
-## Integer
-
-Integers are represented as signed 64-bit values.
-
-Examples:
-
-```gage
-let count = 42;
-let negative = -10;
-let zero = 0;
-```
-
----
-
-## Float
-
-Floating-point values use 64-bit floating-point representation.
-
-Examples:
-
-```gage
-let pi = 3.14159;
-let gravity = -9.8;
-let dt = 0.016;
-```
-
-A decimal point followed by digits creates a floating-point literal.
-
----
-
-## Boolean
-
-Boolean values are:
-
-```text
-true
-false
-```
-
-Example:
-
-```gage
-let running = true;
-
-if (running) {
-    println("Running");
-}
-```
-
----
-
-## String
-
-Strings use double quotes.
-
-```gage
-let name = "GAGE";
-println(name);
-```
-
-Escape sequences supported by the lexer include:
-
-```text
-\n
-\t
-\\
-\"
-```
-
-Example:
-
-```gage
-let message = "Hello\nGAGE";
-println(message);
-```
-
----
-
-## Nil
-
-`nil` represents the absence of a value.
-
-```gage
-let value = nil;
-println(value);
-```
-
----
-
-## Vectors
-
-GAGE provides three vector constructors:
-
-```text
-vec2
-vec3
-vec4
-```
-
-They are represented by dedicated vector types.
-
----
-
-## Arrays
-
-Array literals use square brackets:
-
-```gage
-let values = [10, 20, 30, 40];
-```
-
-Elements are separated by commas.
-
-Arrays support indexing:
-
-```gage
-let first = values[0];
-```
-
-and assignment:
-
-```gage
-values[1] = 99;
-```
-
-Arrays can also be traversed with:
-
-```gage
-for value in values {
-    println(value);
-}
-```
-
----
-
-## Custom Types
-
-Classes introduce custom types.
+The lexer tracks source locations so that lexical errors can report useful line and column information.
+
+The lexer recognizes language elements including:
+
+- Identifiers
+- Keywords
+- Integer literals
+- Floating-point literals
+- String literals
+- Boolean literals
+- Operators
+- Punctuation
+- Delimiters
 
 For example:
 
 ```gage
-class Player {
-    health;
+let speed = 10.0;
+println(speed);
+```
+
+The lexer breaks the source into a sequence of tokens representing:
+
+```text
+let
+identifier(speed)
+=
+float(10.0)
+;
+identifier(println)
+(
+identifier(speed)
+)
+;
+```
+
+The exact internal representation is defined by the token structures in `src/token.rs`.
+
+---
+
+# Tokens
+
+The token system provides the vocabulary consumed by the parser.
+
+Tokens represent syntactic elements rather than complete program structures.
+
+Examples include:
+
+```text
+let
+fn
+class
+new
+this
+if
+else
+while
+loop
+for
+in
+break
+return
+step
+true
+false
+nil
+```
+
+Operators and punctuation are also represented as tokens.
+
+The separation between lexing and parsing allows the parser to work with structured token information rather than raw characters.
+
+---
+
+# Parser
+
+The parser is implemented in:
+
+```text
+src/parser.rs
+```
+
+The parser receives the token stream produced by the lexer and constructs the abstract syntax tree.
+
+Conceptually:
+
+```text
+Tokens
+   |
+   v
+Parser
+   |
+   v
+AST
+```
+
+The parser is responsible for recognizing language constructs such as:
+
+- Variable declarations
+- Expressions
+- Assignments
+- Function declarations
+- Function calls
+- Class declarations
+- Object construction
+- Member access
+- Conditional statements
+- Loops
+- Array literals
+- Index expressions
+- Simulation steps
+- Return statements
+
+The parser therefore converts a flat sequence of tokens into a hierarchical representation of the program.
+
+---
+
+# Abstract Syntax Tree
+
+The AST is implemented in:
+
+```text
+src/ast.rs
+```
+
+The abstract syntax tree represents the structure of a GAGE program.
+
+For example:
+
+```gage
+let x = 10;
+let y = x + 5;
+```
+
+is conceptually represented as a sequence containing:
+
+```text
+Variable declaration
+    |
+    +-- name: x
+    +-- initializer: 10
+
+Variable declaration
+    |
+    +-- name: y
+    +-- initializer:
+            |
+            +-- x
+            +-- +
+            +-- 5
+```
+
+The AST provides a common representation consumed by later compiler stages.
+
+Both the native code generator and bytecode compiler operate from this program representation.
+
+---
+
+# Semantic Analysis and Type Checking
+
+Semantic and type checking are implemented in:
+
+```text
+src/types.rs
+```
+
+The type checker runs after parsing.
+
+Its responsibility is to validate meaning rather than merely syntax.
+
+The compiler maintains information about declarations, scopes, variables, functions, and classes.
+
+The currently represented types include:
+
+- `Int`
+- `Float`
+- `Bool`
+- `Str`
+- `Vec2`
+- `Vec3`
+- `Vec4`
+- Arrays
+- Custom class types
+- `Nil`
+- `Any`
+
+For example, referencing a variable that has not been declared can produce a semantic error.
+
+```text
+[Semantic Error] Undefined variable 'name'
+```
+
+Semantic checking also understands the special `this` binding available inside class methods.
+
+---
+
+# Variables
+
+Variables are declared with `let`.
+
+```gage
+let x = 42;
+let speed = 10.0;
+let active = true;
+let name = "GAGE";
+```
+
+Variables can be reassigned.
+
+```gage
+let speed = 10.0;
+
+speed = speed + 5.0;
+
+println(speed);
+```
+
+The declaration creates a binding in the current scope.
+
+Assignments modify an existing binding.
+
+---
+
+# Primitive Values
+
+GAGE supports several primitive value categories.
+
+## Integer
+
+```gage
+let count = 42;
+```
+
+## Floating-point
+
+```gage
+let gravity = -9.8;
+```
+
+## Boolean
+
+```gage
+let running = true;
+let finished = false;
+```
+
+## String
+
+```gage
+let name = "GAGE";
+```
+
+## Nil
+
+```gage
+let value = nil;
+```
+
+`nil` represents the absence of a normal value.
+
+---
+
+# Expressions
+
+Expressions produce values.
+
+Examples include:
+
+```gage
+10
+3.14
+true
+"hello"
+x
+x + 10
+x * speed
+vec3(1.0, 2.0, 3.0)
+foo(10)
+player.health
+array[0]
+```
+
+Expressions can be combined to construct larger expressions.
+
+```gage
+let result = (speed * time) + offset;
+```
+
+Expressions can also appear as conditions:
+
+```gage
+if (health > 0) {
+    println("Alive");
 }
 ```
 
-An instance can be created using:
-
-```gage
-let player = new Player();
-```
-
-The semantic type is represented internally as a custom type associated with the class name.
-
 ---
 
-# 11. Operators
+# Operators
 
-## Arithmetic
+GAGE supports arithmetic and comparison operations used throughout the language.
 
-GAGE supports:
+Typical arithmetic operators include:
 
-| Operator | Meaning |
-|---|---|
-| `+` | Addition |
-| `-` | Subtraction |
-| `*` | Multiplication |
-| `/` | Division |
-| `%` | Modulo |
-
-Examples:
-
-```gage
-let a = 20;
-let b = 6;
-
-println(a + b);
-println(a - b);
-println(a * b);
-println(a / b);
-println(a % b);
+```text
++
+-
+*
+/
 ```
 
----
-
-## Comparison
-
-Supported comparison operators:
+Comparison operators include:
 
 ```text
 ==
 !=
 <
-<=
 >
+<=
 >=
 ```
 
-Example:
+Operators may operate on scalar values and, where supported by the language implementation, vector values.
+
+---
+
+# Strings
+
+Strings are written using double quotes.
 
 ```gage
-let health = 80;
+let message = "Hello from GAGE";
+println(message);
+```
 
-if (health >= 50) {
-    println("Healthy");
-}
+Strings can be passed to functions and I/O operations.
+
+For example:
+
+```gage
+print("Hello ");
+println("GAGE!");
 ```
 
 ---
 
-## Logical Operators
+# Booleans
 
-GAGE supports:
+Boolean values are represented by:
 
-```text
-&&
-||
-!
+```gage
+true
+false
 ```
 
 Example:
 
 ```gage
-let alive = true;
 let active = true;
 
-if (alive && active) {
-    println("Entity is active");
+if (active) {
+    println("Running");
 }
 ```
 
----
-
-## Unary Operators
-
-Unary negation:
-
-```text
--
-```
-
-Logical negation:
-
-```text
-!
-```
-
-Example:
+Boolean expressions can also be produced by comparisons:
 
 ```gage
-let value = -10;
-let active = !false;
+let healthy = health > 50;
 ```
 
 ---
 
-# 12. Expressions
+# Nil and Any
 
-Expressions can contain:
+GAGE contains `Nil` and `Any` concepts in its type system.
 
-- literals
-- identifiers
-- arrays
-- vectors
-- function calls
-- method calls
-- member access
-- indexing
-- object construction
-- unary operations
-- binary operations
-- built-in mathematical operations
-
-Example:
+`nil` represents an empty or absent value:
 
 ```gage
-let result = (10 + 5) * 2;
+let value = nil;
 ```
 
-Nested expressions are supported:
+`Any` provides a more general type representation where the implementation requires a value without committing to a more specific type.
 
-```gage
-let distance = length(vec3(3.0, 4.0, 0.0));
-```
+These types are primarily relevant to semantic analysis and runtime representation.
 
 ---
 
-## Function Calls
+# Functions
 
-```gage
-let result = calculate(10, 20);
-```
-
----
-
-## Method Calls
-
-```gage
-player.attack(enemy);
-```
-
----
-
-## Member Access
-
-```gage
-player.health
-```
-
----
-
-## Array Indexing
-
-```gage
-scores[0]
-```
-
----
-
-## Object Construction
-
-```gage
-let player = new Player();
-```
-
-Constructor arguments are syntactically accepted:
-
-```gage
-let object = new Example(value);
-```
-
----
-
-# 13. Control Flow
-
-## `if` / `else`
-
-The current parser requires the condition to be enclosed in parentheses.
-
-```gage
-if (health > 50) {
-    println("Healthy");
-} else if (health > 0) {
-    println("Danger");
-} else {
-    println("Dead");
-}
-```
-
-Structure:
-
-```text
-if (condition) {
-    statements
-}
-```
-
-Optional `else`:
-
-```text
-if (condition) {
-    statements
-} else {
-    statements
-}
-```
-
----
-
-## `while`
-
-A `while` loop repeats while its condition evaluates as true.
-
-```gage
-let i = 0;
-
-while (i < 10) {
-    println(i);
-    i = i + 1;
-}
-```
-
-Syntax:
-
-```text
-while (condition) {
-    statements
-}
-```
-
----
-
-## `loop`
-
-`loop` creates an unconditional loop.
-
-```gage
-let counter = 0;
-
-loop {
-    counter = counter + 1;
-
-    if (counter >= 10) {
-        break;
-    }
-}
-```
-
-Syntax:
-
-```text
-loop {
-    statements
-}
-```
-
----
-
-## `for ... in`
-
-GAGE provides an iterator-style loop:
-
-```gage
-let values = [10, 20, 30];
-
-for value in values {
-    println(value);
-}
-```
-
-Syntax:
-
-```text
-for variable in expression {
-    statements
-}
-```
-
-The loop variable is scoped to the loop body during semantic checking.
-
----
-
-## `break`
-
-`break` exits the current loop in the native execution model.
-
-Syntax:
-
-```gage
-break;
-```
-
-Example:
-
-```gage
-let i = 0;
-
-loop {
-    i = i + 1;
-
-    if (i >= 5) {
-        break;
-    }
-}
-```
-
----
-
-## `step(dt)`
-
-`step` is a simulation-oriented construct.
-
-Syntax:
-
-```text
-step(identifier) {
-    statements
-}
-```
-
-Example:
-
-```gage
-let position = vec3(0.0, 10.0, 0.0);
-let velocity = vec3(1.0, 0.0, 0.0);
-
-step(dt) {
-    position = position + (velocity * dt);
-}
-```
-
-The identifier inside `step(...)` becomes a local floating-point time-step variable.
-
-The native implementation uses a fixed timestep value.
-
-The bytecode compiler currently lowers the timestep to approximately:
-
-```text
-0.016667
-```
-
-which corresponds to roughly 60 simulation steps per second.
-
----
-
-# 14. Functions
-
-Functions are declared using:
-
-```text
-fn
-```
-
-Basic syntax:
-
-```gage
-fn add(a, b) {
-    return a + b;
-}
-```
-
-Call the function:
-
-```gage
-let result = add(10, 20);
-println(result);
-```
-
----
-
-## Function Parameters
-
-Multiple parameters are separated by commas:
-
-```gage
-fn calculate_damage(power, defense, multiplier) {
-    return (power - defense) * multiplier;
-}
-```
-
----
-
-## Return Values
-
-Use:
-
-```text
-return
-```
-
-Example:
+Functions are declared using `fn`.
 
 ```gage
 fn square(x) {
@@ -1502,19 +824,51 @@ fn square(x) {
 }
 ```
 
-A return statement may also omit an expression:
+Functions can accept multiple parameters.
 
 ```gage
-fn reset() {
-    return;
+fn add(a, b) {
+    return a + b;
 }
 ```
 
+They can then be called using normal call syntax:
+
+```gage
+let result = add(10, 20);
+
+println(result);
+```
+
+Functions can be used to separate reusable program logic into named operations.
+
 ---
 
-## Recursion
+# Return Values
 
-Functions can call other functions, including themselves.
+A function can return a value using `return`.
+
+```gage
+fn multiply(a, b) {
+    return a * b;
+}
+```
+
+The returned value can be assigned:
+
+```gage
+let result = multiply(6, 7);
+
+println(result);
+```
+
+Returning from a function terminates that function's current execution path.
+
+---
+
+# Recursion
+
+GAGE functions can call themselves.
 
 Example:
 
@@ -1530,25 +884,15 @@ fn factorial(n) {
 println(factorial(5));
 ```
 
----
-
-## Function Scope
-
-Function parameters are placed into a new semantic scope.
-
-Local names can therefore be used inside function bodies without being confused with the outer scope.
+Recursive programs are subject to the limits of the selected execution backend and runtime.
 
 ---
 
-# 15. Classes and Objects
+# Classes
 
-Classes are declared using:
+GAGE provides a compact object-oriented system.
 
-```text
-class
-```
-
-Example:
+A class can define fields and methods.
 
 ```gage
 class Player {
@@ -1560,53 +904,41 @@ class Player {
         this.power = attack;
     }
 
-    fn attack(target) {
-        return target - this.power;
+    fn damage(amount) {
+        this.health = this.health - amount;
     }
 }
 ```
 
+A class definition describes the structure and behavior of its instances.
+
 ---
 
-## Class Fields
+# Fields
 
-Fields are declared inside the class body.
-
-Each field declaration ends with a semicolon:
+Fields are declared inside a class.
 
 ```gage
 class Player {
     health;
     power;
-    speed;
 }
 ```
 
----
+Fields represent state belonging to an instance.
 
-## Methods
-
-Methods are functions declared inside a class.
+They can be accessed through an object:
 
 ```gage
-class Player {
-    health;
-
-    fn heal(amount) {
-        this.health = this.health + amount;
-    }
-}
+player.health
+player.power
 ```
-
-Methods use the same function syntax as normal functions.
 
 ---
 
-## `this`
+# Methods
 
-Inside a class method, `this` refers to the current object.
-
-Example:
+Methods are functions declared inside a class.
 
 ```gage
 class Player {
@@ -1618,71 +950,320 @@ class Player {
 }
 ```
 
-The semantic checker introduces `this` into the method's scope as the class type.
-
-Using `this` outside a class method produces a semantic error.
+Methods can modify object state through `this`.
 
 ---
 
-## `new`
+# The `this` Binding
 
-Objects are created with:
-
-```text
-new
-```
-
-Example:
+Inside a class method, `this` refers to the current object instance.
 
 ```gage
 class Player {
     health;
-}
 
+    fn setup(value) {
+        this.health = value;
+    }
+}
+```
+
+The expression:
+
+```gage
+this.health
+```
+
+refers to the `health` field belonging to the current instance.
+
+The type checker recognizes `this` specially when analyzing class methods.
+
+---
+
+# Object Construction
+
+Objects are created with `new`.
+
+```gage
 let player = new Player();
 ```
 
-Constructor-style arguments are accepted by the language grammar:
+After construction, methods can be called:
 
 ```gage
-let player = new Player(100);
+player.setup(100);
+```
+
+A complete example:
+
+```gage
+class Player {
+    health;
+
+    fn setup(value) {
+        this.health = value;
+    }
+}
+
+let player = new Player();
+
+player.setup(100);
+
+println(player.health);
 ```
 
 ---
 
-## Member Access
+# Member Access
 
-Fields can be accessed using `.`:
+Members are accessed using the dot operator.
 
 ```gage
 player.health
+player.setup(100)
 ```
 
-Methods can be called using the same member-access syntax:
+Member access can appear inside larger expressions:
 
 ```gage
-player.heal(25);
+let remaining = player.health - 10;
+```
+
+Member access is also used for method invocation.
+
+---
+
+# Arrays
+
+GAGE supports array literals.
+
+```gage
+let numbers = [10, 20, 30, 40];
+```
+
+Arrays provide dynamic collection storage.
+
+The native representation maintains storage information including:
+
+- Data
+- Current length
+- Capacity
+
+The backing storage can grow as required by supported operations.
+
+---
+
+# Array Indexing
+
+Array elements can be accessed using an index.
+
+```gage
+let numbers = [10, 20, 30];
+
+let first = numbers[0];
+
+println(first);
+```
+
+Array indexing is zero-based.
+
+Therefore:
+
+```text
+numbers[0]
+```
+
+refers to the first element.
+
+---
+
+# Array Mutation
+
+Array elements can be changed through indexed assignment.
+
+```gage
+let numbers = [10, 20, 30];
+
+numbers[1] = 99;
+
+println(numbers[1]);
+```
+
+This modifies the element at the selected index.
+
+---
+
+# Array Iteration
+
+Arrays can be traversed with `for ... in`.
+
+```gage
+let scores = [450, 1200, 890, 2400];
+
+for score in scores {
+    println(score);
+}
+```
+
+The loop variable receives each element as iteration proceeds.
+
+---
+
+# Conditional Execution
+
+GAGE provides `if` and `else`.
+
+```gage
+let health = 75;
+
+if (health > 50) {
+    println("Healthy");
+} else {
+    println("Danger");
+}
+```
+
+Conditions can contain expressions:
+
+```gage
+if (health <= 0) {
+    println("Defeated");
+}
+```
+
+Multiple branches can be expressed using `else if` where supported by the parser.
+
+```gage
+if (health > 75) {
+    println("High");
+} else if (health > 25) {
+    println("Medium");
+} else {
+    println("Low");
+}
 ```
 
 ---
 
-## Member Assignment
+# While Loops
 
-Fields can be assigned:
+`while` repeats a block while its condition remains true.
 
 ```gage
-player.health = 100;
+let i = 0;
+
+while (i < 10) {
+    println(i);
+    i = i + 1;
+}
 ```
 
-The parser represents this as a member assignment rather than a normal variable assignment.
+The condition is evaluated as part of each loop iteration.
 
 ---
 
-# 16. Vector Mathematics
+# Loop Statements
 
-Vectors are built into the language rather than being implemented as ordinary user-defined classes.
+GAGE also provides an unconditional `loop`.
 
-GAGE provides:
+```gage
+let i = 0;
+
+loop {
+    i = i + 1;
+
+    if (i >= 10) {
+        break;
+    }
+}
+```
+
+The loop continues until control leaves it.
+
+---
+
+# For-In Iteration
+
+The `for ... in` construct is designed for iterating over collections.
+
+```gage
+let values = [1, 2, 3, 4];
+
+for value in values {
+    println(value);
+}
+```
+
+The loop variable represents the current element.
+
+This construct is particularly useful for array-based simulation and game logic.
+
+---
+
+# Break
+
+`break` exits the current loop.
+
+```gage
+let i = 0;
+
+loop {
+    i = i + 1;
+
+    if (i >= 5) {
+        break;
+    }
+}
+```
+
+`break` is useful when the termination condition is determined from inside the loop body.
+
+---
+
+# Simulation Steps
+
+One of the distinctive language constructs in GAGE is:
+
+```gage
+step(dt) {
+    ...
+}
+```
+
+A `step` block provides a simulation-oriented execution construct.
+
+Example:
+
+```gage
+let position = vec3(0.0, 50.0, 0.0);
+let velocity = vec3(0.0, -1.0, 0.0);
+
+step(dt) {
+    position = position + (velocity * dt);
+}
+
+println(position);
+```
+
+The `dt` identifier represents the local time-step value available inside the step block.
+
+The construct is intended for programs involving:
+
+- Physics
+- Motion
+- Simulation
+- Game state updates
+- Repeated numerical integration
+
+The current native implementation uses a fixed simulation interval for this construct.
+
+---
+
+# Vectors
+
+Vectors are built into the GAGE language.
+
+The current language includes:
 
 ```text
 vec2
@@ -1690,144 +1271,90 @@ vec3
 vec4
 ```
 
+Vectors are intended to make mathematical and simulation-oriented code concise.
+
 ---
 
-## `vec2`
+# Vector Construction
 
-Create a two-dimensional vector:
+A two-dimensional vector:
 
 ```gage
 let position = vec2(10.0, 20.0);
 ```
 
-The components are:
-
-```text
-x
-y
-```
-
----
-
-## `vec3`
-
-Create a three-dimensional vector:
+A three-dimensional vector:
 
 ```gage
 let position = vec3(10.0, 20.0, 30.0);
 ```
 
-Components:
+A four-dimensional vector:
 
-```text
-x
-y
-z
+```gage
+let color = vec4(1.0, 0.0, 0.0, 1.0);
 ```
+
+---
+
+# Vector Arithmetic
+
+Vector values can participate directly in arithmetic operations supported by the implementation.
 
 Example:
 
 ```gage
+let position = vec3(0.0, 10.0, 0.0);
 let velocity = vec3(1.0, 0.0, -2.0);
+let gravity = vec3(0.0, -9.8, 0.0);
+
+let next_velocity = velocity + gravity;
+let next_position = position + next_velocity;
+
+println(next_position);
 ```
 
----
-
-## `vec4`
-
-Create a four-dimensional vector:
-
-```gage
-let color = vec4(1.0, 0.0, 0.5, 1.0);
-```
-
-Components:
-
-```text
-x
-y
-z
-w
-```
-
----
-
-## Vector Addition
-
-Vectors of the same dimension can be added:
-
-```gage
-let a = vec3(1.0, 2.0, 3.0);
-let b = vec3(4.0, 5.0, 6.0);
-
-let result = a + b;
-```
-
----
-
-## Vector Subtraction
-
-```gage
-let a = vec3(5.0, 6.0, 7.0);
-let b = vec3(1.0, 2.0, 3.0);
-
-let result = a - b;
-```
-
----
-
-## Scalar Multiplication
-
-Vector values can be multiplied by scalar numeric values in the native runtime.
+Scalar multiplication can also be used:
 
 ```gage
 let velocity = vec3(1.0, 2.0, 3.0);
+
 let scaled = velocity * 2.0;
+
+println(scaled);
 ```
 
-This is particularly useful for simulation code:
-
-```gage
-let position = position + velocity * dt;
-```
+The exact combinations supported are determined by the language type system and backend implementation.
 
 ---
 
-## `dot`
+# Vector Functions
 
-Calculate the dot product:
+GAGE provides built-in mathematical operations for vectors.
+
+## Dot product
 
 ```gage
 let a = vec3(1.0, 0.0, 0.0);
 let b = vec3(0.0, 1.0, 0.0);
 
 let result = dot(a, b);
+
 println(result);
 ```
 
-The result is a floating-point value.
-
----
-
-## `cross`
-
-Calculate the cross product:
+## Cross product
 
 ```gage
 let a = vec3(1.0, 0.0, 0.0);
 let b = vec3(0.0, 1.0, 0.0);
 
 let result = cross(a, b);
+
 println(result);
 ```
 
-The semantic type of the result is `Vec3`.
-
----
-
-## `length`
-
-Calculate a vector's magnitude:
+## Length
 
 ```gage
 let velocity = vec3(3.0, 4.0, 0.0);
@@ -1837,468 +1364,81 @@ let speed = length(velocity);
 println(speed);
 ```
 
-The result is a floating-point value.
+## Normalize
+
+```gage
+let direction = vec3(10.0, 0.0, 0.0);
+
+let normalized = normalize(direction);
+
+println(normalized);
+```
+
+These operations are particularly useful for simulation, physics, geometry, and game-oriented programs.
 
 ---
 
-## `normalize`
+# Input and Output
 
-Normalize a vector:
+GAGE provides simple built-in terminal I/O.
 
-```gage
-let direction = vec3(3.0, 4.0, 0.0);
-let unit = normalize(direction);
-
-println(unit);
-```
-
-The result retains the vector's type.
-
----
-
-## Vector Simulation Example
-
-```gage
-let position = vec3(0.0, 20.0, 0.0);
-let velocity = vec3(2.0, 0.0, 0.0);
-let gravity = vec3(0.0, -9.8, 0.0);
-
-step(dt) {
-    velocity = velocity + gravity * dt;
-    position = position + velocity * dt;
-}
-
-println(position);
-```
-
----
-
-# 17. Input and Output
-
-## `print`
-
-`print` writes an expression without automatically adding a newline.
-
-```gage
-print("Loading");
-```
-
-Example:
+The primary output functions are:
 
 ```gage
 print("Hello ");
-print("GAGE");
+println("GAGE!");
 ```
+
+`print` writes output without automatically adding a newline.
+
+`println` writes output followed by a newline.
 
 ---
 
-## `println`
+# Input
 
-`println` writes an expression followed by a newline.
-
-```gage
-println("Hello from GAGE!");
-```
-
-It can print values such as:
-
-```gage
-println(42);
-println(3.14);
-println(true);
-println("text");
-println(vec3(1.0, 2.0, 3.0));
-```
-
----
-
-## `input`
-
-`input` reads a line from standard input.
-
-With a prompt:
+Interactive input can be read using `input`.
 
 ```gage
 let name = input("Enter your name: ");
+
 println(name);
 ```
 
-The prompt expression is optional at the parser level.
+The native runtime provides the necessary terminal handling through generated C runtime support.
 
 ---
 
-# 18. File Operations
+# File I/O
 
-GAGE provides two file-related built-ins.
+GAGE provides basic file operations.
 
----
-
-## `read_file`
-
-Read the contents of a file:
+## Reading a file
 
 ```gage
 let contents = read_file("data.txt");
+
 println(contents);
 ```
 
-Syntax:
-
-```text
-read_file(path)
-```
-
----
-
-## `write_file`
-
-Write content to a file:
+## Writing a file
 
 ```gage
-let success = write_file("data.txt", "Hello from GAGE!");
+let success = write_file(
+    "data.txt",
+    "Hello from GAGE!"
+);
+
 println(success);
 ```
 
-Syntax:
+These operations are implemented through runtime helpers provided by the native backend.
 
-```text
-write_file(path, content)
-```
-
-The native backend exposes these operations through its generated runtime.
+File I/O is useful for simple persistence, logs, configuration data, and experimental game save systems.
 
 ---
 
-# 19. Expression Precedence
-
-GAGE's parser evaluates expressions using a conventional precedence hierarchy.
-
-From lowest precedence to highest:
-
-| Level | Operators |
-|---|---|
-| 1 | `||` |
-| 2 | `&&` |
-| 3 | `==`, `!=` |
-| 4 | `<`, `<=`, `>`, `>=` |
-| 5 | `+`, `-` |
-| 6 | `*`, `/`, `%` |
-| 7 | unary `-`, `!` |
-| 8 | function calls, method calls, member access, indexing |
-| 9 | primary expressions |
-
-Therefore:
-
-```gage
-let result = 2 + 3 * 4;
-```
-
-is interpreted as:
-
-```text
-2 + (3 * 4)
-```
-
-Parentheses can be used to explicitly control grouping:
-
-```gage
-let result = (2 + 3) * 4;
-```
-
----
-
-# 20. Lexer
-
-The lexer is implemented in:
-
-```text
-src/lexer.rs
-```
-
-Its job is to convert source characters into tokens.
-
-Example:
-
-```gage
-let value = 42;
-```
-
-Conceptually becomes:
-
-```text
-LET
-IDENT(value)
-ASSIGN
-INT(42)
-SEMICOLON
-EOF
-```
-
-The lexer records:
-
-```text
-line
-column
-```
-
-for tokens and lexical errors.
-
----
-
-## Whitespace
-
-The lexer ignores:
-
-```text
-space
-tab
-carriage return
-newline
-```
-
----
-
-## Comments
-
-The lexer recognizes:
-
-```text
-// comment
-```
-
-and ignores the comment until the newline.
-
----
-
-## Numeric Literals
-
-Integer:
-
-```text
-42
-```
-
-Floating-point:
-
-```text
-42.5
-```
-
-The lexer recognizes a decimal point only when it is followed by another digit.
-
----
-
-## Strings
-
-Strings begin and end with:
-
-```text
-"
-```
-
-Supported escapes include:
-
-```text
-\n
-\t
-\\
-\"
-```
-
-An unterminated string produces:
-
-```text
-[Lexer Error]
-```
-
----
-
-# 21. Parser
-
-The parser is implemented in:
-
-```text
-src/parser.rs
-```
-
-It consumes the token stream and constructs the abstract syntax tree.
-
-The parser supports statements including:
-
-```text
-let
-fn
-class
-return
-print
-println
-if
-while
-for
-loop
-break
-step
-assignment
-expression statements
-```
-
-Expressions include:
-
-```text
-literals
-identifiers
-arrays
-new expressions
-vectors
-built-in math operations
-function calls
-method calls
-member access
-index access
-unary expressions
-binary expressions
-```
-
----
-
-## AST
-
-The AST is defined in:
-
-```text
-src/ast.rs
-```
-
-The AST provides the intermediate representation shared by the semantic checker and the native/bytecode backends.
-
----
-
-# 22. Semantic and Type Checking
-
-Semantic validation is implemented in:
-
-```text
-src/types.rs
-```
-
-The type checker maintains:
-
-```text
-scopes
-functions
-classes
-```
-
-The checker validates the program after parsing and before native code generation.
-
----
-
-## Variable Lookup
-
-Variables are resolved through nested scopes.
-
-For example:
-
-```gage
-let global_value = 10;
-
-fn test(value) {
-    println(value);
-}
-```
-
-Function parameters are placed into the function scope.
-
----
-
-## Undefined Variables
-
-Using an unknown identifier:
-
-```gage
-println(unknown_value);
-```
-
-produces a semantic error similar to:
-
-```text
-[Semantic Error] Undefined variable 'unknown_value'
-```
-
----
-
-## `this` Validation
-
-Using:
-
-```gage
-this
-```
-
-outside a class method produces a semantic error.
-
----
-
-## Function Scopes
-
-Function parameters are inserted into a new scope:
-
-```gage
-fn add(a, b) {
-    return a + b;
-}
-```
-
-Inside the function:
-
-```text
-a
-b
-```
-
-are available as local names.
-
----
-
-## Class Method Scopes
-
-Class methods receive:
-
-```text
-this
-```
-
-as well as their declared parameters.
-
-Example:
-
-```gage
-class Player {
-    health;
-
-    fn set(value) {
-        this.health = value;
-    }
-}
-```
-
----
-
-## Type Conversion
-
-The current semantic checker allows an integer value to be assigned to a floating-point variable.
-
-Conceptually:
-
-```text
-Int → Float
-```
-
-is accepted in the relevant reassignment case.
-
----
-
-# 23. Native Backend
+# Native Backend
 
 The native backend is implemented primarily in:
 
@@ -2306,474 +1446,260 @@ The native backend is implemented primarily in:
 src/codegen.rs
 ```
 
-It transforms the validated AST into C source code.
+Its job is to transform the validated GAGE AST into C source code.
 
-The generated C contains runtime structures and helper functions required by GAGE programs.
-
-The backend handles language features including:
+Conceptually:
 
 ```text
-primitive values
-strings
-vectors
-arrays
-classes
-functions
-control flow
-I/O
-file operations
+GAGE AST
+   |
+   v
+Code Generator
+   |
+   v
+C Source
+   |
+   v
+External C Compiler
+   |
+   v
+Native Executable
 ```
 
-The generated C is then passed to an external compiler.
+The backend provides generated runtime support for language features including:
+
+- Scalar output
+- String output
+- Boolean output
+- Vector output
+- Vector construction
+- Vector operations
+- Dynamic arrays
+- Terminal input
+- File reading
+- File writing
+- Class representations
 
 ---
 
-## C Compiler Selection
+# Generated C
 
-On Linux, macOS, Android, and other non-Windows targets:
-
-```text
-1. clang
-2. gcc
-```
-
-On Windows:
-
-```text
-1. clang-cl
-2. clang
-3. gcc
-```
-
-The first compiler that successfully produces an executable is used.
-
----
-
-# 24. Bytecode Backend
-
-The bytecode representation is defined in:
-
-```text
-src/bytecode.rs
-```
-
-The compiler is implemented in:
-
-```text
-src/compiler.rs
-```
-
-The runtime VM is implemented in:
-
-```text
-src/vm.rs
-```
-
----
-
-## Bytecode Values
-
-The VM currently represents values including:
-
-```text
-Nil
-Bool
-Int
-Float
-Str
-Vec2
-Vec3
-Vec4
-```
-
----
-
-## Bytecode Instructions
-
-The bytecode instruction set contains categories for:
-
-### Constants
-
-```text
-Constant
-Nil
-True
-False
-```
-
-### Vectors
-
-```text
-MakeVec2
-MakeVec3
-MakeVec4
-```
-
-### Arithmetic and Comparison
-
-```text
-Add
-Sub
-Mul
-Div
-Negate
-Not
-Equal
-NotEqual
-Less
-LessEqual
-Greater
-GreaterEqual
-```
-
-### Variables and Stack
-
-```text
-Pop
-DefineGlobal
-GetGlobal
-SetGlobal
-GetLocal
-SetLocal
-```
-
-### Control Flow
-
-```text
-Jump
-JumpIfFalse
-Loop
-```
-
-### I/O
-
-```text
-Print
-Println
-```
-
-### VM Control
-
-```text
-Return
-Halt
-```
-
----
-
-# 25. Virtual Machine
-
-The VM uses:
-
-```text
-Instruction Pointer
-Evaluation Stack
-Global Variable Table
-```
-
-The evaluation stack has an initial capacity and is used to perform expression evaluation.
-
-For example:
-
-```text
-1 + 2
-```
-
-is conceptually executed as:
-
-```text
-push 1
-push 2
-add
-```
-
-resulting in:
-
-```text
-3
-```
-
----
-
-## VM Truthiness
-
-The VM defines truthiness for runtime values.
-
-The following values are false:
-
-```text
-nil
-false
-integer 0
-float 0.0
-empty string
-```
-
-Non-zero numeric values and non-empty strings are true.
-
-Vector values are treated as truthy.
-
----
-
-## VM Arithmetic
-
-The VM supports numeric arithmetic and vector arithmetic for compatible values.
-
-For example:
-
-```text
-Int + Int
-Float + Float
-Int + Float
-Float + Int
-```
-
-are supported by the runtime.
-
-Vector addition is supported for matching vector dimensions.
-
----
-
-## VM Errors
-
-Invalid runtime operations produce a VM runtime error.
-
-For example, incompatible operands for an operator can produce:
-
-```text
-[Runtime Error] Invalid operands for '+'
-```
-
----
-
-# 26. Runtime Behavior
-
-GAGE has two execution models and they should not be assumed to behave identically for every feature.
-
-## Native Backend
-
-The native backend is the more complete execution path and lowers the GAGE AST into generated C.
-
-Use:
-
-```bash
-gage build program.gage
-```
-
-or:
-
-```bash
-gage run program.gage
-```
-
-when testing native behavior.
-
----
-
-## VM Backend
-
-The VM executes GAGE bytecode directly:
-
-```bash
-gage vm program.gage
-```
-
-The current VM implementation is smaller than the native backend.
-
-When adding or testing a new language feature, verify that the feature is implemented in the desired backend.
-
----
-
-# 27. Error Reference
-
-GAGE errors are produced by multiple compiler stages.
-
----
-
-## Lexer Errors
-
-Example:
-
-```text
-[Lexer Error] Line 3:12 -> Unexpected character: '@'
-```
-
-### Common causes
-
-- unsupported characters
-- invalid punctuation
-- unterminated strings
-
-### Example
-
-Invalid:
-
-```gage
-let value = @10;
-```
-
----
-
-## Unterminated String
-
-Invalid:
-
-```gage
-let message = "Hello;
-```
-
-The lexer reports:
-
-```text
-Unterminated string literal
-```
-
----
-
-## Parse Errors
-
-Example:
-
-```text
-[Parse Error] Line 4:10 -> Expected ';' after expression
-```
-
-Common causes:
-
-- missing semicolon
-- missing closing parenthesis
-- missing brace
-- malformed function declaration
-- malformed class declaration
-- invalid assignment target
-
----
-
-## Missing Semicolon
-
-Invalid:
-
-```gage
-let value = 10
-println(value);
-```
-
-Correct:
-
-```gage
-let value = 10;
-println(value);
-```
-
----
-
-## Semantic Errors
-
-Example:
-
-```text
-[Semantic Error] Undefined variable 'player'
-```
-
-Cause:
-
-```gage
-println(player);
-```
-
-without declaring `player`.
-
-Correct:
-
-```gage
-let player = 10;
-println(player);
-```
-
----
-
-## `this` Outside a Class
-
-Invalid:
-
-```gage
-println(this);
-```
-
-The semantic checker reports that `this` is being used outside a class method.
-
----
-
-## Native Compilation Errors
-
-If the generated C cannot be compiled, GAGE reports:
-
-```text
-Native compilation failed.
-```
-
-The first compiler failure is retained as diagnostic information.
-
-Ensure that one of the following is installed and available through `PATH`:
-
-```text
-clang
-gcc
-```
-
-On Windows, also consider:
-
-```text
-clang-cl
-```
-
----
-
-# 28. Debugging Generated C
-
-The `emit-c` command is the primary tool for inspecting the native backend.
-
-Run:
+The generated C code can be inspected using:
 
 ```bash
 gage emit-c program.gage
 ```
 
-Or save the result:
+The generated representation is useful when investigating:
 
-```bash
-gage emit-c program.gage > generated.c
-```
+- Code-generation behavior
+- Runtime representation
+- Native data layout
+- Vector lowering
+- Array handling
+- Class lowering
+- Generated helper functions
+- Native compiler compatibility
 
-Then inspect:
-
-```text
-generated.c
-```
-
-This is useful when investigating:
-
-- compiler errors
-- type lowering
-- vector operations
-- generated runtime code
-- class representations
-- array handling
-- native I/O
-- generated control flow
+The generated C is an implementation detail of the native backend and should not normally be written manually.
 
 ---
 
-# 29. Project Structure
+# Native Compiler Selection
+
+GAGE does not depend on one specific external C compiler.
+
+The native toolchain can use an available compiler such as:
+
+```text
+clang
+gcc
+clang-cl
+```
+
+The exact compiler selected depends on the host platform and available toolchain.
+
+This allows the same GAGE language implementation to target different environments through their native C compiler.
+
+---
+
+# Bytecode Backend
+
+The bytecode backend is implemented across:
+
+```text
+src/bytecode.rs
+src/compiler.rs
+src/vm.rs
+```
+
+The bytecode path avoids generating an external native executable.
+
+The pipeline is:
+
+```text
+AST
+ |
+ v
+Bytecode Compiler
+ |
+ v
+Bytecode Chunk
+ |
+ v
+Virtual Machine
+ |
+ v
+Program Output
+```
+
+---
+
+# Bytecode Chunks
+
+The bytecode compiler converts supported AST constructs into a bytecode representation stored in a `Chunk`.
+
+A chunk contains the information required by the VM to execute the compiled program.
+
+The bytecode representation is defined primarily in:
+
+```text
+src/bytecode.rs
+```
+
+The compiler responsible for producing the bytecode is implemented in:
+
+```text
+src/compiler.rs
+```
+
+---
+
+# Virtual Machine
+
+The virtual machine is implemented in:
+
+```text
+src/vm.rs
+```
+
+The VM uses a stack-oriented execution model.
+
+Important runtime components include:
+
+- Instruction pointer
+- Evaluation stack
+- Global values
+- Constants
+- Runtime values
+- Bytecode instructions
+
+Conceptually:
+
+```text
+Bytecode
+   |
+   v
+Instruction Pointer
+   |
+   v
+Evaluation Stack
+   |
+   v
+Runtime Values
+   |
+   v
+Program Output
+```
+
+The VM contains runtime handling for scalar values and supported vector values.
+
+Invalid runtime operations can be detected by VM-side validation.
+
+---
+
+# Execution Models
+
+GAGE provides two execution models from the same language.
+
+```text
+                 GAGE Program
+                      |
+             +--------+--------+
+             |                 |
+             v                 v
+        Native Path        Bytecode Path
+             |                 |
+             v                 v
+       Generate C         Compile Bytecode
+             |                 |
+             v                 v
+       Clang / GCC            VM
+             |                 |
+             +--------+--------+
+                      |
+                      v
+                   Output
+```
+
+The native path is designed for native execution through C compilation.
+
+The VM path is designed for direct execution of GAGE bytecode.
+
+This separation also makes the project useful for experimenting with different compiler and runtime strategies.
+
+---
+
+# Diagnostics
+
+GAGE performs diagnostics at multiple stages.
+
+## Lexical diagnostics
+
+The lexer can report invalid source characters or malformed lexical constructs.
+
+Source location information is retained so diagnostics can identify where an error occurred.
+
+## Parse diagnostics
+
+The parser reports invalid syntactic structures.
+
+Examples include malformed expressions, declarations, or statements.
+
+## Semantic diagnostics
+
+The type checker validates program meaning.
+
+Examples include:
+
+- Undefined variables
+- Invalid bindings
+- Invalid operations
+- Incorrect use of language constructs
+- Invalid member access
+- Type-related errors
+
+Example:
+
+```text
+[Semantic Error] Undefined variable 'name'
+```
+
+Diagnostics are an important part of the compiler pipeline because they allow invalid programs to be rejected before native code generation or execution.
+
+---
+
+# Repository Structure
 
 The repository is organized approximately as follows:
 
 ```text
 GAGE/
-│
 ├── docs/
+│   └── supporting documentation
 │
 ├── examples/
+│   └── *.gage
 │
 ├── src/
 │   ├── ast.rs
@@ -2788,6 +1714,10 @@ GAGE/
 │   └── vm.rs
 │
 ├── stdlib/
+│   └── standard-library-related files
+│
+├── tests_suite/
+│   └── test programs and test infrastructure
 │
 ├── Cargo.toml
 ├── Cargo.lock
@@ -2798,161 +1728,291 @@ GAGE/
 ├── gage-setup.sh
 ├── install.ps1
 ├── logo.png
+├── test_runner.py
 └── version.txt
 ```
 
 ---
 
-## `src/main.rs`
+# Source Code Guide
 
-The command-line driver.
+The `src/` directory contains the compiler and runtime implementation.
 
-Responsible for:
-
-- reading command-line arguments
-- displaying help
-- loading source files
-- invoking validation
-- invoking native code generation
-- invoking the C compiler
-- invoking the VM
-- temporary executable management
-- installation removal
-
----
-
-## `src/token.rs`
-
-Defines the token representation used by the lexer and parser.
-
----
-
-## `src/lexer.rs`
-
-Converts raw source text into tokens.
-
----
-
-## `src/ast.rs`
-
-Defines the abstract syntax tree used throughout the compiler.
-
----
-
-## `src/parser.rs`
-
-Converts tokens into the AST.
-
----
-
-## `src/types.rs`
-
-Performs semantic validation and tracks:
+## `main.rs`
 
 ```text
-variables
-scopes
-functions
-classes
-types
+src/main.rs
+```
+
+Provides the command-line interface and connects the major compiler stages.
+
+It is responsible for dispatching commands such as:
+
+```text
+build
+run
+vm
+check
+emit-c
+--version
+--info
+--help
+```
+
+## `token.rs`
+
+```text
+src/token.rs
+```
+
+Contains the token definitions used by the lexer and parser.
+
+## `lexer.rs`
+
+```text
+src/lexer.rs
+```
+
+Converts source characters into tokens.
+
+It also handles source-location tracking and lexical diagnostics.
+
+## `ast.rs`
+
+```text
+src/ast.rs
+```
+
+Contains the abstract syntax tree structures representing GAGE programs.
+
+## `parser.rs`
+
+```text
+src/parser.rs
+```
+
+Converts the token stream into the AST.
+
+## `types.rs`
+
+```text
+src/types.rs
+```
+
+Contains semantic analysis and type-checking functionality.
+
+It tracks declarations and scopes and validates language constructs before code generation.
+
+## `codegen.rs`
+
+```text
+src/codegen.rs
+```
+
+Implements the native C code generator.
+
+The AST is lowered into C source code and the resulting C can then be compiled by the host C toolchain.
+
+## `bytecode.rs`
+
+```text
+src/bytecode.rs
+```
+
+Defines the bytecode representation and runtime value structures used by the VM.
+
+## `compiler.rs`
+
+```text
+src/compiler.rs
+```
+
+Converts AST structures into bytecode instructions.
+
+## `vm.rs`
+
+```text
+src/vm.rs
+```
+
+Implements the bytecode virtual machine that executes compiled GAGE bytecode.
+
+---
+
+# Recommended Compiler Reading Order
+
+For developers learning how GAGE works internally, the source is best explored in pipeline order:
+
+```text
+src/token.rs
+      |
+      v
+src/lexer.rs
+      |
+      v
+src/ast.rs
+      |
+      v
+src/parser.rs
+      |
+      v
+src/types.rs
+      |
+      +-----------------------+
+      |                       |
+      v                       v
+src/codegen.rs          src/compiler.rs
+                              |
+                              v
+                       src/bytecode.rs
+                              |
+                              v
+                           src/vm.rs
+```
+
+This order follows the flow of information through the compiler.
+
+Start with the language vocabulary, then understand tokenization, syntax construction, semantic checking, and finally the execution backends.
+
+---
+
+# Examples
+
+The `examples/` directory contains GAGE source programs.
+
+Examples are useful for understanding the language without reading the compiler implementation first.
+
+Example categories include:
+
+- Basic expressions
+- Variables
+- Control flow
+- Functions
+- Recursion
+- Classes
+- Objects
+- Vector mathematics
+- Physics
+- Arrays
+- Input
+- File persistence
+- Simulation logic
+- Game-oriented experiments
+
+A typical example can be executed with:
+
+```bash
+gage run examples/example.gage
+```
+
+or through the VM:
+
+```bash
+gage vm examples/example.gage
+```
+
+The exact filename depends on the example available in the repository.
+
+---
+
+# Example Program
+
+A small simulation-oriented GAGE program can look like this:
+
+```gage
+let position = vec3(0.0, 10.0, 0.0);
+let velocity = vec3(1.0, 0.0, 0.0);
+
+step(dt) {
+    position = position + (velocity * dt);
+}
+
+println(position);
+```
+
+The same source can be routed through either execution backend.
+
+```text
+              program.gage
+                    |
+          +---------+---------+
+          |                   |
+          v                   v
+     Native AOT          Bytecode VM
+          |                   |
+          v                   v
+     Generated C          Bytecode
+          |                   |
+          v                   v
+      C Compiler              VM
+          |                   |
+          +---------+---------+
+                    |
+                    v
+                  Output
 ```
 
 ---
 
-## `src/codegen.rs`
+# Testing
 
-Generates C source for the native backend.
+The repository contains a test suite and supporting test infrastructure.
 
----
-
-## `src/bytecode.rs`
-
-Defines:
+The main test-related locations include:
 
 ```text
-Value
-OpCode
-Chunk
+tests_suite/
+test_runner.py
 ```
 
-for the bytecode system.
+Rust-level tests can be run through Cargo:
 
----
+```bash
+cargo test
+```
 
-## `src/compiler.rs`
+This is the preferred starting point for testing the Rust implementation.
 
-Converts AST nodes into bytecode instructions.
+Example GAGE programs can also be used to manually verify compiler behavior.
 
----
-
-## `src/vm.rs`
-
-Executes bytecode.
-
----
-
-## `examples/`
-
-Contains example `.gage` programs covering language features and experimentation.
-
----
-
-## `stdlib/`
-
-Contains standard-library-related project files.
-
----
-
-# 30. Example Programs
-
-The repository contains example programs covering progressively more advanced features.
-
-The examples include concepts such as:
+A useful development cycle is:
 
 ```text
-Hello World
-variables
-arithmetic
-conditionals
-while loops
-loop statements
-step blocks
-functions
-recursion
-classes
-object state
-combat logic
-vector mathematics
-physics
-arrays
-inventory systems
-interactive input
-file persistence
-raycasting calculations
-orbit simulation
-game loops
-camera movement
-projectile motion
-logging
-surface lighting
-integrated gameplay examples
+Modify compiler
+      |
+      v
+cargo build
+      |
+      v
+cargo test
+      |
+      v
+Run example
+      |
+      v
+Check native output
+      |
+      v
+Check VM output
 ```
-
-A useful way to learn GAGE is to start with the smallest examples and then move toward programs combining multiple language features.
 
 ---
 
-# 31. Development Guide
+# Development Workflow
 
-GAGE is a Cargo project.
-
-Build in debug mode:
+Build the project in debug mode:
 
 ```bash
 cargo build
 ```
 
-Build an optimized version:
+Run the Rust test suite:
+
+```bash
+cargo test
+```
+
+Build an optimized release:
 
 ```bash
 cargo build --release
@@ -2964,231 +2024,144 @@ Run the compiler through Cargo:
 cargo run -- --help
 ```
 
-Run a source file through the native path:
+Run a GAGE source file through Cargo:
 
 ```bash
-cargo run -- run examples/example.gage
+cargo run -- run program.gage
 ```
 
-Run through the VM:
+Validate a program:
 
 ```bash
-cargo run -- vm examples/example.gage
-```
-
-Check source:
-
-```bash
-cargo run -- check examples/example.gage
+cargo run -- check program.gage
 ```
 
 Inspect generated C:
 
 ```bash
-cargo run -- emit-c examples/example.gage
+cargo run -- emit-c program.gage
+```
+
+Run through the VM:
+
+```bash
+cargo run -- vm program.gage
 ```
 
 ---
 
-## Recommended Development Flow
+# Extending GAGE
 
-When modifying the language:
+Adding a new language feature generally involves multiple compiler stages.
+
+A typical feature-development process is:
 
 ```text
-1. Modify token definitions if needed
-            ↓
-2. Update lexer
-            ↓
-3. Update AST
-            ↓
-4. Update parser
-            ↓
-5. Update type checker
-            ↓
-6. Update native code generation
-            ↓
-7. Update bytecode compiler if supported
-            ↓
-8. Update VM if supported
-            ↓
-9. Add/update examples
-            ↓
-10. Run validation
+1. Define the syntax
+        |
+        v
+2. Add or update tokens
+        |
+        v
+3. Update the lexer if required
+        |
+        v
+4. Update the parser
+        |
+        v
+5. Add AST representation
+        |
+        v
+6. Add semantic/type checking
+        |
+        +----------------------+
+        |                      |
+        v                      v
+7. Add native lowering    8. Add bytecode
+        |                      |
+        v                      v
+   codegen.rs             compiler.rs
+                               |
+                               v
+                           vm.rs
+        |
+        +----------------------+
+                       |
+                       v
+                 Add tests/examples
 ```
 
-For a new syntax feature, the parser and AST are normally the central points where the feature enters the compiler.
+A feature that only works in one backend may behave differently depending on whether a program is executed natively or through the VM.
+
+For this reason, backend parity should be considered when extending the language.
 
 ---
 
-# 32. Current Implementation Notes
+# Adding Syntax
 
-GAGE is an experimental language implementation, so the documentation describes the current implementation rather than promising that every feature behaves like a mature production language.
+When introducing new syntax, the lexer and parser must understand it.
 
-Important implementation details:
-
-### Native and VM paths are separate
-
-The native backend and VM are different execution engines.
-
-A feature added to the language front end may require separate implementation work in:
+For example, a new keyword normally requires:
 
 ```text
-codegen.rs
-compiler.rs
-vm.rs
+Token definition
+      |
+      v
+Lexer recognition
+      |
+      v
+Parser handling
+      |
+      v
+AST representation
 ```
+
+The type checker and execution backend then need to understand the resulting AST node if the feature has semantic behavior.
 
 ---
 
-### The native backend uses generated C
+# Adding a Type
 
-GAGE does not directly emit machine instructions from its Rust compiler.
-
-The native path is:
+A new type generally affects:
 
 ```text
-GAGE AST
-   ↓
-Generated C
-   ↓
-Clang / GCC
-   ↓
-Native executable
+Type representation
+      |
+      v
+Type checking
+      |
+      +------------------+
+      |                  |
+      v                  v
+Native representation   VM representation
+      |                  |
+      v                  v
+Code generation       Runtime handling
 ```
+
+This is particularly important for vector-like or structured values because both execution paths need compatible semantics.
 
 ---
 
-### The VM is stack-based
+# Adding a Built-In Function
 
-The bytecode VM evaluates expressions using a stack and stores global variables in a runtime table.
+A built-in function may require changes to the runtime or compiler depending on how it is implemented.
 
----
+For native execution, the required runtime support may need to be emitted into generated C.
 
-### `step(dt)` uses a fixed timestep
+For VM execution, equivalent runtime behavior may need to be implemented in the VM.
 
-The `step` construct provides a convenient simulation-oriented syntax.
-
-The current bytecode compiler lowers its timestep value to:
-
-```text
-0.016667
-```
-
-The native implementation also uses a fixed simulation interval.
-
-It should therefore be viewed as a simulation primitive rather than a complete wall-clock scheduler.
+A built-in should therefore be tested against both execution paths whenever applicable.
 
 ---
 
-### Type checking is intentionally compact
+# Native and VM Compatibility
 
-The type system tracks the major built-in types, scopes, functions, and classes.
+GAGE has two execution backends.
 
-Some expressions are represented as `Any` during semantic analysis, particularly dynamic operations such as generic member access and function calls.
+They are separate implementations of the same language.
 
----
-
-### Arrays are language-level constructs
-
-Arrays are represented directly in the AST and are handled by the native backend.
-
-The current bytecode implementation is smaller and does not provide complete bytecode equivalents for every native language feature.
-
----
-
-# 33. Troubleshooting
-
-## `gage: command not found`
-
-The GAGE binary is not available through your `PATH`.
-
-Check where the binary was installed and ensure its directory is included in:
-
-```text
-PATH
-```
-
-You can also run the binary directly from the build directory:
-
-```bash
-./target/release/gage --help
-```
-
----
-
-## `clang: command not found`
-
-Install Clang.
-
-### Termux
-
-```bash
-pkg install clang -y
-```
-
-### Ubuntu / Debian
-
-```bash
-sudo apt install clang -y
-```
-
-Then verify:
-
-```bash
-clang --version
-```
-
----
-
-## `gcc: command not found`
-
-Install GCC through your operating system's package manager.
-
-Verify:
-
-```bash
-gcc --version
-```
-
----
-
-## Rust is missing
-
-Verify:
-
-```bash
-rustc --version
-```
-
-If it is unavailable, install Rust using the recommended Rust installation method for your operating system.
-
----
-
-## Program fails during `gage check`
-
-Run:
-
-```bash
-gage check program.gage
-```
-
-Read the reported stage:
-
-```text
-Lexer Error
-Parse Error
-Semantic Error
-```
-
-Fix the reported issue before attempting native compilation.
-
----
-
-## Program works natively but not in the VM
-
-The native and VM backends are separate.
-
-Try:
+When developing a feature, verify both:
 
 ```bash
 gage run program.gage
@@ -3200,87 +2173,345 @@ and:
 gage vm program.gage
 ```
 
-If only one path works, the feature may currently be implemented in one execution engine but not the other.
+The intended behavior should remain consistent between the two paths.
+
+Differences may exist for features that have not yet reached complete parity.
 
 ---
 
-## Native compiler error
+# Platform Notes
 
-First inspect the generated C:
+GAGE is implemented in Rust and is intended to be portable across environments supported by the Rust toolchain and an appropriate native C compiler.
 
-```bash
-gage emit-c program.gage > generated.c
-```
+## Linux
 
-Then inspect:
+A typical environment requires:
 
 ```text
-generated.c
+Rust
+Cargo
+Clang or GCC
 ```
 
-Also verify:
+Build:
 
 ```bash
-clang --version
+cargo build --release
 ```
 
-or:
+## Termux
+
+Termux can be used as a development environment when the required Rust and native compiler toolchain are available.
+
+The exact package setup depends on the Termux environment.
+
+Once Rust and a C compiler are available, the project can be built normally:
 
 ```bash
-gcc --version
+cargo build --release
+```
+
+## macOS
+
+A Rust installation and an available C compiler toolchain are required.
+
+The native backend can use an available Clang toolchain.
+
+## Windows
+
+Rust and Cargo are required.
+
+The native backend may use an available Windows-compatible C compiler, including `clang-cl` where supported.
+
+The repository also contains:
+
+```text
+install.ps1
+```
+
+for Windows-oriented installation/setup work.
+
+---
+
+# Limitations
+
+GAGE is an experimental language implementation.
+
+Important considerations include:
+
+- The language is still evolving.
+- Native and VM execution paths may not have perfect feature parity.
+- The bytecode VM is an independent execution implementation rather than simply executing generated native code.
+- The native backend depends on an external C compiler.
+- Some language features may be experimental.
+- The runtime and language semantics may change as development continues.
+- The project is better suited to experimentation, learning, simulations, and compiler development than as a production replacement for established programming languages.
+
+---
+
+# Architecture Summary
+
+The complete GAGE architecture can be summarized as:
+
+```text
+                         GAGE
+                           |
+                           v
+                    Source Program
+                      .gage file
+                           |
+                           v
+                        Lexer
+                           |
+                           v
+                        Tokens
+                           |
+                           v
+                        Parser
+                           |
+                           v
+                         AST
+                           |
+                           v
+                    Type Checker
+                           |
+                 +---------+---------+
+                 |                   |
+                 v                   v
+             Native Path        Bytecode Path
+                 |                   |
+                 v                   v
+             CodeGen              Compiler
+                 |                   |
+                 v                   v
+            Generated C           Bytecode
+                 |                   |
+                 v                   v
+          Clang / GCC /           VM
+            clang-cl                |
+                 |                   |
+                 v                   v
+          Native Program       VM Program
+                 |                   |
+                 +---------+---------+
+                           |
+                           v
+                         Output
+```
+
+This architecture allows GAGE to remain small while still exposing the major stages of a traditional compiler.
+
+---
+
+# Design Goals
+
+GAGE is built around several core ideas.
+
+## Compact language surface
+
+The language aims to provide useful programming constructs without requiring a huge syntax system.
+
+## Native-oriented execution
+
+The native backend allows GAGE programs to ultimately become native executables through generated C.
+
+## Flexible execution
+
+The same source language can be processed by either the native compiler path or the internal bytecode VM.
+
+## Mathematics as a language feature
+
+Vectors and common vector operations are integrated into the language rather than being treated purely as an external library concept.
+
+## Simulation-friendly programming
+
+The combination of:
+
+```text
+vectors
+mutable variables
+loops
+functions
+classes
+step(dt)
+```
+
+makes small simulations and game-oriented experiments straightforward to express.
+
+## Understandable implementation
+
+The compiler is separated into focused Rust modules so that individual stages can be studied and modified independently.
+
+---
+
+# Suggested Learning Path
+
+If you are new to compiler development, the following progression is recommended.
+
+## Step 1 — Learn the language
+
+Start with:
+
+```text
+examples/
+```
+
+Run small programs and observe their behavior.
+
+## Step 2 — Read the token system
+
+Open:
+
+```text
+src/token.rs
+```
+
+Understand how language symbols are represented.
+
+## Step 3 — Read the lexer
+
+Open:
+
+```text
+src/lexer.rs
+```
+
+Follow how source characters become tokens.
+
+## Step 4 — Read the AST
+
+Open:
+
+```text
+src/ast.rs
+```
+
+Understand how tokens eventually become structured program nodes.
+
+## Step 5 — Read the parser
+
+Open:
+
+```text
+src/parser.rs
+```
+
+Follow how syntax is converted into the AST.
+
+## Step 6 — Read semantic analysis
+
+Open:
+
+```text
+src/types.rs
+```
+
+Understand how declarations, scopes, and types are checked.
+
+## Step 7 — Study native compilation
+
+Open:
+
+```text
+src/codegen.rs
+```
+
+Follow how GAGE constructs become C code.
+
+## Step 8 — Study bytecode
+
+Open:
+
+```text
+src/bytecode.rs
+src/compiler.rs
+```
+
+Understand how the AST becomes bytecode.
+
+## Step 9 — Study the VM
+
+Open:
+
+```text
+src/vm.rs
+```
+
+Follow how bytecode instructions are executed.
+
+---
+
+# Native Backend vs Bytecode VM
+
+| Feature | Native Backend | Bytecode VM |
+|---|---|---|
+| Input | GAGE source | GAGE source |
+| Front end | Lexer + Parser + Type Checker | Lexer + Parser + Type Checker |
+| Intermediate representation | AST → C | AST → Bytecode |
+| External compiler | Required | Not required |
+| Runtime | Generated C runtime | Rust VM |
+| Final execution | Native executable | VM |
+| Main implementation | `src/codegen.rs` | `src/compiler.rs`, `src/bytecode.rs`, `src/vm.rs` |
+| Inspection | Generated C | Bytecode/runtime implementation |
+
+The native backend and VM provide different execution strategies while sharing the same language front end.
+
+---
+
+# Documentation Philosophy
+
+`README.md` introduces the project.
+
+`DOCS.md` contains the detailed language and toolchain information.
+
+The source code under:
+
+```text
+src/
+```
+
+contains the actual implementation.
+
+The examples under:
+
+```text
+examples/
+```
+
+provide executable demonstrations of the language.
+
+These three layers serve different purposes:
+
+```text
+README.md
+    |
+    +-- What GAGE is
+    +-- Why it exists
+    +-- Major features
+    +-- Architecture overview
+    +-- Project introduction
+
+DOCS.md
+    |
+    +-- How to build
+    +-- How to use the CLI
+    +-- Language reference
+    +-- Compiler details
+    +-- Runtime details
+    +-- Development information
+
+src/
+    |
+    +-- Actual compiler implementation
+
+examples/
+    |
+    +-- Working language examples
 ```
 
 ---
 
-## Missing semicolon
-
-GAGE statements normally terminate with `;`.
-
-Incorrect:
-
-```gage
-let x = 10
-println(x)
-```
-
-Correct:
-
-```gage
-let x = 10;
-println(x);
-```
-
----
-
-## Invalid `if` syntax
-
-The current parser expects parentheses around the condition.
-
-Correct:
-
-```gage
-if (x > 10) {
-    println(x);
-}
-```
-
----
-
-## Invalid `while` syntax
-
-The current parser expects parentheses around the condition.
-
-Correct:
-
-```gage
-while (x < 10) {
-    x = x + 1;
-}
-```
-
----
-
-# 34. License
+# License
 
 GAGE is released under the MIT License.
 
@@ -3294,218 +2525,14 @@ for the complete license text.
 
 ---
 
-# 📌 Quick Reference
+# GAGE
 
-## CLI
+A compact programming language built around native execution, mathematics, and simulation.
 
-```text
-gage <file.gage>
-gage build <file.gage> [-o output]
-gage run <file.gage>
-gage vm <file.gage>
-gage check <file.gage>
-gage emit-c <file.gage>
-gage delete
-gage --info
-gage --version
-gage --help
-```
-
-## Variables
-
-```gage
-let x = 10;
-x = 20;
-```
-
-## Functions
-
-```gage
-fn add(a, b) {
-    return a + b;
-}
-```
-
-## Classes
-
-```gage
-class Player {
-    health;
-
-    fn set_health(value) {
-        this.health = value;
-    }
-}
-
-let player = new Player();
-```
-
-## Conditionals
-
-```gage
-if (x > 10) {
-    println("large");
-} else {
-    println("small");
-}
-```
-
-## While
-
-```gage
-while (x < 10) {
-    x = x + 1;
-}
-```
-
-## Loop
-
-```gage
-loop {
-    if (done) {
-        break;
-    }
-}
-```
-
-## For
-
-```gage
-for item in items {
-    println(item);
-}
-```
-
-## Simulation
-
-```gage
-step(dt) {
-    position = position + velocity * dt;
-}
-```
-
-## Vectors
-
-```gage
-let a = vec3(1.0, 2.0, 3.0);
-let b = vec3(4.0, 5.0, 6.0);
-
-let sum = a + b;
-let d = dot(a, b);
-let c = cross(a, b);
-let l = length(a);
-let n = normalize(a);
-```
-
-## Input
-
-```gage
-let name = input("Name: ");
-```
-
-## Output
-
-```gage
-print("Hello");
-println("GAGE");
-```
-
-## Files
-
-```gage
-let data = read_file("data.txt");
-let ok = write_file("data.txt", "GAGE");
-```
-
----
-
-# 🧭 Learning Path
-
-If you are new to GAGE, a good progression is:
+Repository:
 
 ```text
-1. Variables
-      ↓
-2. Arithmetic
-      ↓
-3. Conditions
-      ↓
-4. Loops
-      ↓
-5. Functions
-      ↓
-6. Arrays
-      ↓
-7. Vectors
-      ↓
-8. Classes
-      ↓
-9. Simulation with step(dt)
-      ↓
-10. Native compilation
-      ↓
-11. Bytecode VM
-      ↓
-12. Compiler internals
+https://github.com/LossRun/GAGE
 ```
 
-For compiler development, explore the implementation in this order:
-
-```text
-src/token.rs
-      ↓
-src/lexer.rs
-      ↓
-src/ast.rs
-      ↓
-src/parser.rs
-      ↓
-src/types.rs
-      ↓
-src/codegen.rs
-      │
-      └──────────────┐
-                     ↓
-              src/compiler.rs
-                     ↓
-              src/bytecode.rs
-                     ↓
-                 src/vm.rs
-```
-
----
-
-# ⚡ GAGE
-
-GAGE is intentionally compact: a language, a compiler front end, a native backend, and a bytecode virtual machine in one project.
-
-The best way to understand the language is to read the examples, experiment with small `.gage` programs, inspect the generated C with `gage emit-c`, and explore the compiler implementation under `src/`.
-
-```text
-GAGE SOURCE
-     │
-     ▼
-   LEXER
-     │
-     ▼
-   PARSER
-     │
-     ▼
- TYPE CHECKER
-     │
-     ├──────────────────┐
-     ▼                  ▼
- NATIVE PATH         BYTECODE PATH
-     │                  │
-     ▼                  ▼
- GENERATED C          BYTECODE
-     │                  │
-     ▼                  ▼
- CLANG / GCC           VM
-     │                  │
-     └────────┬─────────┘
-              ▼
-           EXECUTION
-```
-
-**GAGE — compact syntax, native-oriented execution, and simulation-focused programming.**
+If you find GAGE interesting, consider starring the repository and following its development.
