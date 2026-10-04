@@ -237,7 +237,240 @@ fn start_repl() {
     let _ = rl.save_history(&history_path);
 }
 
+
+fn print_gage_banner() {
+    println!("\x1b[1;36m   ⚡ GAGE v0.1.0\x1b[0m \x1b[90m— High-Performance SIMD Simulation Language\x1b[0m");
+    println!("\x1b[90m   ──────────────────────────────────────────────────────────\x1b[0m");
+}
+
+fn print_custom_help() {
+    print_gage_banner();
+    println!("\x1b[1mUSAGE:\x1b[0m");
+    println!("  gage [OPTIONS] <file.gage>");
+    println!("  gage [COMMAND]\n");
+    println!("\x1b[1mCORE COMMANDS:\x1b[0m");
+    println!("  \x1b[1;32mgage <file.gage>\x1b[0m          Compile natively (Clang + FNV-1a cache) & run");
+    println!("  \x1b[1;32mgage run <file.gage>\x1b[0m      Explicit native compile and execute");
+    println!("  \x1b[1;32mgage vm <file.gage>\x1b[0m       Execute on stack bytecode virtual machine");
+    println!("  \x1b[1;32mgage check <file.gage>\x1b[0m    Validate syntax and check types without compiling");
+    println!("  \x1b[1;32mgage emit-c <file.gage>\x1b[0m   Transpile GAGE source to optimized C99\n");
+    println!("\x1b[1mRAPID TOOLS & EXAMPLES:\x1b[0m");
+    println!("  \x1b[1;33mgage --example <id>\x1b[0m       Run an example by ID (e.g. \x1b[36mgage --example 51\x1b[0m)");
+    println!("  \x1b[1;33mgage --examples, --list\x1b[0m   List all available numbered examples");
+    println!("  \x1b[1;33mgage --test\x1b[0m               Run automated regression test suite\n");
+    println!("\x1b[1mDIAGNOSTICS & SYSTEM:\x1b[0m");
+    println!("  \x1b[1;35mgage --info\x1b[0m               Display toolchain, SIMD vectors, and environment");
+    println!("  \x1b[1;35mgage --version, -v\x1b[0m        Display GAGE compiler version");
+    println!("  \x1b[1;35mgage --help, -h\x1b[0m           Show this documentation menu\n");
+    println!("\x1b[1mINTERACTIVE MODE:\x1b[0m");
+    println!("  \x1b[1;36mgage\x1b[0m                      Launch the interactive REPL\n");
+}
+
+fn print_system_info() {
+    print_gage_banner();
+    println!("\x1b[1mSystem & Toolchain Diagnostics:\x1b[0m");
+    println!("  \x1b[1;32mHost Platform:\x1b[0m      {} ({})", std::env::consts::OS, std::env::consts::ARCH);
+    println!("  \x1b[1;32mSIMD Pipeline:\x1b[0m      Clang ext_vector_type (vec2, vec3, vec4, mat4)");
+    println!("  \x1b[1;32mCompilation Cache:\x1b[0m  FNV-1a content-addressed /tmp/gage_cache");
+
+    let clang_out = std::process::Command::new("clang").arg("--version").output();
+    match clang_out {
+        Ok(out) => {
+            let s = String::from_utf8_lossy(&out.stdout);
+            let first_line = s.lines().next().unwrap_or("Detected");
+            println!("  \x1b[1;32mBackend Toolchain:\x1b[0m  {}", first_line);
+        }
+        Err(_) => {
+            println!("  \x1b[1;31mBackend Toolchain:\x1b[0m  clang not found in PATH!");
+        }
+    }
+    println!();
+}
+
+fn find_examples_dir() -> Option<std::path::PathBuf> {
+    let candidates = [
+        std::path::PathBuf::from("examples"),
+        std::path::PathBuf::from("/sdcard/GAGE/examples"),
+    ];
+    for p in &candidates {
+        if p.is_dir() { return Some(p.clone()); }
+    }
+    if let Ok(mut exe) = std::env::current_exe() {
+        exe.pop();
+        let cand = exe.join("examples");
+        if cand.is_dir() { return Some(cand); }
+    }
+    None
+}
+
+fn handle_list_examples() {
+    print_gage_banner();
+    let ex_dir = match find_examples_dir() {
+        Some(d) => d,
+        None => {
+            eprintln!("\x1b[1;31mError:\x1b[0m Could not locate examples directory.");
+            std::process::exit(1);
+        }
+    };
+
+    let entries = match std::fs::read_dir(&ex_dir) {
+        Ok(e) => e,
+        Err(err) => {
+            eprintln!("\x1b[1;31mError reading examples:\x1b[0m {}", err);
+            std::process::exit(1);
+        }
+    };
+
+    let mut files = Vec::new();
+    for entry in entries.flatten() {
+        let p = entry.path();
+        if let Some(name) = p.file_name().and_then(|n| n.to_str()) {
+            if name.ends_with(".gage") {
+                files.push(name.to_string());
+            }
+        }
+    }
+    files.sort();
+
+    println!("\x1b[1mAvailable Examples ({})\x1b[0m:\n", files.len());
+    for f in &files {
+        let parts: Vec<&str> = f.splitn(2, '_').collect();
+        if parts.len() == 2 {
+            let id = parts[0];
+            let name = parts[1].trim_end_matches(".gage").replace('_', " ");
+            println!("  \x1b[1;33m[{:>2}]\x1b[0m \x1b[1m{:<28}\x1b[0m \x1b[90m({})\x1b[0m", id, name, f);
+        } else {
+            println!("  \x1b[1;33m[--]\x1b[0m {}", f);
+        }
+    }
+    println!("\n\x1b[90m💡 Run any example via:\x1b[0m \x1b[1;36mgage --example <id>\x1b[0m\n");
+}
+
+fn handle_run_example(target: &str) {
+    let ex_dir = match find_examples_dir() {
+        Some(d) => d,
+        None => {
+            eprintln!("\x1b[1;31mError:\x1b[0m Could not locate examples directory.");
+            std::process::exit(1);
+        }
+    };
+
+    let entries = match std::fs::read_dir(&ex_dir) {
+        Ok(e) => e,
+        Err(e) => {
+            eprintln!("\x1b[1;31mError reading examples:\x1b[0m {}", e);
+            std::process::exit(1);
+        }
+    };
+
+    let target_prefix = if target.len() == 1 { format!("0{}_", target) } else { format!("{}_", target) };
+    let target_raw = format!("{}_", target);
+    let mut matched = None;
+
+    for entry in entries.flatten() {
+        let p = entry.path();
+        if let Some(name) = p.file_name().and_then(|n| n.to_str()) {
+            if name.ends_with(".gage") && (name.starts_with(&target_prefix) || name.starts_with(&target_raw)) {
+                matched = Some(p);
+                break;
+            }
+        }
+    }
+
+    match matched {
+        Some(file) => {
+            let current_exe = std::env::current_exe().unwrap_or_else(|_| std::path::PathBuf::from("gage"));
+            let status = std::process::Command::new(current_exe)
+                .arg(file)
+                .status();
+            match status {
+                Ok(s) => std::process::exit(s.code().unwrap_or(0)),
+                Err(err) => {
+                    eprintln!("\x1b[1;31mError executing example:\x1b[0m {}", err);
+                    std::process::exit(1);
+                }
+            }
+        }
+        None => {
+            eprintln!("\x1b[1;31mError:\x1b[0m No example found starting with id '{}'.", target);
+            eprintln!("\x1b[90mRun \x1b[1;33mgage --examples\x1b[0m \x1b[90mto view all available options.\x1b[0m");
+            std::process::exit(1);
+        }
+    }
+}
+
+fn handle_run_tests() {
+    print_gage_banner();
+    let candidates = [
+        std::path::PathBuf::from("test_runner.py"),
+        std::path::PathBuf::from("/sdcard/GAGE/test_runner.py"),
+    ];
+    let runner = candidates.iter().find(|p| p.exists());
+    let path = match runner {
+        Some(p) => p,
+        None => {
+            eprintln!("\x1b[1;31mError:\x1b[0m test_runner.py not found.");
+            std::process::exit(1);
+        }
+    };
+
+    println!("\x1b[1;33m==> Launching GAGE Regression Test Suite...\x1b[0m\n");
+    let status = std::process::Command::new("python3")
+        .arg(path)
+        .status();
+
+    match status {
+        Ok(s) => std::process::exit(s.code().unwrap_or(0)),
+        Err(err) => {
+            eprintln!("\x1b[1;31mFailed to launch test_runner.py:\x1b[0m {}", err);
+            std::process::exit(1);
+        }
+    }
+}
+
 fn main() {
+    let cli_args: Vec<String> = std::env::args().collect();
+    if cli_args.len() >= 2 {
+        let cmd = cli_args[1].as_str();
+        match cmd {
+            "--help" | "-h" | "help" => {
+                print_custom_help();
+                return;
+            }
+            "--version" | "-v" | "version" => {
+                println!("\x1b[1;36mGAGE\x1b[0m version \x1b[1;32m0.1.0\x1b[0m (SIMD AOT native compiler)");
+                return;
+            }
+            "--info" | "info" => {
+                print_system_info();
+                return;
+            }
+            "--test" | "test" => {
+                handle_run_tests();
+                return;
+            }
+            "--examples" | "--list" | "examples" | "list" => {
+                handle_list_examples();
+                return;
+            }
+            "--example" | "example" => {
+                if cli_args.len() < 3 {
+                    eprintln!("\x1b[1;31mError:\x1b[0m --example requires an ID (e.g. \x1b[36mgage --example 51\x1b[0m)");
+                    std::process::exit(1);
+                }
+                handle_run_example(&cli_args[2]);
+                return;
+            }
+            _ => {
+                if cmd.starts_with('-') && cmd != "--time" && cmd != "--vm" {
+                    eprintln!("\x1b[1;31m[Error]\x1b[0m Unknown option: '{}'", cmd);
+                    eprintln!("Run \x1b[1;33mgage --help\x1b[0m to see all available options.");
+                    std::process::exit(1);
+                }
+            }
+        }
+    }
+
     let args: Vec<String> = env::args().collect();
 
     if args.len() == 1 {
