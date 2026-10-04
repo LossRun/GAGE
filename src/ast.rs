@@ -58,6 +58,13 @@ pub enum Expr {
     Input(Option<Box<Expr>>),
     ReadFile(Box<Expr>),
     WriteFile(Box<Expr>, Box<Expr>),
+    Random,
+    Clamp(Box<Expr>, Box<Expr>, Box<Expr>),
+    ParseInt(Box<Expr>),
+    ClearScreen,
+    Lerp(Box<Expr>, Box<Expr>, Box<Expr>),
+    Distance(Box<Expr>, Box<Expr>),
+    Reflect(Box<Expr>, Box<Expr>),
 
     Binary(Box<Expr>, BinaryOp, Box<Expr>),
     Unary(UnaryOp, Box<Expr>),

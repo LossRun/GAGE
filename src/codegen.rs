@@ -324,7 +324,11 @@ static inline void gage_array_push(gage_array* a, double item) {");
             Expr::New(class_name, _args) => format!("({}*)calloc(1, sizeof({}))", class_name, class_name),
             Expr::MemberAccess(obj, member) => {
                 let o = self.gen_expr(obj);
-                format!("(({})->{})", o, member)
+                if member == "x" || member == "y" || member == "z" || member == "w" {
+                    format!("(({}).{})", o, member)
+                } else {
+                    format!("(({})->{})", o, member)
+                }
             }
             Expr::MethodCall(obj, method, args) => {
                 let o = self.gen_expr(obj);
@@ -403,6 +407,13 @@ static inline void gage_array_push(gage_array* a, double item) {");
                 }
             }
             Expr::ReadFile(p) => format!("gage_read_file({})", self.gen_expr(p)),
+                        Expr::Random => "gage_random()".into(),
+            Expr::ClearScreen => "(gage_clear_screen(), 0)".into(),
+            Expr::ParseInt(e) => format!("gage_parse_int({})", self.gen_expr(e)),
+            Expr::Clamp(x, mi, ma) => format!("gage_clamp({}, {}, {})", self.gen_expr(x), self.gen_expr(mi), self.gen_expr(ma)),
+            Expr::Lerp(a, b, t) => format!("gage_lerp({}, {}, {})", self.gen_expr(a), self.gen_expr(b), self.gen_expr(t)),
+            Expr::Distance(a, b) => format!("gage_distance({}, {})", self.gen_expr(a), self.gen_expr(b)),
+            Expr::Reflect(v, n) => format!("gage_reflect({}, {})", self.gen_expr(v), self.gen_expr(n)),
             Expr::WriteFile(p, c) => format!("gage_write_file({}, {})", self.gen_expr(p), self.gen_expr(c)),
         }
     }

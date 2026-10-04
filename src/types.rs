@@ -226,6 +226,27 @@ impl TypeChecker {
             Expr::Unary(UnaryOp::Not, e) => { self.check_expr(e)?; Ok(Type::Bool) }
             Expr::Input(p) => { if let Some(prompt) = p { self.check_expr(prompt)?; } Ok(Type::Str) }
             Expr::ReadFile(p) => { self.check_expr(p)?; Ok(Type::Str) }
+                        Expr::Random => Ok(Type::Float),
+            Expr::ClearScreen => Ok(Type::Nil),
+            Expr::ParseInt(e) => { self.check_expr(e)?; Ok(Type::Int) },
+            Expr::Clamp(x, mi, ma) => {
+                self.check_expr(x)?; self.check_expr(mi)?; self.check_expr(ma)?;
+                Ok(Type::Float)
+            },
+            Expr::Lerp(a, b, t) => {
+                let ta = self.check_expr(a)?;
+                self.check_expr(b)?; self.check_expr(t)?;
+                Ok(ta)
+            },
+            Expr::Distance(a, b) => {
+                self.check_expr(a)?; self.check_expr(b)?;
+                Ok(Type::Float)
+            },
+            Expr::Reflect(v, n) => {
+                let tv = self.check_expr(v)?;
+                self.check_expr(n)?;
+                Ok(tv)
+            },
             Expr::WriteFile(p, c) => { self.check_expr(p)?; self.check_expr(c)?; Ok(Type::Bool) }
         }
     }
