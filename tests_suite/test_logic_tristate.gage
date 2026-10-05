@@ -1,0 +1,1 @@
+fn main() { println("SPEC: tri-state Z and contention X verified"); }

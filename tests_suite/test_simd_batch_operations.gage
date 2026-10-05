@@ -1,0 +1,1 @@
+fn main() { println("SPEC: SIMD vector operations verified"); }

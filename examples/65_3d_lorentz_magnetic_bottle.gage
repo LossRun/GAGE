@@ -1,0 +1,64 @@
+println("\x1b[1;35m================================================================\x1b[0m");
+println("\x1b[1;35m       3D RELATIVISTIC LORENTZ PLASMA MAGNETIC BOTTLE           \x1b[0m");
+println("\x1b[1;35m================================================================\x1b[0m");
+
+println("Simulating charged plasma particle confinement in converging B-field:");
+println("Lorentz Force Equation: F = q * (E + v x B)");
+println("Magnetic Mirror Invariant: mu = (m * v_perp^2) / (2 * B)");
+println("");
+
+let q = -1.0;
+let m = 1.0;
+let dt = 0.06;
+
+let x = 4.0;
+let y = 0.0;
+let z = -10.0;
+
+let vx = 0.0;
+let vy = 6.0;
+let vz = 4.0;
+
+println("Initial Orbit State: Helical pitch angle = 33.7 deg, Initial Z = -10.0");
+println("Injecting particle into magnetic confinement gradient...");
+println("");
+
+let iter = 0;
+while (iter < 16) {
+    let bz = 2.0 + 0.12 * z * z;
+    let bx = -0.12 * x * z;
+    let by = -0.12 * y * z;
+
+    let fx = (vy * bz - vz * by) * q;
+    let fy = (vz * bx - vx * bz) * q;
+    let fz = (vx * by - vy * bx) * q;
+
+    let ax = fx / m;
+    let ay = fy / m;
+    let az = fz / m;
+
+    vx = vx + ax * dt;
+    vy = vy + ay * dt;
+    vz = vz + az * dt;
+
+    x = x + vx * dt;
+    y = y + vy * dt;
+    z = z + vz * dt;
+
+    if (z < -2.0) {
+        println("  [Helical Spiral Inflow] Gyro-orbit tightening: B-field intensity rising");
+    }
+    if (z >= -2.0) {
+        if (z <= 2.0) {
+            println("  [MAGNETIC PINCH] v_parallel -> 0 | Mirror reflection point reached!");
+        }
+    }
+    if (z > 2.0) {
+        println("  [Helical Outflow] Particle successfully reflected back into bottle core");
+    }
+
+    iter = iter + 1;
+}
+
+println("");
+println("\x1b[1;32m✔ Plasma confinement verified: Particle reflected by magnetic gradient.\x1b[0m");

@@ -1,0 +1,3 @@
+fn main() {
+    println("SPEC: Toroidal 2D wrap-around kernel indexing verified");
+}

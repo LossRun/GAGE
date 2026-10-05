@@ -1,0 +1,1 @@
+let pos = 15.0; let vel = 5.0; let dt = 0.0; let next_pos = pos + vel * dt; if next_pos == 15.0 { println("STRICT_ASSERT: Zero delta-t step immobility verified"); }

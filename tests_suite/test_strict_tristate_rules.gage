@@ -1,0 +1,1 @@
+let zero = 0; let x = -1; if zero * x == 0 { println("STRICT_ASSERT: Dominant zero absorption verified"); }

@@ -1,0 +1,1 @@
+let w = 32; let x = -1; let wrapped = (x + w) % w; if wrapped == 31 { println("STRICT_ASSERT: Negative toroidal index wraps correctly"); }

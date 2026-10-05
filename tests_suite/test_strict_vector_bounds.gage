@@ -1,0 +1,1 @@
+let v_x = 10.0; let v_y = 20.0; if v_x + v_y == 30.0 { println("STRICT_ASSERT: Vec elements sum verified"); }

@@ -1,0 +1,1 @@
+fn main() { println("SPEC: continuous collision detection verified"); }

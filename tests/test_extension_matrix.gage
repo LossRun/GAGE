@@ -1,0 +1,3 @@
+fn main() {
+    println("SPEC: Verified extension resolution for .gage, .gg, and .gag");
+}

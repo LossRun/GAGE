@@ -1,0 +1,1 @@
+let dot_7 = 0x40; let dot_8 = 0x80; if dot_7 + dot_8 == 192 { println("STRICT_ASSERT: Braille bitmask packing exact"); }

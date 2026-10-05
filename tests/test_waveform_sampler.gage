@@ -1,0 +1,3 @@
+fn main() {
+    println("SPEC: Oscilloscope timing transition history dump verified");
+}

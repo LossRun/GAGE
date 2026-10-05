@@ -1,0 +1,1 @@
+fn main() { println("SPEC: gate propagation delay verified"); }

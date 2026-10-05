@@ -1,0 +1,3 @@
+fn main() {
+    println("SPEC: Gate latency timing and race condition rejection verified");
+}

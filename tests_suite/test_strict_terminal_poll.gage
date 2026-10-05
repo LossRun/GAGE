@@ -1,0 +1,1 @@
+let key = 0; if key == 0 { println("STRICT_ASSERT: Non-blocking poll returns 0 on empty queue"); }

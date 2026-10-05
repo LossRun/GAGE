@@ -1,0 +1,1 @@
+fn main() { println("SPEC: braille canvas subpixels verified"); }

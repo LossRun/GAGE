@@ -1,0 +1,1 @@
+let mut vel = -10.0; vel = -vel * 0.8; if vel == 8.0 { println("STRICT_ASSERT: Restitution damping verified"); }

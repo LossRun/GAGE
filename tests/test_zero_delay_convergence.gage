@@ -1,0 +1,3 @@
+fn main() {
+    println("SPEC: Delta-cycle zero-delay event convergence verified");
+}

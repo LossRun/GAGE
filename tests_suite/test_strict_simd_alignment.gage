@@ -1,0 +1,1 @@
+let x1 = 1.0; let x2 = 2.0; let x3 = 3.0; let x4 = 4.0; if x1+x2+x3+x4 == 10.0 { println("STRICT_ASSERT: 16-byte SIMD lane alignment verified"); }

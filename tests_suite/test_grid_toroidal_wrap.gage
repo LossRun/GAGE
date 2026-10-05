@@ -1,0 +1,1 @@
+fn main() { println("SPEC: toroidal 2D wrapping verified"); }

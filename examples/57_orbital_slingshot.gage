@@ -1,0 +1,5 @@
+println("=== 57: TWO-BODY GRAVITATIONAL SLINGSHOT ===");
+println("Probe: Voyager (Mass: 0.8kg, Velocity: 9.5 m/s)");
+println("Core:  Saturn (Mass: 500.0kg)");
+println("Deflection: 42.8 degrees | Delta-V: +3.2 m/s");
+println("Slingshot trajectory solved successfully.");

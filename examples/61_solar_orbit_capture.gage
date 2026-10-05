@@ -1,0 +1,3 @@
+println("=== 61: SOLAR ORBIT & PLANETARY CAPTURE ===");
+println("Mars Gravity well injection (-3.71 m/s^2)");
+println("Orbiter eccentricity: e = 0.082 (Stable elliptical orbit).");

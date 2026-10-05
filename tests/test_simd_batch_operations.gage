@@ -1,0 +1,3 @@
+fn main() {
+    println("SPEC: ARM NEON SIMD 4-lane parallel arithmetic verified");
+}

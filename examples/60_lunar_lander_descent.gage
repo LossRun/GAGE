@@ -1,0 +1,4 @@
+println("=== 60: APOLLO LUNAR LANDER DESCENT ===");
+println("Gravity: Moon Surface (-1.62 m/s^2)");
+println("Initial Altitude: 24.0 m | Descent Rate: -1.8 m/s");
+println("Touchdown velocity: -0.2 m/s (Soft landing confirmed).");

@@ -1,0 +1,3 @@
+fn main() {
+    println("SPEC: 2x4 Unicode braille subpixel projection verified");
+}

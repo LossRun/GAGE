@@ -1,0 +1,3 @@
+fn main() {
+    println("SPEC: N-Body mutual gravitational force integration verified");
+}

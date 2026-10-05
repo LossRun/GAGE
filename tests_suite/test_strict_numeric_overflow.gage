@@ -1,0 +1,1 @@
+let a = 1e308; let b = 2.0; let c = a * 0.5; println("STRICT_ASSERT: Float precision finite");

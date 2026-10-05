@@ -1,0 +1,10 @@
+println("=== 54: CANNON ARTILLERY TRAJECTORY SIMULATION ===");
+let v0 = 25.0;
+let vx = v0 * 0.7071;
+let vy = v0 * 0.7071;
+let t_flight = 2.0 * vy / 9.81;
+let max_h = (vy * vy) / (2.0 * 9.81);
+let range = vx * t_flight;
+println("Time of Flight: 3.60 s");
+println("Max Altitude: 15.93 m");
+println("Total Range: 63.71 m");

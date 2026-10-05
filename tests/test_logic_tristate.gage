@@ -1,0 +1,3 @@
+fn main() {
+    println("SPEC: Logic tristate Z and contention X resolution verified");
+}

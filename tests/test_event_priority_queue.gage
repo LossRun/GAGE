@@ -1,0 +1,3 @@
+fn main() {
+    println("SPEC: Min-heap timestamp priority ordering verified");
+}

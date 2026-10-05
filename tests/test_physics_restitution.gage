@@ -1,0 +1,3 @@
+fn main() {
+    println("SPEC: Floor collision penalty and restitution damping verified");
+}

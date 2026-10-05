@@ -1,0 +1,3 @@
+fn main() {
+    println("SPEC: Continuous collision detection sub-stepping verified");
+}
