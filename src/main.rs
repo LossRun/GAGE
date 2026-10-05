@@ -783,6 +783,19 @@ fn resolve_gage_file(target: &str) -> Option<String> {
 }
 
 fn main() {
+    // Universal working directory fallback for global execution
+    if !std::path::Path::new("examples").exists() {
+        if std::path::Path::new("/sdcard/GAGE/examples").exists() {
+            let _ = std::env::set_current_dir("/sdcard/GAGE");
+        } else if let Ok(exe) = std::env::current_exe() {
+            if let Some(parent) = exe.parent() {
+                if parent.join("examples").exists() {
+                    let _ = std::env::set_current_dir(parent);
+                }
+            }
+        }
+    }
+
     let cli_args: Vec<String> = std::env::args().collect();
 
     // No arguments -> launch REPL
