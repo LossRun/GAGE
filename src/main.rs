@@ -1,5 +1,26 @@
 #![allow(warnings)]
 
+
+pub fn get_gage_dir(sub: &str) -> std::path::PathBuf {
+    let local = std::path::PathBuf::from(sub);
+    if local.exists() {
+        return local;
+    }
+    let global_sdcard = std::path::PathBuf::from("/sdcard/GAGE").join(sub);
+    if global_sdcard.exists() {
+        return global_sdcard;
+    }
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent() {
+            let next_to_exe = parent.join(sub);
+            if next_to_exe.exists() {
+                return next_to_exe;
+            }
+        }
+    }
+    local
+}
+
 mod token;
 mod lexer;
 mod ast;
@@ -433,7 +454,7 @@ fn print_system_info() {
 
 fn find_examples_dir() -> Option<std::path::PathBuf> {
     let candidates = [
-        std::path::PathBuf::from("examples"),
+        crate::get_gage_dir("examples"),
         std::path::PathBuf::from("/sdcard/GAGE/examples"),
     ];
     for p in &candidates {
