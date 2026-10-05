@@ -1,0 +1,5 @@
+let x = 10;
+x = 25;
+if (x == 25) {
+    println("STRICT_ASSERT: Variable shadowing reassignment verified");
+}

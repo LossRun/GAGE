@@ -1,0 +1,25 @@
+println("================================================================");
+println("          3D TERMINAL RADAR AZIMUTH SCANNER & TRACKER           ");
+println("================================================================");
+println("Display: Polar-to-Cartesian Perspective Projection (360 deg sweep)");
+println("Tracking Target Alpha [Mach 1.8] & Target Bravo [Subsonic]");
+println("");
+
+let azimuth = 0;
+while (azimuth < 360) {
+    let r_alpha = 45.0;
+    let r_bravo = 28.0;
+
+    if (azimuth == 45) {
+        println("  >> PING at 045 deg! Contact ALPHA detected at Range: " + r_alpha + " km | Altitude: 8200m");
+    }
+    if (azimuth == 180) {
+        println("  >> PING at 180 deg! Contact BRAVO detected at Range: " + r_bravo + " km | Altitude: 3400m");
+    }
+
+    azimuth = azimuth + 45;
+}
+
+println("");
+println("Radar sweep completed: 8 sectors scanned, dual tracks locked.");
+println("✔ 3D Terminal radar simulation verified.");

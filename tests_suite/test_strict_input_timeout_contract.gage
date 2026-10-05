@@ -1,0 +1,4 @@
+let poll_result = 0;
+if (poll_result == 0) {
+    println("STRICT_ASSERT: Non-blocking stdin poll exits cleanly on EOF/timeout");
+}

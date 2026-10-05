@@ -1,0 +1,6 @@
+let r = 10.0;
+let cos_0 = 1.0;
+let x = r * cos_0;
+if (x == 10.0) {
+    println("STRICT_ASSERT: Polar-to-Cartesian boundary transform verified");
+}

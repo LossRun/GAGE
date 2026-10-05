@@ -1,0 +1,5 @@
+let vx = 3.0; let vy = 4.0; let vz = 0.0;
+let mag_sq = (vx * vx) + (vy * vy) + (vz * vz);
+if (mag_sq == 25.0) {
+    println("STRICT_ASSERT: 3D vector magnitude dot product exact");
+}
