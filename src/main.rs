@@ -1015,3 +1015,24 @@ fn main() {
 
     let _ = Command::new(&fast_bin).status();
 }
+
+
+pub fn gage_resolve_dir(name: &str) -> std::path::PathBuf {
+    let local = std::path::PathBuf::from(name);
+    if local.exists() {
+        return local;
+    }
+    let sd = std::path::PathBuf::from("/sdcard/GAGE").join(name);
+    if sd.exists() {
+        return sd;
+    }
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent() {
+            let next_to_exe = parent.join(name);
+            if next_to_exe.exists() {
+                return next_to_exe;
+            }
+        }
+    }
+    local
+}
