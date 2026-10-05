@@ -1,0 +1,5 @@
+let v_inf = 5.0;
+let v_peri = sqrt(v_inf * v_inf + 20.0);
+if (v_peri > 5.0) {
+    println("STRICT_ASSERT: Gravitational assist kinetic acceleration positive");
+}

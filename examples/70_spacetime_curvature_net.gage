@@ -1,0 +1,186 @@
+// ==============================================================================
+// 70: 3D SPACETIME CURVATURE NET & ORBITAL GRAVITY ENGINE
+// Full-Screen Einsteinian Rubber-Sheet Metric with Dual Gravitational Funnels
+// ==============================================================================
+
+let frame = 0;
+let total_frames = 800; // ~30 seconds of real-time animation
+
+while (frame < 800) {
+    clear_screen();
+
+    // 1. HUD Telemetry Dashboard
+    color_green();
+    println("╔══════════════════════════════════════════════════════════╗");
+    println("║    ⚡ 3D SPACETIME FABRIC & ORBITAL GRAVITY NET ENGINE    ║");
+    println("╚══════════════════════════════════════════════════════════╝");
+    color_reset();
+
+    let sec = floor(frame * 0.038);
+    print("  Time: ");
+    print(sec);
+    print("s / 30s | Frame: ");
+    print(frame);
+    print(" / ");
+    println(total_frames);
+
+    // 2. Orbital Mechanics Calculations (Moon orbiting Earth)
+    let theta = frame * 0.052;
+    let cos_t = cos(theta);
+    let sin_t = sin(theta);
+
+    // Moon World Coordinates
+    let mx = 11.8 * cos_t;
+    let mz = 6.4 * sin_t;
+
+    let dist_km = 384400.0 + sin_t * 4200.0;
+    let vel_kms = 1.022 + cos_t * 0.035;
+
+    color_cyan();
+    print("  EARTH: ");
+    color_reset();
+    println("M=5.97e24 kg | g=9.81 m/s² | Curvature Well = -14.2 km");
+
+    color_yellow();
+    print("  MOON : ");
+    color_reset();
+    println("M=7.34e22 kg | g=1.62 m/s² | Curvature Well = -2.4 km");
+
+    print("  ORBIT: Dist=");
+    print(floor(dist_km));
+    print(" km | Vel=");
+    print(floor(vel_kms * 100.0) / 100.0);
+    println(" km/s");
+
+    // 3. Full-Screen Spacetime Metric Rasterization
+    let py = 0.0;
+    while (py < 18.0) {
+        let px = 0.0;
+        while (px < 51.0) {
+            // Map screen pixel to world coordinates
+            let x = (px - 25.0) * 0.65;
+            let z = (py - 9.0) * 1.35;
+
+            // Distance to Earth (center at 0, 0)
+            let r_e = sqrt(x * x + z * z);
+            let r_e_soft = x * x + z * z + 3.8;
+
+            // Gravitational displacement from Earth
+            let pull_e = 15.5 / r_e_soft;
+            let dx_e = x * pull_e * 0.22;
+            let dz_e = z * pull_e * 0.22;
+
+            // Distance to Moon
+            let rx_m = x - mx;
+            let rz_m = z - mz;
+            let r_m = sqrt(rx_m * rx_m + rz_m * rz_m);
+            let r_m_soft = rx_m * rx_m + rz_m * rz_m + 2.0;
+
+            // Gravitational displacement from Moon
+            let pull_m = 4.2 / r_m_soft;
+            let dx_m = rx_m * pull_m * 0.22;
+            let dz_m = rz_m * pull_m * 0.22;
+
+            // Deformed spacetime metric coordinates (u, v)
+            let u = x + dx_e + dx_m;
+            let v = z + dz_e + dz_m;
+
+            // Spacetime Grid Lattice (lines spaced every 2.0 units)
+            let mu = u - floor(u / 2.0 + 0.5) * 2.0;
+            let mv = v - floor(v / 2.0 + 0.5) * 2.0;
+
+            let dist_u = mu;
+            if (dist_u < 0.0) {
+                dist_u = 0.0 - dist_u;
+            }
+
+            let dist_v = mv;
+            if (dist_v < 0.0) {
+                dist_v = 0.0 - dist_v;
+            }
+
+            let on_u = 0;
+            if (dist_u < 0.36) {
+                on_u = 1;
+            }
+
+            let on_v = 0;
+            if (dist_v < 0.36) {
+                on_v = 1;
+            }
+
+            // Determine render character type
+            let tile = 0;
+
+            // Background spacetime grid lines
+            if (on_u == 1) {
+                if (on_v == 1) {
+                    tile = 1; // Green #
+                    if (r_e < 5.8) { tile = 2; } // Cyan +
+                    if (r_m < 3.0) { tile = 3; } // Yellow +
+                }
+            }
+            if (tile == 0) {
+                if (on_u == 1) {
+                    tile = 4; // Green :
+                    if (r_e < 5.5) { tile = 5; } // Cyan |
+                    if (r_m < 2.6) { tile = 6; } // Yellow |
+                }
+            }
+            if (tile == 0) {
+                if (on_v == 1) {
+                    tile = 7; // Green -
+                    if (r_e < 5.5) { tile = 8; } // Cyan -
+                    if (r_m < 2.6) { tile = 9; } // Yellow -
+                }
+            }
+            if (tile == 0) {
+                let rip_e = r_e - floor(r_e / 1.5) * 1.5;
+                let rip_m = r_m - floor(r_m / 1.1) * 1.1;
+                if (r_e < 5.0) {
+                    if (rip_e < 0.28) {
+                        tile = 10; // Cyan ~
+                    }
+                }
+                if (tile == 0) {
+                    if (r_m < 2.8) {
+                        if (rip_m < 0.24) {
+                            tile = 11; // Yellow .
+                        }
+                    }
+                }
+            }
+
+            // Celestial bodies drawn on top with highest priority
+            if (r_m < 2.0) { tile = 15; } // Yellow *
+            if (r_m < 1.1) { tile = 14; } // Yellow o (Moon core)
+            if (r_e < 2.5) { tile = 13; } // Cyan O
+            if (r_e < 1.3) { tile = 12; } // Green @ (Earth core)
+
+            // Render pixel character
+            if (tile == 12) { color_green(); print("@"); color_reset(); }
+            if (tile == 13) { color_cyan(); print("O"); color_reset(); }
+            if (tile == 14) { color_yellow(); print("o"); color_reset(); }
+            if (tile == 15) { color_yellow(); print("*"); color_reset(); }
+            if (tile == 1)  { color_green(); print("#"); color_reset(); }
+            if (tile == 2)  { color_cyan(); print("+"); color_reset(); }
+            if (tile == 3)  { color_yellow(); print("+"); color_reset(); }
+            if (tile == 4)  { color_green(); print(":"); color_reset(); }
+            if (tile == 5)  { color_cyan(); print("|"); color_reset(); }
+            if (tile == 6)  { color_yellow(); print("|"); color_reset(); }
+            if (tile == 7)  { color_green(); print("-"); color_reset(); }
+            if (tile == 8)  { color_cyan(); print("-"); color_reset(); }
+            if (tile == 9)  { color_yellow(); print("-"); color_reset(); }
+            if (tile == 10) { color_cyan(); print("~"); color_reset(); }
+            if (tile == 11) { color_yellow(); print("."); color_reset(); }
+            if (tile == 0)  { print(" "); }
+
+            px = px + 1.0;
+        }
+        println("");
+        py = py + 1.0;
+    }
+
+    frame = frame + 1;
+    gage_sleep(35.0);
+}

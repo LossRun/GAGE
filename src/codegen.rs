@@ -92,7 +92,40 @@ static inline double gage_input_float(void) {
         self.emit_line("#include <stdbool.h>");
         self.emit_line("#include <string.h>");
         self.emit_line("#include <math.h>\n");
-        self.emit_line("#include <unistd.h>");
+        self.emit_line("#include <unistd.h>
+
+#include <termios.h>
+#include <fcntl.h>
+
+static struct termios _gage_orig_term;
+static int _gage_term_setup = 0;
+
+static inline void gage_enable_raw_mode(void) {
+    if (_gage_term_setup) return;
+    tcgetattr(STDIN_FILENO, &_gage_orig_term);
+    struct termios raw = _gage_orig_term;
+    raw.c_lflag &= ~(ECHO | ICANON);
+    raw.c_cc[VMIN] = 0;
+    raw.c_cc[VTIME] = 0;
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+    _gage_term_setup = 1;
+}
+
+static inline void gage_disable_raw_mode(void) {
+    if (!_gage_term_setup) return;
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &_gage_orig_term);
+    _gage_term_setup = 0;
+}
+
+static inline int gage_poll_key(void) {
+    gage_enable_raw_mode();
+    char c = 0;
+    if (read(STDIN_FILENO, &c, 1) > 0) {
+        return (int)c;
+    }
+    return 0;
+}
+");
         self.emit_line("#define PI 3.14159265358979323846");
         self.emit_line("#define TAU 6.28318530717958647692");
         self.emit_line("static inline void gage_sleep(double ms) { usleep((useconds_t)(ms * 1000.0)); }");

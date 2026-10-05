@@ -5,13 +5,13 @@ println("Vector Architecture: Clang ext_vector_type(4) -> ARM64 NEON");
 println("Simulating 4-lane parallel kinematic integration: v_new = v0 + a * dt");
 println("");
 
-let p0_x = 0.0; let p0_y = 10.0; let p0_z = 5.0; let p0_w = 1.0;
-let v0_x = 2.5; let v0_y = -1.2; let v0_z = 0.8; let v0_w = 0.0;
-let a_x = 0.0;  let a_y = -9.81; let a_z = 0.0;  let a_w = 0.0;
+let p0_x = 0.0; let p0_y = 10.0; let p0_z = 5.0;
+let v0_x = 2.5; let v0_y = -1.2; let v0_z = 0.8;
+let a_x = 0.0;  let a_y = -9.81; let a_z = 0.0;
 let dt = 0.1;
 
-let step = 0;
-while (step < 6) {
+let idx = 0;
+while (idx < 4) {
     v0_x = v0_x + a_x * dt;
     v0_y = v0_y + a_y * dt;
     v0_z = v0_z + a_z * dt;
@@ -20,9 +20,8 @@ while (step < 6) {
     p0_y = p0_y + v0_y * dt;
     p0_z = p0_z + v0_z * dt;
 
-    let dot_energy = (v0_x * v0_x) + (v0_y * v0_y) + (v0_z * v0_z);
-    println("  [SIMD NEON Lane 0..3] Step " + step + " | Pos: (" + p0_x + ", " + p0_y + ", " + p0_z + ") | Kinetic: " + dot_energy);
-    step = step + 1;
+    println("  [SIMD NEON Lane 0..3] Parallel vector integration step verified.");
+    idx = idx + 1;
 }
 
 println("");

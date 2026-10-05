@@ -1,0 +1,199 @@
+// ==============================================================================
+// 71: INTERACTIVE 3D SPACETIME CURVATURE & ASTEROID SANDBOX
+// Real-Time Dynamic Mass Wells and Interactive Slingshot Injection
+// ==============================================================================
+
+println("╔══════════════════════════════════════════════════════════╗");
+println("║  ⚡ 3D SPACETIME FABRIC: INTERACTIVE GRAVITY SANDBOX     ║");
+println("╚══════════════════════════════════════════════════════════╝");
+println("Controls: [E] Boost Earth Mass | [M] Boost Moon Mass");
+println("          [SPACE] Spawn Asteroid | [B] Spawn Black Hole");
+println("Initializing 30-second live relativistic simulation loop...");
+
+let frame = 0;
+let total_frames = 800;
+
+let earth_mass = 5.97;
+let moon_mass = 0.73;
+let asteroid_active = 0;
+let ast_x = -15.0;
+let ast_z = -8.0;
+let ast_vx = 1.1;
+let ast_vz = 0.45;
+
+while (frame < 800) {
+    clear_screen();
+
+    // Check for interactive keyboard input (non-blocking)
+    let key = gage_poll_key();
+    if (key == 69 || key == 101) {
+        earth_mass = earth_mass + 1.5;
+    }
+    if (key == 77 || key == 109) {
+        moon_mass = moon_mass + 0.4;
+    }
+    if (key == 32) {
+        asteroid_active = 1;
+        ast_x = -14.0;
+        ast_z = -6.0;
+        ast_vx = 1.25;
+        ast_vz = 0.52;
+    }
+    if (key == 66 || key == 98) {
+        earth_mass = 28.0;
+    }
+
+    // Telemetry Dashboard
+    color_green();
+    println("╔══════════════════════════════════════════════════════════╗");
+    println("║    ⚡ 3D SPACETIME FABRIC & ORBITAL GRAVITY NET ENGINE    ║");
+    println("╚══════════════════════════════════════════════════════════╝");
+    color_reset();
+
+    let sec = floor(frame * 0.038);
+    print("  Time: ");
+    print(sec);
+    print("s / 30s | Frame: ");
+    print(frame);
+    print(" / ");
+    println(total_frames);
+
+    let theta = frame * 0.052;
+    let cos_t = cos(theta);
+    let sin_t = sin(theta);
+
+    let mx = 11.8 * cos_t;
+    let mz = 6.4 * sin_t;
+
+    color_cyan();
+    print("  EARTH: ");
+    color_reset();
+    print("Mass=");
+    print(floor(earth_mass * 10.0) / 10.0);
+    print("e24 kg | g=9.81 m/s² | Well Depth=");
+    print(floor(earth_mass * 2.4));
+    println(" km");
+
+    color_yellow();
+    print("  MOON : ");
+    color_reset();
+    print("Mass=");
+    print(floor(moon_mass * 10.0) / 10.0);
+    print("e22 kg | g=1.62 m/s² | Well Depth=");
+    print(floor(moon_mass * 3.2));
+    println(" km");
+
+    if (asteroid_active == 1) {
+        ast_x = ast_x + ast_vx * 0.35;
+        ast_z = ast_z + ast_vz * 0.35;
+
+        let a_r_sq = ast_x * ast_x + ast_z * ast_z + 2.0;
+        let a_pull = (earth_mass * 0.45) / a_r_sq;
+        ast_vx = ast_vx - (ast_x / 8.0) * a_pull * 0.35;
+        ast_vz = ast_vz - (ast_z / 8.0) * a_pull * 0.35;
+
+        color_magenta();
+        print("  ASTEROID TRACKING: ");
+        color_reset();
+        print("Pos(");
+        print(floor(ast_x));
+        print(", ");
+        print(floor(ast_z));
+        println(") | Slingshot Trajectory ACTIVE");
+    }
+
+    // Full-Screen Spacetime Metric Rendering
+    let py = 0.0;
+    while (py < 18.0) {
+        let px = 0.0;
+        while (px < 51.0) {
+            let x = (px - 25.0) * 0.65;
+            let z = (py - 9.0) * 1.35;
+
+            let r_e = sqrt(x * x + z * z);
+            let pull_e = (earth_mass * 2.6) / (x * x + z * z + 3.8);
+            let dx_e = x * pull_e * 0.22;
+            let dz_e = z * pull_e * 0.22;
+
+            let rx_m = x - mx;
+            let rz_m = z - mz;
+            let r_m = sqrt(rx_m * rx_m + rz_m * rz_m);
+            let pull_m = (moon_mass * 5.7) / (rx_m * rx_m + rz_m * rz_m + 2.0);
+            let dx_m = rx_m * pull_m * 0.22;
+            let dz_m = rz_m * pull_m * 0.22;
+
+            let u = x + dx_e + dx_m;
+            let v = z + dz_e + dz_m;
+
+            let mu = u - floor(u / 2.0 + 0.5) * 2.0;
+            let mv = v - floor(v / 2.0 + 0.5) * 2.0;
+
+            let dist_u = mu;
+            if (dist_u < 0.0) { dist_u = 0.0 - dist_u; }
+
+            let dist_v = mv;
+            if (dist_v < 0.0) { dist_v = 0.0 - dist_v; }
+
+            let on_u = 0;
+            if (dist_u < 0.36) { on_u = 1; }
+            let on_v = 0;
+            if (dist_v < 0.36) { on_v = 1; }
+
+            let tile = 0;
+            if (on_u == 1 && on_v == 1) {
+                tile = 1;
+                if (r_e < 5.8) { tile = 2; }
+                if (r_m < 3.0) { tile = 3; }
+            }
+            if (tile == 0 && on_u == 1) {
+                tile = 4;
+                if (r_e < 5.5) { tile = 5; }
+                if (r_m < 2.6) { tile = 6; }
+            }
+            if (tile == 0 && on_v == 1) {
+                tile = 7;
+                if (r_e < 5.5) { tile = 8; }
+                if (r_m < 2.6) { tile = 9; }
+            }
+
+            // Asteroid Proximity
+            if (asteroid_active == 1) {
+                let d_ast = sqrt((x - ast_x) * (x - ast_x) + (z - ast_z) * (z - ast_z));
+                if (d_ast < 1.2) { tile = 16; }
+            }
+
+            // Celestial bodies
+            if (r_m < 2.0) { tile = 15; }
+            if (r_m < 1.1) { tile = 14; }
+            if (r_e < 2.5) { tile = 13; }
+            if (r_e < 1.3) { tile = 12; }
+
+            // Render characters
+            if (tile == 12) { color_green(); print("@"); color_reset(); }
+            if (tile == 13) { color_cyan(); print("O"); color_reset(); }
+            if (tile == 14) { color_yellow(); print("o"); color_reset(); }
+            if (tile == 15) { color_yellow(); print("*"); color_reset(); }
+            if (tile == 16) { color_magenta(); print("x"); color_reset(); }
+            if (tile == 1)  { color_green(); print("#"); color_reset(); }
+            if (tile == 2)  { color_cyan(); print("+"); color_reset(); }
+            if (tile == 3)  { color_yellow(); print("+"); color_reset(); }
+            if (tile == 4)  { color_green(); print(":"); color_reset(); }
+            if (tile == 5)  { color_cyan(); print("|"); color_reset(); }
+            if (tile == 6)  { color_yellow(); print("|"); color_reset(); }
+            if (tile == 7)  { color_green(); print("-"); color_reset(); }
+            if (tile == 8)  { color_cyan(); print("-"); color_reset(); }
+            if (tile == 9)  { color_yellow(); print("-"); color_reset(); }
+            if (tile == 0)  { print(" "); }
+
+            px = px + 1.0;
+        }
+        println("");
+        py = py + 1.0;
+    }
+
+    frame = frame + 1;
+    gage_sleep(35.0);
+}
+
+gage_disable_raw_mode();
+println("✔ Interactive 3D Spacetime Sandbox run completed successfully.");

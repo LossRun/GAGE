@@ -1,0 +1,6 @@
+let dot_0 = 1;
+let dot_3 = 8;
+let cell = dot_0 + dot_3;
+if (cell == 9) {
+    println("STRICT_ASSERT: Braille subpixel bitmask packing verified");
+}

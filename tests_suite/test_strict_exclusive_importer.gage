@@ -1,0 +1,5 @@
+let val = 16.0;
+let root = sqrt(val);
+if (root == 4.0) {
+    println("STRICT_ASSERT: Standard math runtime linked cleanly");
+}

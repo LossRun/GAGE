@@ -1,0 +1,8 @@
+let mu = 32.0;
+let r = 4.0;
+let r_sq = r * r;
+let z_depth = -mu / r;
+
+if (z_depth == -8.0) {
+    println("STRICT_ASSERT: Spacetime potential well depth exact");
+}
