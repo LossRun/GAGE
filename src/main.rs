@@ -1,6 +1,27 @@
 #![allow(warnings)]
 
 
+
+pub fn gage_global_dir(name: &str) -> std::path::PathBuf {
+    let local = std::path::PathBuf::from(name);
+    if local.exists() {
+        return local;
+    }
+    let sd = std::path::PathBuf::from("/sdcard/GAGE").join(name);
+    if sd.exists() {
+        return sd;
+    }
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent() {
+            let next_to_exe = parent.join(name);
+            if next_to_exe.exists() {
+                return next_to_exe;
+            }
+        }
+    }
+    local
+}
+
 pub fn get_gage_dir(sub: &str) -> std::path::PathBuf {
     let local = std::path::PathBuf::from(sub);
     if local.exists() {
