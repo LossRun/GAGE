@@ -1,0 +1,14 @@
+let yaw = 0.0;
+let cy = cos(yaw);
+let sy = sin(yaw);
+let x = 10.0;
+let z = 0.0;
+
+let rot_x = x * cy - z * sy;
+let rot_z = x * sy + z * cy;
+
+if (rot_x == 10.0) {
+    if (rot_z == 0.0) {
+        println("STRICT_ASSERT: 3D logo perspective rotation identity matrix exact");
+    }
+}

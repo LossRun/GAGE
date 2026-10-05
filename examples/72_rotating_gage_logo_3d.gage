@@ -1,0 +1,156 @@
+// ==============================================================================
+// 72: REAL-TIME 3D ROTATING GAGE UNICODE BANNER LOGO
+// Exact box-drawing banner rendered in true 3D perspective space
+// ==============================================================================
+
+fn get_banner_glyph(c, r) {
+    if (r == 0) {
+        if (c == 8 || c == 17 || c == 27 || c == 37) { return 5; } // ╗
+        if ((c >= 2 && c <= 7) || (c >= 12 && c <= 16) || (c >= 21 && c <= 26) || (c >= 30 && c <= 36)) { return 1; } // █
+        return 0;
+    }
+    if (r == 1) {
+        if (c == 3 || c == 13 || c == 22 || c == 32) { return 4; } // ╔
+        if (c == 18) { return 5; } // ╗
+        if (c == 8 || c == 27 || c == 37) { return 7; } // ╝
+        if ((c >= 4 && c <= 7) || (c >= 14 && c <= 15) || (c >= 23 && c <= 26) || (c >= 33 && c <= 36)) { return 2; } // ═
+        if ((c >= 1 && c <= 2) || (c >= 11 && c <= 12) || (c >= 16 && c <= 17) || (c >= 20 && c <= 21) || (c >= 30 && c <= 31)) { return 1; } // █
+        return 0;
+    }
+    if (r == 2) {
+        if (c == 3 || c == 18 || c == 22) { return 3; } // ║
+        if (c == 9 || c == 28 || c == 35) { return 5; } // ╗
+        if ((c >= 1 && c <= 2) || (c >= 6 && c <= 8) || (c >= 11 && c <= 17) || (c >= 20 && c <= 21) || (c >= 25 && c <= 27) || (c >= 30 && c <= 34)) { return 1; } // █
+        return 0;
+    }
+    if (r == 3) {
+        if (c == 3 || c == 9 || c == 18 || c == 22 || c == 28) { return 3; } // ║
+        if (c == 13 || c == 32) { return 4; } // ╔
+        if ((c >= 14 && c <= 15) || (c >= 33 && c <= 34)) { return 2; } // ═
+        if (c == 35) { return 7; } // ╝
+        if ((c >= 1 && c <= 2) || (c >= 7 && c <= 8) || (c >= 11 && c <= 12) || (c >= 16 && c <= 17) || (c >= 20 && c <= 21) || (c >= 26 && c <= 27) || (c >= 30 && c <= 31)) { return 1; } // █
+        return 0;
+    }
+    if (r == 4) {
+        if (c == 1 || c == 20) { return 6; } // ╚
+        if (c == 8 || c == 27) { return 4; } // ╔
+        if (c == 9 || c == 28) { return 7; } // ╝
+        if (c == 13 || c == 18) { return 3; } // ║
+        if (c == 37) { return 5; } // ╗
+        if ((c >= 2 && c <= 7) || (c >= 11 && c <= 12) || (c >= 16 && c <= 17) || (c >= 21 && c <= 26) || (c >= 30 && c <= 36)) { return 1; } // █
+        return 0;
+    }
+    if (r == 5) {
+        if (c == 2 || c == 11 || c == 16 || c == 21 || c == 30) { return 6; } // ╚
+        if (c == 8 || c == 13 || c == 18 || c == 27 || c == 37) { return 7; } // ╝
+        if ((c >= 3 && c <= 7) || c == 12 || c == 17 || (c >= 22 && c <= 26) || (c >= 31 && c <= 36)) { return 2; } // ═
+        return 0;
+    }
+    return 0;
+}
+
+let frame = 0;
+let total_frames = 800; // ~30 seconds of smooth 3D rotation
+
+while (frame < 800) {
+    clear_screen();
+
+    // 1. HUD Telemetry Dashboard
+    color_green();
+    println("╔══════════════════════════════════════════════════════════╗");
+    println("║     ⚡ GAGE REAL-TIME 3D ROTATING LOGO ENGINE (AOT)       ║");
+    println("╚══════════════════════════════════════════════════════════╝");
+    color_reset();
+
+    let sec = floor(frame * 0.038);
+    print("  Time: ");
+    print(sec);
+    print("s / 30s | Frame: ");
+    print(frame);
+    print(" / ");
+    println(total_frames);
+
+    // 2. Slow, readable 3D rotation angles
+    let yaw   = frame * 0.022;
+    let pitch = sin(frame * 0.020) * 0.14;
+
+    let cy = cos(yaw);
+    let sy = sin(yaw);
+    let cp = cos(pitch);
+    let sp = sin(pitch);
+
+    print("  ROTATION: Yaw=");
+    print(floor(yaw * 57.3));
+    print("° | Pitch=");
+    print(floor(pitch * 57.3));
+    println("° | Geometry: Exact Unicode Box Banner");
+
+    // Camera origin in local space: R^T * (0, 0, -D)
+    let cam_d = 34.0;
+    let ox = cam_d * sy;
+    let oy = (0.0 - cam_d) * cy * sp;
+    let oz = (0.0 - cam_d) * cy * cp;
+
+    let f = 24.0;
+
+    // 3. Render 51x18 Framebuffer
+    let py = 0.0;
+    while (py < 18.0) {
+        let px = 0.0;
+        while (px < 51.0) {
+            let u = (px - 25.0) * 0.72;
+            let v = (9.0 - py) * 1.44;
+
+            // Camera ray direction in local space: R^T * (u, v, f)
+            let dx = cy * u - sy * f;
+            let dy = sy * sp * u + cp * v + cy * sp * f;
+            let dz = sy * cp * u - sp * v + cy * cp * f;
+
+            let gid = 0;
+
+            if (dz > 0.06 || dz < -0.06) {
+                let t = (0.0 - oz) / dz;
+                if (t > 0.0 && t < 90.0) {
+                    let lx = ox + t * dx;
+                    let ly = oy + t * dy;
+
+                    let col = floor(lx + 19.0);
+                    let row = floor(3.0 - (ly / 2.0));
+
+                    if (col >= 0.0 && col < 38.0 && row >= 0.0 && row < 6.0) {
+                        gid = get_banner_glyph(col, row);
+                    }
+                }
+            }
+
+            if (gid > 0) {
+                if (oz <= 0.0) {
+                    color_green();
+                } else {
+                    color_cyan();
+                }
+
+                if (gid == 1) { print("█"); }
+                if (gid == 2) { print("═"); }
+                if (gid == 3) { print("║"); }
+                if (gid == 4) { print("╔"); }
+                if (gid == 5) { print("╗"); }
+                if (gid == 6) { print("╚"); }
+                if (gid == 7) { print("╝"); }
+
+                color_reset();
+            } else {
+                print(" ");
+            }
+
+            px = px + 1.0;
+        }
+        println("");
+        py = py + 1.0;
+    }
+
+    frame = frame + 1;
+    gage_sleep(38.0);
+}
+
+println("✔ 3D Rotating GAGE Unicode Banner Logo completed successfully.");
