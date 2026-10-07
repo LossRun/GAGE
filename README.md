@@ -4,208 +4,53 @@
 
 <img src="logo.png" alt="GAGE Logo" width="200">
 
-### High-performance, native-oriented programming language built in Rust.
+### A high-performance, native-oriented programming language built in Rust.
+
+**AOT C CodeGen** · **SIMD Vectors** · **4×4 Transformations** · **Bytecode VM** · **Simulation Runtime**
 
 <p>
-  <b>Ahead-of-Time C CodeGen</b> · <b>SIMD Vectors</b> · <b>4×4 Transformation Pipelines</b> · <b>Bytecode VM</b> · <b>Simulation Runtime</b>
-</p>
-
-<p>
-  <a href="https://github.com/LossRun/GAGE/actions">
-    <img src="https://img.shields.io/badge/Tests-123%2F123%20passing-brightgreen?style=flat-square" alt="Test Suite">
-  </a>
   <img src="https://img.shields.io/badge/Language-Rust-orange?style=flat-square&logo=rust" alt="Rust">
-  <img src="https://img.shields.io/badge/Backend-C99%20%2B%20Clang-6b6b6b?style=flat-square" alt="C + Clang">
-  <img src="https://img.shields.io/badge/Acceleration-Hardware%20SIMD-blueviolet?style=flat-square" alt="Hardware SIMD">
+  <img src="https://img.shields.io/badge/Backend-C99%20%2B%20Clang-6b6b6b?style=flat-square" alt="C99 + Clang">
+  <img src="https://img.shields.io/badge/SIMD-Hardware%20Vector%20Support-blueviolet?style=flat-square" alt="Hardware SIMD">
   <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="MIT License">
-</p>
-
-<p>
-  <a href="https://github.codespaces.new/?hide_repo_select=true&ref=main&repo=LossRun/GAGE">
-    <img src="https://github.com/codespaces/badge.svg" alt="Open in GitHub Codespaces">
-  </a>
 </p>
 
 </div>
 
 ---
 
-## ⚡ Quick Run
+## What is GAGE?
 
-GAGE can be built and executed directly from a GitHub Codespace or from a local development environment.
+GAGE is a programming language built in Rust for native execution, mathematical computing, and simulation.
 
-### Interactive Cloud Sandbox
+GAGE uses a compact high-level syntax while providing a native execution path through generated C99 code and Clang. It also includes a stack-based bytecode virtual machine for an alternative execution path.
 
-You can build and execute GAGE programs directly in your browser without configuring a local development environment.
+The language is designed around vector mathematics, transformations, simulation logic, and lightweight runtime features.
 
-1. Click the **Open in GitHub Codespaces** button above.
-2. Wait for the development environment to initialize.
-3. Build the compiler and run one of the included examples:
+## Why GAGE?
 
-```bash
-cargo build --release
-./target/release/gage examples/51_rotating_cube_3d.gage
-```
+GAGE focuses on keeping the language small while making common mathematical and simulation operations part of the language itself.
 
----
+The project combines:
 
-## 🧭 Overview
-
-GAGE is an ahead-of-time compiled systems and simulation-oriented programming language implemented in Rust.
-
-The compiler translates validated GAGE source programs through a complete front end consisting of lexical analysis, parsing, and semantic type checking. The resulting validated representation can then be lowered into either native C code for ahead-of-time compilation or instructions for the project's stack-based bytecode virtual machine.
-
-The language is designed around native execution, high-throughput mathematical operations, physical simulation, coordinate transformations, vector mathematics, dynamic collections, and terminal-oriented rendering.
-
-Rather than depending on a large external runtime or graphics framework, GAGE provides a compact language and compiler architecture where important mathematical and simulation primitives are part of the language/runtime itself.
+- Native-oriented execution
+- Ahead-of-Time C code generation
+- First-class vector types
+- Hardware-oriented SIMD support
+- 4×4 transformation mathematics
+- Simulation-oriented `step(dt)`
+- Classes and objects
+- Dynamic arrays
+- A stack-based bytecode VM
+- Interactive REPL
+- Terminal and ANSI functionality
+- Compilation caching
 
 ---
 
-## 🎯 Design Goals
+## Quick Example
 
-GAGE is designed around several core ideas:
-
-- Native-oriented execution.
-- A compact and expressive language syntax.
-- Direct lowering to C for native compilation.
-- Hardware-accelerated vector operations where supported by the C backend.
-- Built-in mathematical and transformation primitives.
-- Simulation-oriented execution through `step(dt)`.
-- A secondary bytecode execution path for experimentation and alternative execution.
-- Lightweight objects and dynamic arrays.
-- Terminal-based rendering and ANSI control.
-- A small compiler architecture implemented in Rust.
-- Clear separation between the compiler front end and execution backends.
-
-The project is particularly suited to experimentation with programming-language implementation, native code generation, mathematical computation, simulation logic, and small interactive programs.
-
----
-
-## 🏗️ Compiler Architecture
-
-GAGE uses a shared compiler front end before selecting an execution backend.
-
-```text
-                         GAGE Source (.gage)
-                                  │
-                                  ▼
-                         ┌─────────────────┐
-                         │      Lexer      │
-                         │                 │
-                         │ Source → Tokens │
-                         └────────┬────────┘
-                                  │
-                                  │ Tokens
-                                  ▼
-                         ┌─────────────────┐
-                         │     Parser      │
-                         │                 │
-                         │ Tokens → AST    │
-                         └────────┬────────┘
-                                  │
-                                  │ AST
-                                  ▼
-                         ┌─────────────────┐
-                         │   Type Checker  │
-                         │                 │
-                         │ Semantic        │
-                         │ Validation      │
-                         └────────┬────────┘
-                                  │
-                                  │ Validated AST
-                         ┌────────┴─────────┐
-                         │                  │
-                         ▼                  ▼
-                ┌────────────────┐  ┌────────────────┐
-                │  Native C Gen  │  │  Bytecode      │
-                │                │  │  Compiler      │
-                │  C99 + SIMD    │  │                │
-                └───────┬────────┘  └───────┬────────┘
-                        │                   │
-                        │ C Source          │ Bytecode
-                        ▼                   ▼
-                ┌────────────────┐  ┌────────────────┐
-                │     Clang      │  │   Stack VM     │
-                │                │  │                │
-                │ Native Binary  │  │   Execution    │
-                └────────────────┘  └────────────────┘
-```
-
-Both execution paths share the same language front end.
-
-The lexer converts source characters into tokens. The parser consumes those tokens and constructs the program's abstract syntax tree. The type checker then performs semantic validation before the validated representation is passed to one of the available execution backends.
-
-This architecture allows the language frontend to remain independent from the final execution strategy.
-
----
-
-## ⚡ Ahead-of-Time Native Code Generation
-
-The primary execution path is the native C backend.
-
-GAGE lowers its validated program representation into C99-compatible source code. The generated C code can then be compiled by Clang into native machine code.
-
-This approach provides a relatively small compiler implementation while allowing GAGE programs to take advantage of the optimization capabilities of an established native compiler toolchain.
-
-The native backend also provides the implementation used by the language's vector and mathematical facilities.
-
-### Native Pipeline
-
-```text
-GAGE Source
-    │
-    ▼
-Lexer
-    │
-    ▼
-Parser
-    │
-    ▼
-Type Checker
-    │
-    ▼
-Validated AST
-    │
-    ▼
-C99 Code Generator
-    │
-    ▼
-Generated C
-    │
-    ▼
-Clang
-    │
-    ▼
-Native Executable
-```
-
----
-
-## 🧮 SIMD Vector Mathematics
-
-GAGE provides first-class vector primitives intended for mathematical computation, simulation, graphics-style calculations, and coordinate manipulation.
-
-Supported vector types include:
-
-- `vec2`
-- `vec3`
-- `vec4`
-
-The native backend maps these vector representations to compiler-supported vector extensions where available.
-
-This allows vector expressions to remain concise at the language level while being lowered toward hardware-oriented representations in generated native code.
-
-### Vector Operations
-
-The language provides mathematical operations including:
-
-- `dot()`
-- `cross()`
-- `length()`
-- `normalize()`
-- `reflect()`
-
-Example:
+A simple vector calculation in GAGE:
 
 ```gage
 let position = vec3(0.0, 10.0, 0.0);
@@ -218,7 +63,66 @@ println(speed);
 println(direction);
 ```
 
-Vector arithmetic can be used directly inside simulation and transformation expressions.
+A simulation can be written directly using `step(dt)`:
+
+```gage
+let position = vec3(0.0, 50.0, 0.0);
+let velocity = vec3(0.0, -9.8, 0.0);
+
+step(dt) {
+    position = position + (velocity * dt);
+}
+```
+
+---
+
+## Features
+
+### Native Compilation
+
+GAGE's primary execution path generates C99 source code and compiles it through Clang.
+
+```text
+GAGE Source
+    ↓
+Lexer
+    ↓
+Parser
+    ↓
+Type Checker
+    ↓
+C99 Code Generator
+    ↓
+Generated C
+    ↓
+Clang
+    ↓
+Native Executable
+```
+
+This keeps the GAGE compiler relatively compact while allowing generated programs to use an established native compiler toolchain.
+
+### SIMD Vector Mathematics
+
+GAGE provides first-class vector types:
+
+```text
+vec2
+vec3
+vec4
+```
+
+Vector operations include:
+
+```text
+dot()
+cross()
+length()
+normalize()
+reflect()
+```
+
+Example:
 
 ```gage
 let a = vec3(1.0, 2.0, 3.0);
@@ -227,17 +131,18 @@ let b = vec3(4.0, 5.0, 6.0);
 let sum = a + b;
 let difference = a - b;
 let scaled = a * 2.0;
+
+let d = dot(a, b);
+let n = normalize(a);
+let len = length(a);
+let r = cross(a, b);
 ```
 
----
+The native backend can use compiler-supported vector extensions for hardware-oriented execution where supported.
 
-## 📐 4×4 Transformation Pipeline
+### 4×4 Transformations
 
-GAGE includes built-in functionality for 4×4 transformation mathematics.
-
-The transformation API is intended for coordinate manipulation, simulation, terminal graphics, and graphics-style programming.
-
-Available transformation primitives include:
+GAGE includes built-in 4×4 transformation operations for mathematical, simulation, and graphics-style workloads.
 
 ```text
 mat4_identity()
@@ -248,33 +153,9 @@ mat4_mul()
 mat4_transform_vec3()
 ```
 
-These operations allow programs to construct and combine transformation matrices and transform 3D positions.
+### Mathematical Functions
 
-A typical transformation pipeline can be represented conceptually as:
-
-```text
-Object Coordinates
-        │
-        ▼
-Model Transformation
-        │
-        ▼
-World Coordinates
-        │
-        ▼
-Additional Transformation
-        │
-        ▼
-Projected / Transformed Coordinates
-```
-
----
-
-## 📐 Mathematical Primitives
-
-GAGE includes mathematical primitives intended for simulation and numerical programming.
-
-Available functions include:
+Common mathematical operations are available directly in GAGE:
 
 ```text
 sin()
@@ -288,24 +169,18 @@ clamp()
 lerp()
 ```
 
-The language also provides global mathematical constants:
+Global constants:
 
 ```text
 PI
 TAU
 ```
 
-These primitives allow common calculations to remain inside GAGE programs without requiring an external mathematics library at the language level.
+### Simulation Runtime
 
----
+Simulation is one of GAGE's main design targets.
 
-## 🔁 Simulation Runtime
-
-Simulation is one of the central design targets of GAGE.
-
-The language provides a dedicated `step(dt)` construct intended for deterministic delta-time based simulation updates.
-
-A simulation can update state using the elapsed timestep:
+The `step(dt)` construct provides a direct way to update simulation state using a delta-time value.
 
 ```gage
 let position = vec3(0.0, 50.0, 0.0);
@@ -316,23 +191,15 @@ step(dt) {
 }
 ```
 
-The `dt` value can be used to scale movement, acceleration, interpolation, and other time-dependent operations.
-
-This makes the construct useful for physics-style calculations and simulation loops.
-
----
-
-## 🧱 Classes and Objects
+### Classes and Objects
 
 GAGE provides a lightweight object model with:
 
-- Classes.
-- Fields.
-- Methods.
-- `new` object construction.
-- `this` instance access.
-
-A class can group state and behavior into a reusable object.
+- Classes
+- Fields
+- Methods
+- `new`
+- `this`
 
 Example:
 
@@ -359,15 +226,9 @@ player.damage(25);
 println(player.health);
 ```
 
-Objects can therefore be used to represent entities, simulation objects, game state, and other structured runtime data.
+### Dynamic Arrays
 
----
-
-## 📦 Dynamic Arrays
-
-GAGE provides dynamic arrays for storing collections of values.
-
-Example:
+GAGE supports dynamic arrays with indexed access, bounds checking, and collection iteration.
 
 ```gage
 let values = [10, 20, 30, 40];
@@ -377,9 +238,7 @@ println(values[0]);
 values[1] = 99;
 ```
 
-Arrays support indexed access and dynamic storage.
-
-They can also be traversed using collection iteration:
+Arrays can also be iterated:
 
 ```gage
 let scores = [100, 250, 500, 1000];
@@ -389,109 +248,40 @@ for score in scores {
 }
 ```
 
-The runtime handles array bounds checking and dynamic reallocation.
+### Bytecode Virtual Machine
 
----
+GAGE includes a stack-based bytecode compiler and virtual machine.
 
-## 🔄 Control Flow
-
-GAGE provides conventional control-flow constructs for writing program logic.
-
-Supported constructs include:
-
-- `if`
-- `else`
-- `while`
-- `loop`
-- `break`
-- `for ... in`
-
-Example:
-
-```gage
-let score = 100;
-
-if (score > 50) {
-    println("High score");
-} else {
-    println("Low score");
-}
+```text
+GAGE Source
+    ↓
+Lexer
+    ↓
+Parser
+    ↓
+Type Checker
+    ↓
+Bytecode Compiler
+    ↓
+Bytecode
+    ↓
+Stack VM
+    ↓
+Execution
 ```
 
-A loop can be used for repeated execution:
+The VM provides an alternative execution path for development, experimentation, and runtime evaluation.
 
-```gage
-let i = 0;
+### Terminal Runtime
 
-while (i < 10) {
-    println(i);
-    i = i + 1;
-}
-```
+GAGE includes lightweight terminal functionality for interactive programs and simulations.
 
-The `loop` construct can be terminated using `break`:
-
-```gage
-let i = 0;
-
-loop {
-    if (i >= 10) {
-        break;
-    }
-
-    println(i);
-    i = i + 1;
-}
-```
-
----
-
-## 🧩 Functions
-
-GAGE supports user-defined functions using the `fn` keyword.
-
-Functions can accept parameters and return values.
-
-Example:
-
-```gage
-fn add(a, b) {
-    return a + b;
-}
-
-let result = add(10, 20);
-
-println(result);
-```
-
-Functions can also call themselves recursively.
-
-```gage
-fn factorial(n) {
-    if (n <= 1) {
-        return 1;
-    }
-
-    return n * factorial(n - 1);
-}
-```
-
----
-
-## 🖥️ Native Terminal Graphics and ANSI Support
-
-GAGE contains terminal-oriented runtime functionality for interactive programs and simulation visualizations.
-
-Terminal control primitives include:
+Available functionality includes:
 
 ```text
 clear_screen()
 gage_sleep()
-```
 
-The runtime also provides ANSI color controls including:
-
-```text
 color_cyan()
 color_magenta()
 color_yellow()
@@ -499,109 +289,132 @@ color_green()
 color_reset()
 ```
 
-These facilities make it possible to build lightweight terminal interfaces and visual simulations without requiring a large external graphics framework.
+---
+
+## Compiler Architecture
+
+GAGE uses a shared compiler frontend for its execution backends.
+
+```text
+                    GAGE Source
+                         │
+                         ▼
+                    ┌─────────┐
+                    │  Lexer  │
+                    └────┬────┘
+                         │
+                         ▼
+                    ┌─────────┐
+                    │ Parser  │
+                    └────┬────┘
+                         │
+                         ▼
+                  ┌──────────────┐
+                  │ Type Checker │
+                  └──────┬───────┘
+                         │
+                  Validated Program
+                         │
+              ┌──────────┴──────────┐
+              │                     │
+              ▼                     ▼
+       ┌──────────────┐      ┌──────────────┐
+       │  Native C    │      │   Bytecode   │
+       │   Backend    │      │   Compiler   │
+       └──────┬───────┘      └──────┬───────┘
+              │                     │
+              ▼                     ▼
+          ┌───────┐             ┌────────┐
+          │ Clang │             │ Stack  │
+          │       │             │   VM   │
+          └───┬───┘             └────┬───┘
+              │                      │
+              ▼                      ▼
+       Native Execution        VM Execution
+```
+
+Both execution paths share the same frontend.
+
+This keeps language processing separate from the final execution strategy.
 
 ---
 
-## 🧠 Bytecode Virtual Machine
+## Compilation Cache
 
-In addition to the native C/Clang backend, GAGE contains a stack-based bytecode virtual machine.
+GAGE includes a compilation cache intended to reduce repeated native compilation overhead.
 
-The bytecode path provides an alternative execution model for development, experimentation, and runtime evaluation.
-
-The general pipeline is:
+The cache uses a 64-bit FNV-1a hash derived from generated source and compilation information.
 
 ```text
 GAGE Source
+    ↓
+Generated C
+    ↓
+FNV-1a Hash
+    ↓
+Cache Lookup
     │
-    ▼
-Lexer
+    ├── Hit  → Reuse Binary
     │
-    ▼
-Parser
-    │
-    ▼
-Type Checker
-    │
-    ▼
-Bytecode Compiler
-    │
-    ▼
-Bytecode Chunks
-    │
-    ▼
-Stack-Based VM
-    │
-    ▼
-Program Execution
+    └── Miss → Compile with Clang
+                    ↓
+                Store Binary
 ```
 
-The VM and native compiler are separate execution backends that share the language's frontend architecture.
-
-The native backend is intended for native compilation through generated C and Clang, while the VM provides a direct bytecode execution path.
+When the relevant compilation inputs have not changed, GAGE can reuse the previously generated native binary.
 
 ---
 
-## 🛠️ Installation & Building
+## Installation
 
-### Prerequisites
-
-GAGE is implemented in Rust and uses Cargo for building.
-
-The native backend also requires a C compiler toolchain capable of compiling the generated C code.
-
-Required development tools include:
+### Requirements
 
 - Rust and Cargo 1.70+
-- Clang C compiler toolchain
+- Clang
 - Git
 
-### Clone the Repository
+### Build from Source
 
 ```bash
 git clone https://github.com/LossRun/GAGE.git
 cd GAGE
-```
-
-### Build a Development Version
-
-```bash
-cargo build
-```
-
-### Build an Optimized Release Version
-
-```bash
 cargo build --release
 ```
 
-The optimized compiler binary will be generated at:
+The release compiler will be available at:
 
 ```text
 target/release/gage
 ```
 
-### Optional System-Wide Installation
+### Linux
 
-On systems where `/usr/local/bin` is appropriate:
+Optionally install the compiler system-wide:
 
 ```bash
 cp target/release/gage /usr/local/bin/gage
 ```
 
+### Termux
+
+```bash
+cp target/release/gage $PREFIX/bin/gage
+chmod +x $PREFIX/bin/gage
+```
+
 ---
 
-## 💻 CLI Usage
+## CLI Usage
 
-### Run a GAGE Program
+### Run a Program
 
-The default execution path uses the native Clang AOT backend:
+The default execution path uses the native C/Clang backend:
 
 ```bash
 gage script.gage
 ```
 
-### Run Through the Bytecode VM
+### Use the Bytecode VM
 
 ```bash
 gage --vm script.gage
@@ -615,17 +428,17 @@ gage --time script.gage
 
 ### Generate C Code
 
-The native backend can expose the generated C representation:
+```bash
+gage emit-c script.gage
+```
+
+Write the generated C code to a file:
 
 ```bash
 gage emit-c script.gage -o output.c
 ```
 
-This is useful when inspecting how a GAGE program is lowered into C.
-
-The generated source can then be compiled independently with an appropriate C compiler toolchain.
-
-### Start the Interactive REPL
+### Start the REPL
 
 ```bash
 gage
@@ -633,311 +446,186 @@ gage
 
 ---
 
-## 🧪 Test Suite
+## Examples
 
-GAGE includes an automated regression test suite covering language behavior, mathematical functionality, vector operations, transformation pipelines, recursion, and complete example programs.
+The `examples/` directory contains working GAGE programs covering areas such as:
 
-Run the complete test suite with:
+- Basic syntax
+- Functions
+- Recursion
+- Classes
+- Objects
+- Dynamic arrays
+- Vector mathematics
+- Physics calculations
+- Simulation loops
+- Matrix transformations
+- Terminal rendering
+- ANSI colors
+- Game-style logic
+- Coordinate transformations
+- 3D calculations
 
-```bash
-python3 test_runner.py
-```
-
-The current project test summary is:
-
-```text
-======================================================
-      ⚡ GAGE FULL TEST SUITE (ADVANCED SIMULATION)
-======================================================
-Phase 1: Feature & Math Primitives Units       [11/11 PASS]
-Phase 2: Full Examples Suite (01 to 50)        [50/50 PASS]
-------------------------------------------------------
-  Executed: 61 | Passed: 61 | Failed: 0
-  Total Runtime: ~2.5 s (100% clean passes)
-======================================================
-```
-
-The repository therefore currently reports:
-
-```text
-61 / 61 tests passing
-```
-
-The test suite is intended to provide a regression layer across both individual language features and complete working programs.
-
----
-
-## 📚 Examples
-
-The `examples/` directory contains working GAGE programs demonstrating the language and runtime.
-
-The examples cover areas such as:
-
-- Basic language syntax.
-- Functions.
-- Recursion.
-- Classes.
-- Object state.
-- Dynamic arrays.
-- Vector mathematics.
-- Physics calculations.
-- Simulation loops.
-- Matrix transformations.
-- Terminal rendering.
-- ANSI colors.
-- Game-style logic.
-- Coordinate transformations.
-- 3D calculations.
-- Integrated simulation programs.
-
-A representative 3D example is:
+A 3D example is included with the project:
 
 ```bash
 ./target/release/gage examples/51_rotating_cube_3d.gage
 ```
 
-Examples are intended to serve both as demonstrations and as practical references for experimenting with the language.
+The examples are intended to be both demonstrations and practical references for learning the language.
 
 ---
 
-## 🗂️ Repository Structure
+## Testing
+
+GAGE includes an automated regression test suite covering language features, mathematical functionality, vectors, transformations, recursion, objects, simulations, and complete example programs.
+
+Run the test suite with:
+
+```bash
+python3 test_runner.py
+```
+
+Current project test result:
+
+```text
+======================================================
+      GAGE FULL TEST SUITE
+======================================================
+Phase 1: Feature & Math Primitives Units       [11/11 PASS]
+Phase 2: Full Examples Suite (01 to 50)        [50/50 PASS]
+------------------------------------------------------
+  Executed: 61 | Passed: 61 | Failed: 0
+======================================================
+```
+
+**61 / 61 tests passing**
+
+---
+
+## Project Structure
 
 ```text
 GAGE/
 ├── src/
-│   ├── ast.rs
-│   │   └── Abstract syntax tree nodes
-│   │
-│   ├── lexer.rs
-│   │   └── Source tokenizer and lexical analysis
-│   │
-│   ├── parser.rs
-│   │   └── Recursive descent parser
-│   │
-│   ├── types.rs
-│   │   └── Semantic type checker and symbol tables
-│   │
-│   ├── codegen.rs
-│   │   └── Native C99 and SIMD code generator
-│   │
-│   ├── bytecode.rs
-│   │   └── Bytecode opcodes and instruction representations
-│   │
-│   ├── compiler.rs
-│   │   └── Bytecode compiler and instruction emission
-│   │
-│   ├── vm.rs
-│   │   └── Stack-based bytecode virtual machine
-│   │
-│   └── main.rs
-│       └── Compiler driver and command-line pipeline
+│   ├── ast.rs          # Abstract syntax tree
+│   ├── lexer.rs        # Source tokenizer
+│   ├── token.rs        # Token definitions
+│   ├── parser.rs       # Recursive descent parser
+│   ├── types.rs        # Type checker and symbols
+│   ├── codegen.rs      # Native C99 / SIMD code generator
+│   ├── bytecode.rs     # Bytecode definitions
+│   ├── compiler.rs     # Bytecode compiler
+│   ├── vm.rs           # Stack-based virtual machine
+│   └── main.rs         # Compiler driver and CLI
 │
-├── examples/
-│   └── Working GAGE reference programs
-│
-├── tests_suite/
-│   └── Core language and feature test specifications
-│
-├── test_runner.py
-│   └── Automated regression test harness
-│
-├── logo.png
-│   └── GAGE project logo
-│
-├── DOCS.md
-│   └── Complete language grammar and API documentation
-│
-├── LICENSE
-│   └── MIT License
-│
-└── README.md
-    └── Project overview and high-level documentation
+├── examples/           # GAGE example programs
+├── tests_suite/        # Language test specifications
+├── test_runner.py      # Automated test runner
+├── README.md           # Project overview
+├── DOCS.md             # Detailed language documentation
+├── Cargo.toml          # Rust project configuration
+├── LICENSE             # MIT License
+├── logo.png            # GAGE logo
+└── version.txt         # Project version information
 ```
 
 ---
 
-## 🔬 Compiler Front End
+## Documentation
 
-The compiler frontend is shared between GAGE's execution backends.
+The README is intended to provide an overview, quick start, and introduction to GAGE.
 
-### Lexer
+For the complete language documentation, see:
 
-The lexer performs lexical analysis of GAGE source code.
+**[DOCS.md](DOCS.md)**
 
-It reads source characters and converts them into a stream of tokens that represent the meaningful lexical components of the program.
+The documentation covers:
 
-These tokens are then consumed by the parser.
-
-### Parser
-
-The parser uses recursive descent parsing to consume the token stream and construct the program's abstract syntax tree.
-
-The AST provides a structured representation of the source program that can be analyzed and lowered by later compiler stages.
-
-### Type Checker
-
-The semantic type-checking stage validates the parsed program before code generation or bytecode compilation.
-
-It is responsible for semantic validation and symbol-table handling required by the language implementation.
-
-The validated program representation is then passed to the selected backend.
-
----
-
-## ⚙️ Native Backend
-
-The native backend is implemented in `src/codegen.rs`.
-
-Its primary responsibility is translating validated GAGE program structures into C99-compatible source.
-
-The generated C can use compiler-supported vector extensions for GAGE vector primitives.
-
-The resulting C source is then suitable for compilation through Clang into a native executable.
-
-Conceptually:
-
-```text
-GAGE AST
-   │
-   ▼
-Native Code Generator
-   │
-   ▼
-Generated C99
-   │
-   ▼
-Clang
-   │
-   ▼
-Native Machine Code
-```
+- Language syntax
+- Lexical structure
+- Parser and AST
+- Type system
+- Variables and types
+- Control flow
+- Functions and recursion
+- Classes and objects
+- Dynamic arrays
+- Vector operations
+- `mat4` transformations
+- Mathematical functions
+- Terminal functionality
+- Input and file I/O
+- Simulation
+- Native C generation
+- Bytecode compilation
+- Virtual machine execution
+- Compilation caching
+- Testing
+- Compiler architecture
 
 ---
 
-## ⚙️ Bytecode Backend
+## Design Goals
 
-The bytecode execution path is implemented across the project's bytecode compiler and VM components.
+GAGE is built around a few simple goals:
 
-The bytecode system contains:
+- Keep the language compact and expressive.
+- Make native execution a core part of the language.
+- Provide first-class mathematical and vector operations.
+- Make simulation logic straightforward to express.
+- Keep the compiler architecture small and understandable.
+- Support both native and bytecode execution.
+- Provide useful runtime functionality without requiring a large framework.
 
-```text
-src/bytecode.rs
-src/compiler.rs
-src/vm.rs
-```
-
-The bytecode representation defines the instructions used by the VM.
-
-The compiler translates validated program structures into bytecode instructions.
-
-The VM then executes those instructions using a stack-based execution model.
-
-This provides GAGE with an execution path that does not require the generated C source to be passed through Clang for every execution.
+GAGE is primarily intended for experimentation with programming-language design, native code generation, mathematical computing, simulation, and interactive programs.
 
 ---
 
-## 🧩 Backend Independence
+## Project Status
 
-One of the architectural characteristics of GAGE is the separation between language processing and execution.
+GAGE is an experimental and actively evolving programming language and compiler project.
 
-The frontend performs:
+The current implementation includes:
 
-```text
-Source
-  ↓
-Lexing
-  ↓
-Parsing
-  ↓
-Semantic Validation
-```
+- Rust-based compiler frontend
+- Lexical analysis
+- Recursive descent parsing
+- Semantic type checking
+- Native C99 code generation
+- Clang-based native compilation
+- Vector and SIMD support
+- 4×4 transformation mathematics
+- Mathematical primitives
+- Simulation-oriented `step(dt)`
+- Classes and objects
+- Dynamic arrays
+- Terminal runtime functionality
+- Bytecode compilation
+- Stack-based virtual machine
+- Compilation caching
+- Interactive REPL
+- Automated regression testing
+- A growing collection of example programs
 
-After that point, the execution strategy can diverge:
-
-```text
-                    Validated Program
-                           │
-                 ┌─────────┴─────────┐
-                 │                   │
-                 ▼                   ▼
-          Native C Backend      Bytecode Backend
-                 │                   │
-                 ▼                   ▼
-              Clang                  VM
-                 │                   │
-                 ▼                   ▼
-          Native Execution      VM Execution
-```
-
-This allows the language implementation to experiment with different execution models without requiring a completely separate frontend for each backend.
+GAGE is not intended to replace established production languages at this stage. The language, compiler, runtime, and VM are still evolving.
 
 ---
 
-## 📖 Language Documentation
-
-The README intentionally provides a high-level overview of GAGE rather than duplicating the complete language specification.
-
-For the complete language grammar, syntax reference, APIs, compiler details, runtime information, and additional technical documentation, see:
-
-```text
-DOCS.md
-```
-
-The documentation is kept separately so that the README can remain focused on introducing the project, its architecture, major capabilities, installation, and usage.
-
----
-
-## 🚧 Project Status
-
-GAGE is an experimental programming language and compiler project focused on native execution, mathematics, simulation, and language implementation.
-
-The current repository includes:
-
-- A Rust-based compiler frontend.
-- Lexical analysis.
-- Recursive descent parsing.
-- Semantic type checking.
-- Native C99 code generation.
-- Clang-based native compilation.
-- Hardware-oriented vector support.
-- 4×4 transformation mathematics.
-- Simulation-oriented `step(dt)` execution.
-- Classes and objects.
-- Dynamic arrays.
-- A stack-based bytecode compiler.
-- A bytecode virtual machine.
-- Terminal graphics and ANSI functionality.
-- More than 50 example programs.
-- An automated regression suite.
-
-GAGE should currently be considered a development and experimentation project rather than a production-ready replacement for established programming languages.
-
-The architecture and language features may continue to evolve as the project develops.
-
----
-
-## 📜 License
+## License
 
 GAGE is released under the MIT License.
 
-See the following file for the complete license text:
-
-```text
-LICENSE
-```
+See [LICENSE](LICENSE) for the complete license text.
 
 ---
 
-## ⭐ Support the Project
+<div align="center">
 
-If you find GAGE interesting, consider starring the repository and following its development.
+### GAGE
 
-```text
-https://github.com/LossRun/GAGE
-```
+**Native execution. Mathematics. Simulation.**
 
----
+If you find the project interesting, consider giving it a ⭐ on GitHub.
 
-## ⚡ GAGE
-
-A compact programming language built around native execution, mathematics, and simulation.
+</div>
