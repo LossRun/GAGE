@@ -456,6 +456,12 @@ gage --help
 gage --version
 ```
 
+### Run test
+
+```bash
+gage --test
+```
+
 ---
 
 ## Examples
@@ -500,18 +506,154 @@ python3 test_runner.py
 
 Current project test result:
 
-```text
-======================================================
-      GAGE FULL TEST SUITE
-======================================================
-Phase 1: Feature & Math Primitives Units       [11/11 PASS]
-Phase 2: Full Examples Suite (01 to 50)        [50/50 PASS]
-------------------------------------------------------
-  Executed: 61 | Passed: 61 | Failed: 0
-======================================================
+```bash
+ Target:  Android (aarch64)
+ Engine:  clang version 21.1.8
+ SIMD:    Clang ext_vector_type (v2/v3/v4)
+──────────────────────────────────────────
+ [01/123] ✔ PASS [D] 01_calculator      585ms
+ [02/123] ✔ PASS [D] 02_bmi_calculator  256ms
+ [03/123] ✔ PASS [D] 03_bms_battery_mo… 339ms
+ [04/123] ✔ PASS [D] 04_fibonacci       359ms
+ [05/123] ✔ PASS [D] 05_projectile_mot… 357ms
+ [06/123] ✔ PASS [D] 06_pid_controller  350ms
+ [07/123] ✔ PASS [D] 07_temperature_co… 359ms
+ [08/123] ✔ PASS [D] 08_simple_interest 299ms
+ [09/123] ✔ PASS [D] 09_vector_reflect… 264ms
+ [10/123] ✔ PASS [D] 10_orbital_mechan… 395ms
+ [11/123] ✔ PASS [D] 11_unit_converter  369ms
+ [12/123] ✔ PASS [D] 12_discount_prici… 345ms
+ [13/123] ✔ PASS [D] 13_game_player_st… 381ms
+ [14/123] ✔ PASS [D] 14_prime_checker   352ms
+ [15/123] ✔ PASS [D] 15_color_lerp      398ms
+ [16/123] ✔ PASS [D] 16_server_rate_li… 379ms
+ [17/123] ✔ PASS [D] 17_circle_physics  256ms
+ [18/123] ✔ PASS [D] 18_linear_search   352ms
+ [19/123] ✔ PASS [D] 19_camera_lookat   358ms
+ [20/123] ✔ PASS [D] 20_leap_year       357ms
+ [21/123] ✔ PASS [D] 21_fuel_efficiency 345ms
+ [22/123] ✔ PASS [D] 22_matrix_trace    232ms
+ [23/123] ✔ PASS [D] 23_hello_world     333ms
+ [24/123] ✔ PASS [D] 24_functions_recu… 362ms
+ [25/123] ✔ PASS [D] 25_classes_player  365ms
+ [26/123] ✔ PASS [D] 26_enemy_ai        349ms
+ [27/123] ✔ PASS [D] 27_vector_math     265ms
+ [28/123] ✔ PASS [D] 28_physics_partic… 258ms
+ [29/123] ✔ PASS [D] 29_dynamic_arrays  354ms
+ [30/123] ✔ PASS [D] 30_inventory_syst… 344ms
+ [31/123] ✔ PASS [D] 31_interactive_in… 353ms
+ [32/123] ✔ PASS [D] 32_save_load_game  356ms
+ [33/123] ✔ PASS [D] 33_raycast_distan… 355ms
+ [34/123] ✔ PASS [D] 34_orbit_simulati… 356ms
+ [35/123] ✔ PASS [D] 35_combat_arena    356ms
+ [36/123] ✔ PASS [D] 36_score_leaderbo… 344ms
+ [37/123] ✔ PASS [D] 37_game_loop_timer 336ms
+ [38/123] ✔ PASS [D] 38_camera_follow   345ms
+ [39/123] ✔ PASS [D] 39_projectile_mot… 349ms
+ [40/123] ✔ PASS [D] 40_consumables     326ms
+ [41/123] ✔ PASS [D] 41_game_logger     368ms
+ [42/123] ✔ PASS [D] 42_surface_lighti… 356ms
+ [43/123] ✔ PASS [D] 43_mini_rpg_dunge… 352ms
+ [44/123] ✔ PASS [D] 44_tic_tac_toe     430ms
+ [45/123] ✔ PASS [D] 45_physics_partic… 241ms
+ [46/123] ✔ PASS [D] 46_flocking_boids  347ms
+ [47/123] ✔ PASS [D] 47_elastic_collis… 338ms
+ [48/123] ✔ PASS [D] 48_smooth_camera_… 347ms
+ [49/123] ✔ PASS [D] 49_standard_math_… 379ms
+ [50/123] ✔ PASS [D] 50_mat4_transform… 342ms
+ [51/123] ✔ PASS [D] 51_rotating_cube_… 545ms
+ [52/123] ✔ PASS [D] 52_canvas_ascii_a… 425ms
+ [53/123] ✔ PASS [D] 53_matrix_perspec… 365ms
+ [54/123] ✔ PASS [D] 54_cannon_ballist… 350ms
+ [55/123] ✔ PASS [D] 55_physics_trajec…  23ms
+ [56/123] ✔ PASS [D] 56_pulsar_oscilla…  25ms
+ [57/123] ✔ PASS [D] 57_orbital_slings… 337ms
+ [58/123] ✔ PASS [D] 58_elastic_bounce  359ms
+ [59/123] ✔ PASS [D] 59_clock_divider   411ms
+ [60/123] ✔ PASS [D] 60_lunar_lander_d… 314ms
+ [61/123] ✔ PASS [D] 61_solar_orbit_ca… 362ms
+ [62/123] ✔ PASS [D] 62_simd_vector_fi… 304ms
+ [63/123] ✔ PASS [D] 63_braille_subpix…  26ms
+ [64/123] ✔ PASS [D] 64_3d_planetary_g… 412ms
+ [65/123] ✔ PASS [D] 65_3d_lorentz_mag… 359ms
+ [66/123] ✔ PASS [D] 66_3d_double_pend… 354ms
+ [67/123] ✔ PASS [D] 67_interactive_lu… 353ms
+ [68/123] ✔ PASS [D] 68_simd_neon_part… 324ms
+ [69/123] ✔ PASS [D] 69_terminal_radar… 347ms
+ [70/123] ✔ PASS [D] 70_spacetime_curv… 391ms
+ [71/123] ✔ PASS [D] 71_interactive_br… 459ms
+ [72/123] ✔ PASS [D] 72_rotating_gage_… 431ms
+ [73/123] ✔ PASS [S] test_boolean_logic 320ms
+ [74/123] ✔ PASS [S] test_braille_canv… 240ms
+ [75/123] ✔ PASS [S] test_canvas_buffer 349ms
+ [76/123] ✔ PASS [S] test_collision_tu… 251ms
+ [77/123] ✔ PASS [S] test_control_flow  373ms
+ [78/123] ✔ PASS [S] test_dynamic_arra… 344ms
+ [79/123] ✔ PASS [S] test_event_priori… 452ms
+ [80/123] ✔ PASS [S] test_extension_ma… 681ms
+ [81/123] ✔ PASS [S] test_field_gravit… 592ms
+ [82/123] ✔ PASS [S] test_file_io       786ms
+ [83/123] ✔ PASS [S] test_functions_re… 769ms
+ [84/123] ✔ PASS [S] test_gate_propaga… 573ms
+ [85/123] ✔ PASS [S] test_grid_still_l… 547ms
+ [86/123] ✔ PASS [S] test_grid_toroida… 594ms
+ [87/123] ✔ PASS [S] test_logic_trista… 552ms
+ [88/123] ✔ PASS [S] test_math_and_mat4 786ms
+ [89/123] ✔ PASS [S] test_nbody_gravit… 565ms
+ [90/123] ✔ PASS [S] test_oop_classes   788ms
+ [91/123] ✔ PASS [S] test_physics_rest… 581ms
+ [92/123] ✔ PASS [S] test_primitives_a… 759ms
+ [93/123] ✔ PASS [S] test_rk4_integrat… 595ms
+ [94/123] ✔ PASS [S] test_sim_primitiv… 751ms
+ [95/123] ✔ PASS [S] test_simd_batch_o… 611ms
+ [96/123] ✔ PASS [S] test_simd_shading… 797ms
+ [97/123] ✔ PASS [S] test_simd_vectors  786ms
+ [98/123] ✔ PASS [S] test_step_physics… 947ms
+ [99/123] ✔ PASS [S] test_strict_aster… 487ms
+ [100/123] ✔ PASS [S] test_strict_brail… 339ms
+ [101/123] ✔ PASS [S] test_strict_deep_…  19ms
+ [102/123] ✔ PASS [S] test_strict_dt_ze…  36ms
+ [103/123] ✔ PASS [S] test_strict_energ…  32ms
+ [104/123] ✔ PASS [S] test_strict_exclu… 333ms
+ [105/123] ✔ PASS [S] test_strict_exten… 358ms
+ [106/123] ✔ PASS [S] test_strict_input… 357ms
+ [107/123] ✔ PASS [S] test_strict_momen… 379ms
+ [108/123] ✔ PASS [S] test_strict_neon_… 346ms
+ [109/123] ✔ PASS [S] test_strict_neon_…  33ms
+ [110/123] ✔ PASS [S] test_strict_numer…  30ms
+ [111/123] ✔ PASS [S] test_strict_polar… 372ms
+ [112/123] ✔ PASS [S] test_strict_repl_… 330ms
+ [113/123] ✔ PASS [S] test_strict_resti…  32ms
+ [114/123] ✔ PASS [S] test_strict_rotat… 332ms
+ [115/123] ✔ PASS [S] test_strict_simd_…  35ms
+ [116/123] ✔ PASS [S] test_strict_space… 343ms
+ [117/123] ✔ PASS [S] test_strict_subpi…  27ms
+ [118/123] ✔ PASS [S] test_strict_termi…  38ms
+ [119/123] ✔ PASS [S] test_strict_toroi…  31ms
+ [120/123] ✔ PASS [S] test_strict_trist…  26ms
+ [121/123] ✔ PASS [S] test_strict_vecto…  34ms
+ [122/123] ✔ PASS [S] test_waveform_sam… 236ms
+ [123/123] ✔ PASS [S] test_zero_delay_c… 243ms
+
+╔════════════════════════════════════════╗
+║      EXECUTIVE DIAGNOSTIC SUMMARY      ║
+╠════════════════════════════════════════╣
+ Suite Status:   ALL TESTS PASSED
+ Demo Examples:  72/72 passed (0 fail)
+ Language Specs: 51/51 passed (0 fail)
+╟────────────────────────────────────────╢
+ Latency (Avg):  364.7ms / unit
+ Median (p50):   353.0ms
+ Tail (p95):     769.3ms
+ Fastest Unit:   test_strict_dee (19.5ms)
+ Slowest Unit:   test_step_physi (947.1ms)
+╟────────────────────────────────────────╢
+ Throughput:     2.4 suites/sec
+ Total Runtime:  51.18s
+╚════════════════════════════════════════╝
 ```
 
-**61 / 61 tests passing**
+**123 / 123 tests passing**
 
 ---
 
