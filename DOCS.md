@@ -236,6 +236,24 @@ Start the interactive REPL:
 gage
 ```
 
+### Get Help
+
+```bash
+gage --help
+```
+
+### Get Version Info
+
+```bash
+gage --version
+```
+
+### Run GAGE Test
+
+```bash
+gage --test
+```
+
 ---
 
 ## 🧪 Test Suite
