@@ -236,19 +236,19 @@ Start the interactive REPL:
 gage
 ```
 
-### Get Help
+Get Help
 
 ```bash
 gage --help
 ```
 
-### Get Version Info
+Get Version Info
 
 ```bash
 gage --version
 ```
 
-### Run GAGE Test
+Run GAGE Test
 
 ```bash
 gage --test
