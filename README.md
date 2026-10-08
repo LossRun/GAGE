@@ -507,6 +507,21 @@ python3 test_runner.py
 Current project test result:
 
 ```bash
+   ██████╗   █████╗   ██████╗  ███████╗
+ ██╔════╝  ██╔══██╗ ██╔════╝  ██╔════╝
+ ██║  ███╗ ███████║ ██║  ███╗ █████╗
+ ██║   ██║ ██╔══██║ ██║   ██║ ██╔══╝
+ ╚██████╔╝ ██║  ██║ ╚██████╔╝ ███████╗
+  ╚═════╝  ╚═╝  ╚═╝  ╚═════╝  ╚══════╝
+  ● GAGE 0.2.0 | native-aot [SIMD]
+  Type "help", "license", or "exit" for more information.
+
+==> Launching GAGE Regression Test Suite...
+
+
+╔════════════════════════════════════════╗
+║  ⚡ GAGE AOT COMPILER REGRESSION SUITE  ║
+╚════════════════════════════════════════╝
  Target:  Android (aarch64)
  Engine:  clang version 21.1.8
  SIMD:    Clang ext_vector_type (v2/v3/v4)
