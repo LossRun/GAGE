@@ -444,6 +444,18 @@ gage emit-c script.gage -o output.c
 gage
 ```
 
+### Get Help
+
+```bash
+gage --help
+```
+
+### Get Version Info
+
+```bash
+gage --version
+```
+
 ---
 
 ## Examples
