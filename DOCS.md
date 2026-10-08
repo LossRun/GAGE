@@ -12,7 +12,7 @@
 
 <p>
   <a href="https://github.com/LossRun/GAGE/actions">
-    <img src="https://img.shields.io/badge/Tests-126%2F126%20passing-brightgreen?style=flat-square" alt="Test Suite">
+    <img src="https://img.shields.io/badge/Tests-123%2F123%20passing-brightgreen?style=flat-square" alt="Test Suite">
   </a>
   <img src="https://img.shields.io/badge/Language-Rust-orange?style=flat-square&logo=rust" alt="Rust">
   <img src="https://img.shields.io/badge/Backend-C99%20%2B%20Clang-6b6b6b?style=flat-square" alt="C + Clang">
