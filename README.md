@@ -501,7 +501,7 @@ GAGE includes an automated regression test suite covering language features, mat
 Run the test suite with:
 
 ```bash
-python3 test_runner.py
+gage --test
 ```
 
 Current project test result:
